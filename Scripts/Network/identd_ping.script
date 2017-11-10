@@ -1,0 +1,21 @@
+#include reporting_helpers.inc;
+// test for identd server
+if (IsPortOpen(113)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 113;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send("21,21\r\n");		
+		data = socket.Receive(true);	
+		//trace(data);
+	
+		if (data.match(/.+ : .+ : (.+)/))
+		{
+			trace("identd server detected!");
+			KBase("Identd server running", "An identd server is running on TCP port 113.");
+		}
+		socket.Close();
+	}
+}

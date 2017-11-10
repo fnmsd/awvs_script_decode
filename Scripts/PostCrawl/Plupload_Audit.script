@@ -1,0 +1,100 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("8f0411d8b0e8e64b320b2cf74e078f04"); 
+hashes.push("84ec6016b168a54157dd1053cd6effae"); 
+hashes.push("ee837c2cd3bf6c56eb344f9e67146c8d"); 
+hashes.push("d2d3c18349651a45310ef0b95200befe"); 
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testPluploadOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "/plupload.flash.swf?id=\"));}catch(e){alert(1);}//";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(dir + "/Plupload.swf", 'Plupload_XSS.xml', lastJob);
+            }
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.indexOf("plupload")!=-1 || sf.Name.indexOf("wp-includes")!=-1) 
+			{
+			    if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+			    if (sf.Name.indexOf("wp-includes")!=-1) dirName = dirName + "/js/plupload/";
+			    
+                if (dirs.indexOf(dirName) == -1)                	
+				    dirs.push(dirName);
+			}
+		}	
+        
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name == "plupload.flash.swf") 
+			{
+			    dirName = dirName.replace("plupload.flash.swf", "");
+                
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}	
+    
+    var tested_common_dirs = getGlobalValue("Plupload_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("Plupload_tested_common_dirs", 1, true);
+        
+        dirs.push("/wp-includes/js/plupload/");
+        dirs.push("/includes/plupload/");
+        dirs.push("/js/plupload/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testPluploadOnDir(dirs[i]);
+}

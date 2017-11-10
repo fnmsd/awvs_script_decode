@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Jetpack 2.9.3: Critical Security Update" version="0.1" released="20080307" updated="20140411" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,missing_update" CVE="CVE-2014-0173" CWE="CWE-287" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N/E:U/RL:OF" CVSSScoreTemp="4.3" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress plugin Jetpack version 2.9.3 contains a critical security update, and you should update your site as soon as possible. 
+During an internal security audit, the Jetpack team found a bug that allows an attacker to bypass a site's access controls and publish posts. This vulnerability could be combined with other attacks to escalate access. This bug has existed since Jetpack 1.9, released in October 2012. [break][break]
+
+All Jetpack versions from [dark]1.9[/dark] until [dark]2.9.2[/dark] (inclusive) are vulnerable.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can bypass access controls and publish posts.</Impact>
+		<Recommendation>Upgrade to the latest version of Jetpack.</Recommendation>
+		<Reference database="Jetpack 2.9.3: Critical Security Update" URL="http://jetpack.me/2014/04/10/jetpack-security-update/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

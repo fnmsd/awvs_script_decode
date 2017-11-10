@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Possible relative path overwrite" version="0.1" released="20080307" updated="20150218" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+Gareth Heyes introduced a technique to take advantage of CSS imports with relative URLs by overwriting their target file. This technique can be used by an attacker to trick browsers into importing HTML pages as CSS stylesheets. If the attacker can control a part of the imported HTML pages he can abuse this issue to inject arbitrary CSS rules.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>On older versions of Internet Explorer it's possible to execute arbitrary JavaScript code using Internet Explorer's expression() function. An attacker can also extract the page source and potentially steal CSRF tokens using CSS selectors.</Impact>
+		<Recommendation>If possible, it's recommended to use absolute links for CSS imports. The problem can be partially mitigated by preventing framing. To prevent framing configure your web server to include an  X-Frame-Options: deny header on all pages.</Recommendation>
+		<Reference database="Relative Path Overwrite" URL="http://www.thespanner.co.uk/2014/03/21/rpo/"/></TestDescription>
+</WebApplicationTest>

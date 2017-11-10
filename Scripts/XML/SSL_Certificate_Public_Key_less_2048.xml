@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SSL certificate public key less than 2048 bit" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-310" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>One of the SSL certificates used by your SSL server contains a public key less than 2048 bit long. [break][break]
+
+New Standard for SSL Certificates Industry standards set by the Certification Authority/Browser (CA/B) Forum require that certificates issued after January 1, 2014 MUST be at least 2048-bit key length.1 As computer power increases, anything less than 2048-bit certificates are at risk of being compromised by hackers with sophisticated processing capabilities. The cybersecurity industry is moving to stronger 2048-bit encryption to help preserve internet security.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Any certificate with a public key less than 2048-bit are at risk of being compromised by hackers with sophisticated processing capabilities.</Impact>
+		<Recommendation>If you have any 1024-bit certificates or certificates with less than 2048-bit key length, you will need to migrate to 2048-bit key length.</Recommendation>
+		<Reference database="Moving to a 2048-bit certificate" URL="http://www.geotrust.com/resources/2048-bit-compliance/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

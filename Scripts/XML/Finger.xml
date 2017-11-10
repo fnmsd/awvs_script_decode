@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Finger service running" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>A finger service is running on this host. The finger protocol is used to find out information about users on a remote system. Finger servers can usually provide either a list of logged-in users or detailed information on a single user. [break]
+
+Finger information has been frequently used by crackers as a way to initiate a social engineering attack on a company's computer security system. By using a finger client to get a list of a company's employee names, email addresses, phone numbers, and so on, a cracker can telephone or email someone at a company requesting information while posing as another employee.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>It is recommended to disable this service.</Recommendation>
+		<Reference database="Wikipedia finger" URL="http://en.wikipedia.org/wiki/Finger_protocol"/>
+	</TestDescription>
+</WebApplicationTest>

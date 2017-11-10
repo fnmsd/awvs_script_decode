@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Possible debug parameter found" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:N/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>To ease debugging of web applications some developers add hidden debug parameters to their application. When these parameters are present, the developers send additional output to the browser, often giving a trace of internal application details such as database connections, SQL queries, and variable states.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Remove debug parameters from production websites or restrict their usage to the local network.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

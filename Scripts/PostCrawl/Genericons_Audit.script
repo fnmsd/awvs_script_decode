@@ -1,0 +1,84 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("bb0f3b9d51439e02ac4a4475637c1269");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "example.html";
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(dir + "/example.html", 'Genericons_DOM_XSS.xml', lastJob);
+            }
+		}
+	}		
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+        
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name == "genericons")
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}
+    
+    var tested_common_dirs = getGlobalValue("genericons_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("genericons_tested_common_dirs", 1, true);
+        
+        dirs.push("/wp-content/themes/twentyfifteen/genericons/");
+        dirs.push("/wp-content/plugins/jetpack/_inc/genericons/genericons/");
+        if (scanURL.path !== '/') {
+            dirs.push(scanURL.path + "wp-content/themes/twentyfifteen/genericons/");
+            dirs.push(scanURL.path + "wp-content/plugins/jetpack/_inc/genericons/genericons/");
+        }
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testOnDir(dirs[i]);
+}

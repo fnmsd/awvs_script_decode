@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla! 1.6.0 SQL injection vulnerability" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="CVE-2011-1151" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Joomla! 1.6.0 is vulnerable to an SQL Injection vulnerability. Parameters (filter_order, filer_order_Dir) were not properly sanitized, leading to an SQL Injection vulnerability.  This could an attacker to inject or manipulate SQL queries in the back-end database, allowing for the manipulation or disclosure of arbitrary data.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. [break][break]Depending on the back-end database in use, SQL injection vulnerabilities lead to varying levels of data/system access for the attacker. It may be possible to not only manipulate existing queries, but to UNION in arbitrary data, use sub selects, or append additional queries. In some cases, it may be possible to read in or write out to files, or to execute shell commands on the underlying operating system.</Impact>
+		<Recommendation>Upgrade to Joomla! 1.6.1 or higher.</Recommendation>
+		<Reference database="Joomla! 1.6.0 SQL Injection Vulnerability" URL="http://seclists.org/fulldisclosure/2011/Mar/158"></Reference>
+		<Reference database="Joomla 1.6.0 Analysis and Exploitation" URL="http://0x6a616d6573.blogspot.com/2011/04/joomla-160-sql-injection-analysis-and.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

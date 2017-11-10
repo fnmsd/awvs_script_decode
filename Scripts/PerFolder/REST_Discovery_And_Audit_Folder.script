@@ -1,0 +1,58 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include rest_helpers.inc;
+#include WebDAV_helpers.inc;
+var excludedMethods = ["OPTIONS", "GET", "HEAD", "POST", "TRACE", "PROPFIND", "PROPPATCH", "MKCOL", "COPY", "LOCK", "UNLOCK", "BIND", "REBIND", "UNBIND", "VERSION-CONTROL"];
+var debug = false;
+//--------------------------------------------------------------------------------------------------------
+function methodIsExcluded(method) {
+    for (var i=0; i<excludedMethods.length; i++) {
+        if (excludedMethods[i] == method)
+            return true;
+    }
+    return false;
+}
+//--------------------------------------------------------------------------------------------------------
+var sf = getCurrentDirectory();
+var dirPath = sf.fullPath;
+if (!dirPath.endsWith('/')) dirPath = dirPath + "/";
+var lastJob = new THTTPJob();
+lastJob.url     = sf.url;
+lastJob.verb    = 'OPTIONS';
+lastJob.URI     = dirPath;
+lastJob.execute();
+if (!lastJob.wasError && !lastJob.notFound && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf("xmlns:jersey") != -1)
+{
+    try {
+        processWADL(lastJob.response.body);
+    }
+    catch(err) {
+        if (debug) logError(err.message);
+    }
+}
+if (!lastJob.wasError)
+{
+	// look for WebDAV and custom HTTP method and test those for XXE
+	var allowedMethods = lastJob.response.headerValue('Allow');
+	if (allowedMethods) {
+        // test for WebDAV XXE on various methods
+        if (allowedMethods.indexOf('PROPFIND') != -1)
+                testXXE(dirPath, "PROPFIND", '<propfind xmlns="DAV:"><allprop/></propfind>');
+        if (allowedMethods.indexOf('PROPPATCH') != -1)
+                testXXE(dirPath, "PROPPATCH", '<d:propertyupdate xmlns:d="DAV:" xmlns:o="urn:schemas-microsoft-com:office:office"><d:set><d:prop><o:Author>Douglas Groncki</o:Author></d:prop></d:set></d:propertyupdate>');
+        if (allowedMethods.indexOf('LOCK') != -1)
+                testXXE(dirPath, "LOCK", '<d:lockinfo xmlns:d="DAV:"><d:lockscope><d:exclusive/></d:lockscope><d:locktype><d:write/></d:locktype><d:owner><d:href>test</d:href></d:owner></d:lockinfo>');
+        // look for custom methods and test them all for XXE
+        var methods = allowedMethods.split(",");
+        for (var j=0; j<methods.length; j++) if (methods[j]) {
+            var method = methods[j].trim().toUpperCase();
+            if (method && !methodIsExcluded(method))
+            {
+                if (debug) trace("testing custom method " + method + " on " + dirPath);
+                testXXE(dirPath, method, '<test></test>');
+            }
+        }
+	}
+}

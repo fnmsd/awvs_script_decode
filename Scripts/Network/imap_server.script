@@ -1,0 +1,21 @@
+#include reporting_helpers.inc;
+// test for IMAP server
+if (IsPortOpen(143)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 143;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		data = socket.ReceiveLine();
+		//trace(data);
+		socket.send("1 login \"acunetix\" \"acunetix\"\r\n");
+		data = socket.ReceiveLine();
+		if (data.indexOf("1 NO ") == 0)
+		{
+			trace("kbase: imap server detected!");
+			KBase("IMAP server running", "An IMAP server is running on TCP port 143.");
+		}
+		socket.Close();
+	}
+}

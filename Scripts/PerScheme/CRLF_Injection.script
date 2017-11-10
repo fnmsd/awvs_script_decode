@@ -1,0 +1,18 @@
+#include constants.inc;
+#include classCRLFInjection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var injectionPatterns = new classInjectionPatterns();
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	if ( scheme.inputHasFlag(i, INPUT_GROUP_FLAG_REFLECTION_TESTS)) {
+		var tester = new classCRLFInjection(targetUrl, injectionPatterns, scheme, i);
+		tester.startTesting();
+		tester = null;
+	}
+    
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+}

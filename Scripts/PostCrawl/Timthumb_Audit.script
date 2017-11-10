@@ -1,0 +1,57 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;		
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.details = details;	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function testFile(sf)
+{
+	var m = /TimThumb version : ([\d\.]+)/.exec(sf.response.body);
+	if (m && m[1]) {
+		var timthumbVersion = m[1];
+		if (version_compare(timthumbVersion, '2.8.13', '<=')) {
+			var details = "Current version: [dark][bold]" + timthumbVersion + "[/bold][/dark]";		
+			alert(sf.fullPath, "Timthumb_WebShot_Remote_Code_Execution.xml", details);
+		}
+	}	
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var foundFile = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.name == 'timthumb.php' || sf.name == 'img.php' || sf.name == 'thumb.php') 
+			{
+				files.push(sf);
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		testFile(files[i]);
+	}
+}

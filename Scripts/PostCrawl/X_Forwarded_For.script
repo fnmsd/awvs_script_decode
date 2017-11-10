@@ -1,0 +1,114 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+// dirs to be tested
+var dirs = new Array();
+var lastJob = null;
+var confirmJob = null;
+var fakeIPs	= [
+    "127.0.0.1",
+    "192.168.0.1",
+    "192.168.1.1",
+    "172.16.0.1",
+    "10.0.0.1"
+];
+var adminDirs = [
+    "admin",
+    "login",
+    "manage",
+    "panel",
+    "users",
+    "control",
+    "account",
+    "upload",
+    "moderator",
+    "debug",
+    "dev",
+    "test"
+]
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+    
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+    if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************	
+function testDir(siteFile)
+{
+    for (var i=0; i<fakeIPs.length; i++) {
+        
+        // prepare HTTP request 
+    	lastJob = new THTTPJob();
+        lastJob.url = scanUrl;
+        lastJob.uri = siteFile.fullPath + '/';
+    	lastJob.request.addHeader('X-Forwarded-For', fakeIPs[i], true);
+        
+    	lastJob.execute();
+    	
+    	if (!lastJob.wasError && (lastJob.responseStatus == 200 || lastJob.responseStatus == 301 || lastJob.responseStatus == 302)) 
+        {
+            // let's confirm just in case
+        	confirmJob = new THTTPJob();
+            confirmJob.url = scanUrl;
+            confirmJob.uri = siteFile.fullPath + '/';
+            
+        	confirmJob.execute();
+        	
+        	if (!confirmJob.wasError && (confirmJob.responseStatus == 403)) {
+                details = "X-Forwarded-For was set to [bold][dark]" + fakeIPs[i] + "[/dark][/bold]";
+                alert(siteFile.fullPath, 'X-Forwarded-For.xml', lastJob, details);
+            }                     
+            
+            break;
+        }    
+	}
+}
+/***********************************************************************************/
+function prepareDirsToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){        
+        // don't test more than 3 dirs	
+        if (dirs.length >= 3) break;
+        
+		var sf = list.getFile(i);
+        
+		// only test real directories and directories with intereting names
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir && sf.isMarkedAs(MARKED_AS_RealDir) && sf.response.msg2 == 403) 
+		{
+            // lowercase
+            var fname = sf.name.toLowerCase();            
+            
+            // look for matches
+            var match = false;
+            for (var j=0; j<adminDirs.length;  j++) 
+            {
+                if (fname.indexOf(adminDirs[j]) != -1)
+                {
+                    match = true;
+                    break;
+                }
+            }
+                                
+            if (match) 
+                dirs.push(sf);  
+		}
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareDirsToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+        testDir(dirs[i]);
+}

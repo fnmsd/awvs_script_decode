@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Email address found" version="0.1" released="20041108" updated="20140307" protocol="HTTP" mayproxy="true" affects="file" severity="info" alert="success" type="Informational">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="information_disclosure" SendCookies="true" HasPrecondition="false" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>One or more email addresses have been found on this page. The majority of spam comes from email addresses harvested off the internet. The spam-bots (also known as email harvesters and email extractors) are programs that scour the internet looking for email addresses on any website they come across.  Spambot programs look for strings like myname@mydomain.com and then record any addresses found.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Email addresses posted on Web sites may attract spam.</Impact>
+		<Recommendation>Check references for details on how to solve this problem.</Recommendation>
+		<Reference database="Email Address Disclosed on Website Can be Used for Spam" URL="http://www.websitedefender.com/web-security/email-address-disclosure/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,72 @@
+#include helpers.inc;
+// **************************************************************************************
+function testFile(sf) {
+	var fileName = getFileName(sf.name);
+	var http = new THTTPJob();
+	
+	http.url = sf.url;
+	http.verb = 'GET';
+	http.URI = sf.path + fileName;
+	http.request.addHeader('Accept', 'acunetix/wvs', true);
+	http.execute();	
+	
+	if ((!http.wasError && !http.notFound && http.responseStatus == 406))
+	{
+		var alternates = http.response.headerValue('Alternates');
+		if (alternates) {
+			var re = /{"(.*?)"\s\d+\s{/g;	
+			var match;
+			while (match = re.exec(alternates)) {
+				//logError('CN alternate:' + match[1]);
+				addLinkToCrawler((match[1]), sf);
+			}			
+		}
+	}
+}
+/***********************************************************************************/
+function Apache_Content_Negotiation_Enabled(list){
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);
+		if(!sf.notFound && !sf.ignored && sf.isFile && sf.scanSiteFile && sf.name != ""){
+		
+			var fileName = getFileName(sf.name);
+			var fileExt  = getFileExt(sf.name);
+				
+			if (fileExt) {		
+				
+				var http = new THTTPJob();
+				
+				http.url = sf.url;
+				http.verb = 'GET';
+				http.URI = sf.path + fileName;
+				http.request.addHeader('Accept', 'acunetix/wvs', true);
+				http.execute();	
+				
+				if ((!http.wasError && !http.notFound && http.responseStatus == 406))
+				{
+					var alternates = http.response.headerValue('Alternates');
+					if (alternates) return true;
+				}
+				
+				break;
+			}
+		}
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function LookForAlternates(list){
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{			
+			testFile(sf);
+    	}
+  	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+if (Apache_Content_Negotiation_Enabled(list)) 
+	LookForAlternates(list);

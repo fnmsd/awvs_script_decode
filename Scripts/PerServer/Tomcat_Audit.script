@@ -1,0 +1,109 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+var tomcatVersion = '';
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Current version: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function request(verb, uri, postData)
+{	
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.verb = verb;
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	
+	if (postData) 
+		lastJob.request.body = postData;
+	
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************	
+function TomcatIsDetected()
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/" + randStr(10) + ".jsp";
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.notFound)
+	{
+		var m = /<html><head><title>Apache Tomcat\/([\d\.]*) - Error report<\/title><style>/.exec(lastJob.response.body);
+		if (m && m[1]) 
+		{
+			tomcatVersion = m[1];
+			KBase("Apache Tomcat version", "Apache Tomcat version: [dark][bold]" + m[1] + "[/bold][/dark].");
+			return true;
+		}
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function TestTomcatJKConnectorBypass()
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/examples/jsp/%252e%252e/%252e%252e/manager/html/";
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 401 && lastJob.response.body.indexOf("<tt>tomcat</tt> with a password of <tt>s3cret</tt>") != -1)
+	{
+		alert('Tomcat_JK_Connector_Bypass.xml');
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+if (TomcatIsDetected() && tomcatVersion)
+{
+	//tomcatVersion = '7.0.18';
+	
+	// Apache Tomcat 7.x
+	
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^7\.0\.(0\d|1\d|2\d|3[01])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_7_0_32.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^7\.0\.(0\d|1\d|2[0-9])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_7_0_30.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^7\.0\.(0\d|1\d|2[0-7])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_7_0_28.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^7\.0\.(0\d|1\d|2[0-2])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_7_0_23.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^7\.0\.(0\d|1\d|2[0])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_7_0_21.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	
+	// Apache Tomcat 6.x
+	
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^6\.0\.(0\d|1\d|2\d|3[0-5])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_6_0_36.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+	m = /^6\.0\.(0\d|1\d|2\d|3[0-3])$/.exec(tomcatVersion);
+	if (m) alert('Apache_Tomcat_6_0_35.xml', tomcatVersion);
+	/*-----------------------------------------------------------------------------------------------------------*/	
+}
+TestTomcatJKConnectorBypass();

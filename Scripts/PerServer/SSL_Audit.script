@@ -1,0 +1,220 @@
+#include classSSL.inc;
+#include reporting_helpers.inc;
+#noretest;
+var sslKBase = "";
+var validityLookaheadDays = 30;
+var arrayOfPorts = [];
+if (scanURL.scheme == 'https') 
+{
+	if (scanURL.port && !isNaN(scanURL.port)) arrayOfPorts.push(scanURL.port)
+	else arrayOfPorts.push(443);
+}
+function debug(str)
+{
+	//Trace(str);
+}
+function getCipherStrength(cipher)
+{
+	if((cipher == "") || (cipher== null))
+		return("Error");
+	var strength = "Uncategorised strength";
+	if(cipher.match(/Symmetric encryption method: None/))
+		strength = "Null strength";
+	else
+	if(cipher.match(/Symmetric encryption method: AES/))
+		strength = "High strength";
+	else
+	{
+		var match = cipher.match(/Symmetric encryption method: [^,]+\(([0-9]+)\)/);
+		if(match)
+		{
+			if(match[1] == 0) 
+				strength = "Null strength";
+			else
+			if(match[1] <= 56) 
+				strength = "Low strength";
+			else
+			if(match[1] <= 112) 
+				strength = "Medium strength";
+			else
+				strength = "High strength";
+		}
+		else	
+			strength = "Max strength";
+	}
+	return(strength);
+}
+var arrayReportedCertificates = new Array();
+function checkCertForExpiration(cert, strProtocolVersion)
+{
+	for (var i = 0; i < arrayReportedCertificates.length; i++)
+	{
+		if (arrayReportedCertificates[i] == cert.serialNumber) 
+			return;
+	}
+	if(cert.boolNotValidYet)
+	{
+		arrayReportedCertificates.push(cert.serialNumber);
+		ReportItem("SSL_certificate_validity.xml", "The SSL certificate (serial: " 
+					+ cert.serialNumber 
+					//+ ", protocol: "
+					//+ strProtocolVersion
+					+ ") is not valid yet.[break] The certificate validity period is between [bold]" 
+					+ cert.valabilityStart 
+					+ "[/bold] and [bold]" 
+					+ cert.valabilityEnd 
+                    + "[/bold]");
+	}
+	else if(cert.boolExpired)
+	{
+		arrayReportedCertificates.push(cert.serialNumber);
+		ReportItem("SSL_certificate_validity.xml", "The SSL certificate (serial: " 
+				+ cert.serialNumber
+				//+ ", protocol: "
+				//+ strProtocolVersion
+				+ ") is expired.[break] The certificate validity period is between [bold]" 
+				+ cert.valabilityStart 
+				+ "[/bold] and [bold]" 
+				+ cert.valabilityEnd 
+                + "[/bold]");
+	}
+	else if(cert.intExpireInXDays < validityLookaheadDays)
+	{
+		arrayReportedCertificates.push(cert.serialNumber);
+		ReportItem("SSL_certificate_about_to_expire.xml", "The SSL certificate (serial: " 
+				+ cert.serialNumber
+				//+ ", protocol: "
+				//+ strProtocolVersion
+				+ ")is about to expire in less than [bold]" 
+				+ cert.intExpireInXDays
+				+ "[/bold] days. [break] The certificate validity period is between [bold]"
+				+ cert.valabilityStart 
+				+ "[/bold] and [bold]" 
+				+ cert.valabilityEnd
+                + "[/bold]");
+	}
+}
+var reportedInvalidCommonName = false;
+if (arrayOfPorts.length >= 1)
+for(var portIndex in arrayOfPorts)
+{
+	var ssl = new classSSL(ScanHost);
+	var sslKBase = "";
+	
+	arrayReportedCertificates = new Array();
+	var arrayOfProtocols = new Array("SSL2", "SSL3", "TLS1");
+	//var arrayOfProtocols = new Array("SSL2");
+	for(p in arrayOfProtocols)
+	{
+		var strProtocol = arrayOfProtocols[p];
+		debug("Trying: " + strProtocol);
+		
+		if(ssl.getCapabilities(arrayOfPorts[portIndex], strProtocol))
+		{
+			debug(strProtocol + " on port " + arrayOfPorts[portIndex]);
+			
+			if(strProtocol == "SSL2")
+				ReportItem("SSLv2.xml", "The SSL server (port: " + arrayOfPorts[portIndex] + ") encrypts traffic using an old deprecated protocol (SSL 2.0) with known weaknesses.");
+			
+			if(strProtocol == "SSL3")
+				ReportItem("SSLv3.xml", "The SSL server (port: " + arrayOfPorts[portIndex] + ") encrypts traffic using SSLv3.0.");
+			
+			var ciphersInfo = "";
+			var lowStrengthCiphers = "";
+			var exportCiphers = "";
+			var rc4Ciphers = "";
+			
+			for(var cipherIndex in ssl.sslInfo.ciphers)
+			{	
+				var strength = getCipherStrength(ssl.ciphersDescription[ssl.sslInfo.ciphers[cipherIndex]]);
+				
+				ciphersInfo += " - " + ssl.sslInfo.ciphers[cipherIndex] + '(' + ssl.ciphersDescription[ssl.sslInfo.ciphers[cipherIndex]] +') - ' + strength + ' [break]';
+				
+				if(strength.match(/null/i) || strength.match(/low/i)) // low strength alert
+					lowStrengthCiphers += ssl.sslInfo.ciphers[cipherIndex] + " - " + strength + "[break]";
+					
+				if (ssl.sslInfo.ciphers[cipherIndex].indexOf("EXPORT") != -1) {
+					exportCiphers += ssl.sslInfo.ciphers[cipherIndex] + " - " + strength + "[break]";
+				}
+				
+				if (ssl.sslInfo.ciphers[cipherIndex].indexOf("RC4") != -1) {
+					rc4Ciphers += ssl.sslInfo.ciphers[cipherIndex] + " - " + strength + "[break]";
+				}
+			}
+	
+			if (ciphersInfo != "") 
+			{
+				ciphersInfo = "Ciphers suported:[break]" +  ciphersInfo + "[break]";
+			}
+			
+			strVersion = "SSL 2.0";
+			if(arrayOfProtocols == "SSL3") strVersion = "SSL 3.0";
+			if(arrayOfProtocols == "TLS1") strVersion = "TLS 1.0";
+			
+			sslKBase += "[subtitle]A " + strProtocol + " server is running on TCP port " 
+					 + arrayOfPorts[portIndex] + ".[/subtitle][break][break]"
+					 + "[li][subtitle]SSL server information:[/subtitle]"
+					 //+ "[li]Version: " + arrayOfProtocols + "[\li]"
+					 + ciphersInfo + "[break]";
+			
+			for(var i = 0; i < ssl.sslInfo.certificates.length; i++)
+			{
+				sslKBase += "[li][bold]Certificate";
+				var x = i + 1;
+				if (ssl.sslInfo.certificates.length > 1) sslKBase += " " + x;
+				sslKBase +=	":[/bold][break]";
+				sslKBase += ssl.sslInfo.certificates[i].prettyPrint();
+				sslKBase += "[/li]"
+				checkCertForExpiration(ssl.sslInfo.certificates[i], strProtocol);
+				
+				/*
+				var r = ssl.checkForRandomBug(ssl.sslInfo.certificates[i].publicKeyFingerprint);
+				if(r != "")
+				{
+					//debug("SSL_random" + r);
+					ReportItem("SSL_random.xml", "SSL Certificate serial number: [pre]" + ssl.sslInfo.certificates[i].serialNumber + "[/pre][break]Vulnerable hash: [pre]" + r + "[/pre]");
+				}
+				*/
+				
+				var issuer = ssl.sslInfo.certificates[i].issuer;
+				
+				// look for invalid common name 
+//				if (!reportedInvalidCommonName) 
+//				for(var k = 0; k < issuer.length; k++) {
+//					if (issuer[k][0] == "Common Name") {
+//						var commonName = issuer[k][1];
+//						if (commonName != scanHost) {
+//							ReportItem("SSL_certificate_common_name_invalid.xml", "Common name: [dark][bold]" + commonName + "[/bold][/dark][break]Hostname: [dark][bold]" + scanHost + "[/bold][/dark][break][break]Certificate information: [break]" + sslKBase);
+//							reportedInvalidCommonName = true;
+//						}
+//					}
+//				}
+			}
+	
+			sslKBase += "[/li][break]";
+	
+			if(lowStrengthCiphers != "")
+			{
+				debug("Low strength ciphers found.");
+				ReportItem("SSL_weak_ciphers.xml", "Weak SSL ciphers (" + strProtocol + " on port " + arrayOfPorts[portIndex] + "): [break][break]" + lowStrengthCiphers);
+			}
+			
+			if(exportCiphers != "")
+			{
+				debug("Export ciphers found.");
+				ReportItem("SSL_export_cipher_suites_FREAK_attack.xml", "EXPORT cipher suites (" + strProtocol + " on port " + arrayOfPorts[portIndex] + "): [break][break]" + lowStrengthCiphers);
+			}
+			
+			if(rc4Ciphers != "")
+			{
+				debug("RC4 ciphers found.");
+				ReportItem("RC4_Cipher_Suites.xml", "RC4 cipher suites (" + strProtocol + " on port " + arrayOfPorts[portIndex] + "): [break][break]" + rc4Ciphers);
+			}			
+		}
+	}
+	
+	if(sslKBase)
+	{
+		KBase(	"SSL server running [" + arrayOfPorts[portIndex] + "]" ,sslKBase);
+	}
+}

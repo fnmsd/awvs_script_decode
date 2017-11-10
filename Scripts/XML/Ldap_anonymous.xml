@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="LDAP anonymous binds" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:N/A:N" CVSSScoreTemp="4.4" CVSSScoreEnv="4.3"/>
+		<Copyright/>
+		<Description>The remote LDAP server allows anonymous binds. Anonymous binds (or NULL binds) permits an attacker to anonymously access information from the LDAP directory. 
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it. Otherwise, it is recommended to disable anonymous binds.</Recommendation>
+		<Reference database="Multiple Vendor LDAP Server NULL Bind Connection Information Disclosure" URL="http://osvdb.org/9723"/>
+		<Reference database="LDAP injection" URL="https://www.owasp.org/index.php/LDAP_injection"/>
+		<Reference database="RFC2251" URL="http://tools.ietf.org/html/rfc2251"/>
+	</TestDescription>
+</WebApplicationTest>

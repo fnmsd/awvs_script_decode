@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL server older than 4.0.21 or 3.23.59" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2004-0835,CVE-2004-0836,CVE-2004-0837" CWE="CWE-284" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The MySQL server is vulnerable to specially crafted ALTER TABLE SQL query which can be exploited to bypass some applied security restrictions or cause a denial of service.[break]
+To exploit this flaw, an attacker would need the ability to execute arbitrary SQL statements on the remote host.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Abuse of functionality: an attacker uses server's features and functionality to consume, defraud, or circumvents access controls mechanisms.</Impact>
+		<Recommendation>Upgrade the MySQL server to the latest version.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

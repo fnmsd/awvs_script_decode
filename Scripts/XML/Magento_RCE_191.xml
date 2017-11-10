@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Magento remote code execution" version="0.1" released="20080307" updated="20150423" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2015-1397,CVE-2015-1398,CVE-2015-1399" CWE="CWE-94" CVSSVer="2.0" CVSSScore="9.4" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:C/A:C" CVSSScoreTemp="9.5" CVSSScoreEnv="9.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Check Point researchers discovered a critical RCE (remote code execution) vulnerability in the Magento web e-commerce platform that can lead to the complete compromise of any Magento-based store, including credit card information as well as other financial and personal data.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the vulnerable application.</Impact>
+		<Recommendation>A patch to address the flaws was released on February 9, 2015 (SUPEE-5344). Install this patch or upgrade to the latest version of Magento.</Recommendation>
+		<Reference database="Analyzing the Magento Vulnerability" URL="http://blog.checkpoint.com/2015/04/20/analyzing-magento-vulnerability/"></Reference>
+		<Reference database="Magento Community Edition Patches" URL="https://www.magentocommerce.com/products/downloads/magento/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

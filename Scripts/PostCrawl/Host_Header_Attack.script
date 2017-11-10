@@ -1,0 +1,199 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#noretest;
+// files to be tested
+var targets = new Array();
+var lastJob = null;
+var tagsToCheck = [
+		{ "tag": "FORM", "attr": "action"},
+		{ "tag": "A", "attr": "href"},
+		{ "tag": "LINK", "attr": "href"},
+		{ "tag": "LINK", "attr": "src"},
+		{ "tag": "IMG", "attr": "src"},
+		{ "tag": "FRAME", "attr": "src"},
+		{ "tag": "IFRAME", "attr": "src"},
+		{ "tag": "FORM", "attr": "action"},
+		{ "tag": "SCRIPT", "attr": "src"}
+	];	
+	
+// **************************************************************************************							 
+function alert(uri, details)
+{	
+	var ri = new TReportItem();	
+	var fname = "Host_Header_Attack.xml"
+	ri.LoadFromFile(fname);	
+	ri.alertPath = "Scripts/" + fname;	
+	ri.affects = uri;
+    
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function prepareTargetList(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		//trace(i);
+		var sf = list.getFile(i);		
+		
+		if (!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			// don't test more than 25 files
+			if (targets.length < 25)
+				targets.push(sf);
+		}	
+	}	
+}
+// **************************************************************************************	
+function requestWithBadHost(url, host, forwardedHost)
+{
+	//trace("host=" + host + ", forwardedHost=" + forwardedHost + ", url=" + url);
+	lastJob = new THTTPJob();
+	lastJob.setURL(scanURL);
+	lastJob.retries = 0;
+	lastJob.autoHostHeader = false;
+	lastJob.uri = url;
+	lastJob.Request.addHeader('Host', host, false);
+	lastJob.Request.addHeader('X-Forwarded-Host', forwardedHost, false);
+	lastJob.execute();
+	var result = [];
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************	
+function requestWithTwoHostHeaders(url, host1, host2)
+{
+	//trace("host=" + host + ", forwardedHost=" + forwardedHost + ", url=" + url);
+	lastJob = new THTTPJob();
+	lastJob.setURL(scanURL);
+	lastJob.retries = 0;
+	lastJob.autoHostHeader = false;
+	lastJob.uri = url;
+	lastJob.Request.addHeader('Host', host1, false);
+	lastJob.Request.addHeader('Host', host2, false);
+	lastJob.execute();
+	var result = [];
+	return (!lastJob.wasError); 
+}
+/***********************************************************************************/
+function hostPresentInBody(body, marker)
+{
+	var tokens = htmlTokens(body);
+	var token = null;
+	while (token = tokens.nextToken()) {
+		// marker is present in token?
+		if (token.isTag && token.raw.indexOf(marker) != -1) {
+			// look for form action			
+			for (var i=0;i<tagsToCheck.length;i++) {
+				tagName = tagsToCheck[i]["tag"];
+				tagAttr = tagsToCheck[i]["attr"];
+				
+	            if (token.tagName == tagName)
+	            {
+					for(var j=0; j<token.paramCount; j++) {
+						var paramName = token.getParamName(j).toLowerCase();
+						var paramValue = token.getParamValue(j);
+						
+						if (paramName == tagAttr && paramValue.indexOf(marker) != -1) 
+	                    {
+	                    	var falsePositive = false;
+	                    	if (tagName == 'A') {
+	                    		if (paramValue && paramValue.toLowerCase().startsWith("mailto:")) {
+	                    			falsePositive = true;
+	                    		}
+	                    	}
+	                    	
+	                    	
+	                    	if (!falsePositive) {
+	                        	var details = "Host header [bold][dark]" + marker + "[/dark][/bold] was reflected inside a [bold]" + tagName + "[/bold] tag ([bold]" + tagAttr + "[/bold] attribute).";    
+	                        	return details;
+	                        }
+	                    }
+	                }
+	            }
+			}
+		}
+	}	
+	return false;
+}
+/***********************************************************************************/
+function testTarget(sf)
+{
+	var uri = sf.fullPath;
+	var url = scanURL.scheme + "://" + scanURL.hostPort + uri;
+	
+	var vulnerable = false;
+		
+	// make 3 requests
+	// 1. with uri
+	
+	var hostName = 'evilhost' + randStr(8) + ".com";
+    var res = requestWithBadHost(uri, hostName, scanURL.hostPort);
+    
+    var reflected = hostPresentInBody(lastJob.response.body, hostName);
+    if (reflected) {
+    	alert(uri, reflected);
+    	vulnerable = true;
+    }
+    
+	// 2. with full URL
+	if (!vulnerable) {	
+		hostName = 'evilhost' + randStr(8) + ".com";
+		
+    	res = requestWithBadHost(uri, scanURL.hostPort, hostName);
+    	
+	    reflected = hostPresentInBody(lastJob.response.body, hostName);
+	    if (reflected) {
+	    	alert(uri, reflected);
+	    	vulnerable = true;	    	
+	    }	    	
+    }    
+    
+	// 3. with full URL
+	if (!vulnerable) {	
+		hostName = 'evilhost' + randStr(8) + ".com";
+		
+    	res = requestWithBadHost(url, hostName, hostName);
+    	
+	    reflected = hostPresentInBody(lastJob.response.body, hostName);
+	    if (reflected) {
+	    	alert(uri, reflected);
+	    	vulnerable = true;	    	
+	    }	    	
+    }
+    
+	// 4. with two host headers
+	if (!vulnerable) {	
+		hostName = 'evilhost' + randStr(8) + ".com";
+		
+    	res = requestWithTwoHostHeaders(url, scanURL.hostPort, hostName);
+    	
+	    reflected = hostPresentInBody(lastJob.response.body, hostName);
+	    if (reflected) {
+	    	alert(uri, reflected);
+	    	vulnerable = true;	    	
+	    }
+    }    
+}
+/***********************************************************************************/
+/* main entry point */
+// don't test this vulnerability twice
+var tested = getGlobalValue("host_header_attack");
+if (!tested)
+{	
+	var list = getNewFiles(loadHttp);
+	
+	prepareTargetList(list);	
+	if (targets.length > 0) 
+	{
+		SetGlobalValue("host_header_attack", 1, true);
+		// test targets
+		for (var i=0; i<targets.length; i++){
+			testTarget(targets[i]);
+		}
+	}
+}

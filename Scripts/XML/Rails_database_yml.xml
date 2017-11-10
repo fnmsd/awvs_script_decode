@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Ruby on Rails database configuration file" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>Ruby on Rails applications store database configuration information in a file named [bold]config/database.yml[/bold]. By default it contains three configurations: production, development, and test. The information stored in this file is highly sensitive and should not be found in a production system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Sensitive information disclosure. An attacker can use this information to conduct further attacks.</Impact>
+		<Recommendation>Restrict access to this file or remove it from the system.</Recommendation>
+		<Reference database="Configuring Rails Applications" URL="http://edgeguides.rubyonrails.org/configuring.html"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,181 @@
+#include helpers.inc;
+#include os_detection.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var dirs = new Array();
+var lastJob = null;
+var confirmJob = null;
+var vulnCount = 0;
+var reportedAlert = false;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVulnOnFile(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "?debug=xml";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.startsWith("<debug>"))
+	{
+		var ct = lastJob.response.headerValue('content-type');		
+		if (ct && ct.indexOf("text/xml") != -1) {
+			reportedAlert = true;
+			alert(uri, 'Struts_DevMode.xml', lastJob);
+			vulnCount = vulnCount + 1;
+            return true;
+		}
+	}
+    return false;
+}
+/***********************************************************************************/
+function testVulnOnFile2(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+	lastJob.uri  = uri + "?debug=console";
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf("window.open(baseUrl+\"/webconsole.html\", 'OGNL Console'") != -1)
+	{
+		var ct = lastJob.response.headerValue('content-type');
+		if (ct && ct.indexOf("text/html") != -1) {
+			reportedAlert = true;
+			alert(uri, 'Struts_DevMode.xml', lastJob);
+			vulnCount = vulnCount + 1;
+            return true;
+		}
+	}
+    return false;
+}
+/***********************************************************************************/
+function testVulnOnFile3(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;
+	lastJob.uri  = uri;
+    lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+    lastJob.request.body = "debug=command&expression=3*2*56*45*34789334";
+    lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body == "2028719968")
+	{
+		var ct = lastJob.response.headerValue('content-type');
+		if (ct && ct.indexOf("text/plain") != -1) {
+			reportedAlert = true;
+			alert(uri, 'Struts_DevMode.xml', lastJob);
+			vulnCount = vulnCount + 1;
+            return true;
+		}
+	}
+    return false;
+}
+/***********************************************************************************/
+function testDevModeWebConsole(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf("<title>OGNL Console</title>") != -1)
+	{
+        reportedAlert = true;
+        alert(uri, 'Struts_DevMode.xml', lastJob);
+        vulnCount = vulnCount + 1;
+	}
+}
+/***********************************************************************************/
+function interestingFile(sf) {
+    if (!isJava) return false;
+    var fileExt  = getFileExt(sf.name);
+    // we are interested in files witout extension
+    if (fileExt == "") return true;
+    var ExcludedExtensions = new TStringList();
+    ExcludedExtensions.add("txt");
+    ExcludedExtensions.add("png");
+    ExcludedExtensions.add("jpg");
+    ExcludedExtensions.add("jpeg");
+    ExcludedExtensions.add("gif");
+    ExcludedExtensions.add("avi");
+    ExcludedExtensions.add("mpg");
+    ExcludedExtensions.add("js");
+    ExcludedExtensions.add("css");
+    if (ExcludedExtensions.indexOf(fileExt) != -1) return false;
+    return true;
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.Name.endsWith(".action") || sf.Name.endsWith(".do") || sf.Name.endsWith(".page") || interestingFile(sf))
+			{
+				if (files.length < 100) {
+					files.push(sf.fullPath);
+					
+					// add paths to dirs 
+					if (dirs.indexOf(sf.path) == -1) {
+						dirs.push(sf.path + "/struts/webconsole.html");
+						dirs.push(sf.path + "/../struts/webconsole.html");
+						dirs.push(sf.path + "/../../struts/webconsole.html");
+						dirs.push(sf.path + "/../../../struts/webconsole.html");
+					}
+				}
+			}					
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+	  	// don't test on all files (stop after 2 vulnerable action files).
+		if (vulnCount < 2)
+			if (!testVulnOnFile(files[i]))
+            {
+                if (!testVulnOnFile2(files[i]))
+                {
+                    testVulnOnFile3(files[i])
+                }
+            }
+	}
+}
+// try to look for the struts web console	
+if (!reportedAlert) {
+    var strutsdevmode_common_dirs = getGlobalValue("strutsdevmode_common_dirs");
+    if (!strutsdevmode_common_dirs)
+    {
+	    setGlobalValue("strutsdevmode_common_dirs", 1, true);
+        var siteRoot = getSiteFileWithPath(scanURL.path, 0);
+        if (siteRoot && siteRoot.fullPath != "/")  dirs.push(siteRoot.fullPath + "/struts/webconsole.html");
+        dirs.push("/struts/webconsole.html");
+	}
+	if (dirs.length > 0)
+	for (var i=0; i<dirs.length; i++)
+	{
+		if (vulnCount < 2)
+			testDevModeWebConsole(dirs[i]);
+	}
+}

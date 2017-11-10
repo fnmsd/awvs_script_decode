@@ -1,0 +1,45 @@
+#include helpers.inc;
+var variants = [
+				"/_vti_inf.html"
+				];
+// **************************************************************************************							 
+function alert(job, URL, vxml)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = URL;
+	ri.alertPath = "Scripts/" + vxml; 	
+		
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function testURL(URL)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.verb = 'GET';	
+	http.URI = URL;
+	http.addCookies = false;
+	
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		if (http.response.body.indexOf("<!-- FrontPage Configuration Information") != -1)
+		{
+			alert(http, URL, 'Microsoft_Frontpage_Configuration_Information.xml');
+			return 1;
+		}	
+	}	
+	return 0;	
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0; i<variants.length; i++) 
+{
+	if (testURL(variants[i])) break;	
+}

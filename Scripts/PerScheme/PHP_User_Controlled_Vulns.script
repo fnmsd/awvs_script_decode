@@ -1,0 +1,206 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for php user controlled vulns (like preg_replace, unserialize, curl_exec) (AcuSensor)
+	function classPHPUserControlledVulns(scheme, inputIndex){
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+		this.injectionValidator = new TInjectionValidator(ACUINJSTART, ACUINJEND);
+	}
+	
+	{
+		// *********************************************************************************************
+		// object used for injection test result
+		// *********************************************************************************************	
+		function InjectionResult(data, adItem){
+			this.data = data;
+			this.adItem = adItem;
+		}
+	}	
+	
+	// *********************************************************************************************
+	// function to detect if AcuSensor data indicates an php curl_exec vulnerability
+	// params:  
+	//	ad => AspectData object
+	// returns: 
+	//	an AspectDataItem if true / False
+	// *********************************************************************************************
+	 classPHPUserControlledVulns.prototype.isPHPCurlExec = function(ad) {
+		var adItems = ad.getItemsWithKey("CURL_Exec");
+		
+		if (adItems && adItems.count) 
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);
+			// check aspect data for signs of vulnerability
+			if (aditem) {
+				var stringList = aditem.getDataList();
+				if (stringList.count>0 && stringList.item(0).indexOf(this.injectionValidator.startMark) != -1 ) {
+					return new InjectionResult(stringList.item(0), aditem);						
+				}	
+			} 		
+		}
+		
+		return false;
+	}
+	
+	// *********************************************************************************************
+	// function to detect if AcuSensor data indicates an php preg_replace vulnerability
+	// params:  
+	//	ad => AspectData object
+	// returns: 
+	//	an AspectDataItem if true / False
+	// *********************************************************************************************
+	 classPHPUserControlledVulns.prototype.isPHPpreg_replace = function(ad) {
+		var adItems = ad.getItemsWithKey("preg_replace_warning");
+	
+		if (adItems && adItems.count) 
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);
+			// check aspect data for signs of vulnerability
+			if (aditem) {
+				var stringList = aditem.getDataList();
+				if (stringList.count>0) {
+					return new InjectionResult(stringList.item(0), aditem);						
+				}	
+			} 		
+		}
+		
+		return false;
+	}	
+	// *********************************************************************************************
+	// function to detect if AcuSensor data indicates an php unserialize vulnerability
+	// params:  
+	//	ad => AspectData object
+	// returns: 
+	//	an AspectDataItem if true / False
+	// *********************************************************************************************
+	 classPHPUserControlledVulns.prototype.isPHPUnserialize = function(ad) {
+		var adItems = ad.getItemsWithKey("Unserialize");
+		
+		if (adItems && adItems.count) 
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);
+			// check aspect data for signs of vulnerability
+			if (aditem) {
+				// check aspect data for signs of vulnerability
+				var stringList = aditem.getDataList();
+				if (stringList.count>0 && stringList.item(0).indexOf(this.injectionValidator.startMark) != -1 ) {
+					return new InjectionResult(stringList.item(0), aditem);						
+				}	
+			} 				
+		}
+		
+		return false;
+	}	
+	
+	// *********************************************************************************************
+	// set a certain value to the current variation and makes an HTTP request
+	// *********************************************************************************************	
+	classPHPUserControlledVulns.prototype.request = function(value, testId)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		if (scheme.targetHasAcuSensor) this.lastJob.addAspectHeaders();
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	// *********************************************************************************************
+	// issue a report item for the scanner
+	// *********************************************************************************************	
+	classPHPUserControlledVulns.prototype.alert = function(testValue, sourceFile, sourceLine, additionalInfo, vulnxml, alertPath, acuSensor)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile(vulnxml);
+		if (acuSensor) ri.name = ri.name + " (verified)";
+		ri.affects = this.scheme.path;
+		ri.alertPath = alertPath;
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.sensorSourceFile = sourceFile;
+		ri.sensorSourceLine = sourceLine;
+		ri.sensorAdditional = additionalInfo;		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		AddReportItem(ri);	
+	}		
+	
+	// *********************************************************************************************
+	// main function to test the vulnerability
+	// *********************************************************************************************		
+	classPHPUserControlledVulns.prototype.testInjection = function(value, testId)
+	{
+		if (!this.request(value, testId)) return false;
+		// if AcuSensor is enabled
+		if (this.lastJob.hasAspectData) {
+			// get aspect data information
+			var ad = this.lastJob.getAspectData(); 
+			
+			// look for curl_exec problems			
+			var injRes = this.isPHPCurlExec(ad, this.injectionValidator);			
+			if (injRes && injRes.adItem) {				
+				var additional = injRes.adItem.additional;
+				this.alert(value, injRes.adItem.FileName, injRes.adItem.lineNumber, additional, "PHP_curl_exec()_url_is_controlled_by_user.xml", "Scripts/PHP curl_exec() url is controlled by user", 1);
+				return true;
+			}
+			
+			// look for preg_replace problems			
+			var injRes = this.isPHPpreg_replace(ad, this.injectionValidator);			
+			if (injRes && injRes.adItem) {				
+				var additional = injRes.adItem.additional;
+				this.alert(value, injRes.adItem.FileName, injRes.adItem.lineNumber, additional, "PHP_preg_replace_used_on_user_input.xml", "Scripts/PHP preg_replace used on user input", 1);
+				return true;
+			}			
+			
+			// look for unserialize problems			
+			var injRes = this.isPHPUnserialize(ad, this.injectionValidator);			
+			if (injRes && injRes.adItem) {				
+				var additional = injRes.adItem.additional;
+				this.alert(value, injRes.adItem.FileName, injRes.adItem.lineNumber, additional, "PHP_unserialize_used_on_user_input.xml", "Scripts/PHP unserialize() used on user input", 1);
+				return true;
+			}			
+			
+		}		
+		return false;
+	}
+	
+	// *********************************************************************************************
+	// iterate and test all variations
+	// *********************************************************************************************	
+	classPHPUserControlledVulns.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;		
+			this.currentVariation = i;			
+			if (this.testInjection(this.injectionValidator.startMark)) continue;
+		}
+	}	
+}
+// main entry point 
+if (scheme.targetHasAcuSensor) 
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classPHPUserControlledVulns(scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}

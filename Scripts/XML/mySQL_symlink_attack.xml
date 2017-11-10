@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL Community Server symlink attack vulnerability" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2004-0381,CVE-2004-0388" CWE="CWE-284" CVSSVer="2.0" CVSSScore="2.2" CVSSDescr="AV:L/AC:L/Au:N/C:N/I:P/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="1.7" CVSSScoreEnv="1.6" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The MySQL Community Server installed on the remote host fails to check whether a file to which a symlink points exists when using RENAME TABLE against a table with explicit DATA DIRECTORY and INDEX DIRECTORY options.  A local attacker can overwrite system table information by replacing the file to which the symlink points.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A local attacker can overwrite system table information by replacing the file to which the symlink points.</Impact>
+		<Recommendation>Upgrade to MySQL Community Server version 5.0.51 or later.</Recommendation>
+		<Reference database="MySQL mysqlbug script symlink attack" URL="http://xforce.iss.net/xforce/xfdb/15617"></Reference>
+	</TestDescription>
+</WebApplicationTest>

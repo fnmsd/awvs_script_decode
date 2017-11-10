@@ -1,0 +1,77 @@
+#include constants.inc;
+#include reporting_helpers.inc;
+var servers = [];
+var ext = [];
+// inject a test string into all site files
+function CheckSiteFiles(sf)
+{	
+	if (sf.isFile && !sf.notFound)
+	{
+		fileExt = getFileExt(sf.name);
+		if (fileExt) 
+		{
+			fileExtCnt = ext[fileExt];
+			if (fileExtCnt >= 1)
+			{
+				ext[fileExt] = fileExtCnt+1;
+			}
+			else
+			{
+				ext[fileExt] = 1;
+			}
+		}
+	}
+	
+	if(sf.isDir && !sf.notFound && !sf.ignored && sf.scanSiteFile)
+	{
+		//trace(sf.fullPath);
+		
+		server_header = sf.response.headerValue('server');
+		if (server_header)
+		{
+			// have a valid server header
+			// this server is already in our list?
+			server_header_path = servers[server_header];
+			if (server_header_path)
+			{
+				if (sf.fullPath.length < sf.fullPath.length) 
+				{
+					// replace existing server header with the new path
+					servers[server_header] = sf.fullPath;
+				}
+			}
+			else servers[server_header] = sf.fullPath; 
+		}		
+	}
+	
+	var child = sf.getFirstChild();
+	while(child != null){
+		CheckSiteFiles(child);
+		child = child.getNextSibling();
+	}
+}
+// main entry point
+var root = getSiteRoot(loadHttp);
+CheckSiteFiles(root);
+// more than one server ?
+str = "[ul]";
+cnt = 0;
+for (web_server in servers) 
+{ 
+	str = str + '[li][dark]' + web_server+'[/dark] => [bold]'+servers[web_server] + "[/bold][/li]";
+	cnt++;
+}
+str = str + '[/ul]';
+if (cnt>1) 
+	KBase('Multiple web servers detected', 'List of web servers (and corresponding URLs) detected on this website: [break][break]' + str);
+// list file extensions
+str = "[ul]";
+cnt = 0;
+for (fileExt in ext) 
+{ 
+	str = str + '[li][dark]' + fileExt + '[/dark] => [bold]'+ext[fileExt] + "[/bold] file(s)[/li]";
+	cnt++;
+}
+str = str + '[/ul]';
+if (cnt>0) 
+	KBase('List of file extensions', 'File extensions can provide information on what technologies are being used on this website.[break] List of file extensions detected:[break][break]' + str);

@@ -1,0 +1,45 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for open proxy
+// test if the proxy is forwarding our requests
+function TextOpenProxyOnPort(port){
+	var result = false;
+	if(IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if(socket.IsConnected){
+		socket.send("GET http://testasp.vulnweb.com/t/fit.txt HTTP/1.1\r\nHost: testasp.vulnweb.com\r\n\r\n");
+		
+		res = "";
+		while( (data = socket.Receive(true)) != ""){
+			res += data;
+		}
+		//trace(res);
+	
+		if (res.search("63c19a6da79816b21429e5bb262daed863c19a6da79816b21429e5bb262daed8") >=0 )
+		{
+			//trace('open proxy on port' + port);
+			ReportItem("Open_proxy.xml", "The proxy server is running on TCP port " + port + ".");	
+			
+			result = true;
+		}
+		
+		socket.Close();
+		}
+	}
+	return result;
+}
+//start
+if (TextOpenProxyOnPort(3128)){
+		
+		trace('open proxy on port 3128');
+}
+if (TextOpenProxyOnPort(8080)){
+		trace('open proxy on port 8080');
+}
+if (TextOpenProxyOnPort(80)){
+		trace('open proxy on port 80');
+}

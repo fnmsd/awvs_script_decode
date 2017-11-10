@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Ruby on Rails XML processor YAML deserialization code execution" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities,sql_injection" CVE="CVE-2013-0156" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Copyright></Copyright>
+		<Description>[dark]This alert requires user confirmation. It may be a false positive.[/dark][break][break]
+
+There are multiple weaknesses in the parameter parsing code for Ruby on Rails which allows attackers to bypass authentication systems, inject arbitrary SQL, inject and execute arbitrary code, or perform a DoS attack on a Rails application. This vulnerability has been assigned the CVE identifier CVE-2013-0156. [break][break]
+The parameter parsing code of Ruby on Rails allows applications to automatically cast values from strings to certain data types.  Unfortunately the type casting code supported certain conversions which were not suitable for performing on user-provided data including creating Symbols and parsing YAML.  These unsuitable conversions can be used by an attacker to compromise a Rails application. 
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Due to the critical nature of this vulnerability, and the fact that portions of it have been disclosed publicly, all users running an affected release should either upgrade or use one of the work arounds *immediately*. </Impact>
+		<Recommendation>Consult Web References for detailed information about protecting against this vulnerability.</Recommendation>
+		<Reference database="Multiple vulnerabilities in parameter parsing in Action Pack (CVE-2013-0156)" URL="https://groups.google.com/forum/#!topic/rubyonrails-security/61bkgvnSGTQ/discussion"/></TestDescription>
+</WebApplicationTest>

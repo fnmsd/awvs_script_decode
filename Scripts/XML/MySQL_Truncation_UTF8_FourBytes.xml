@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL utf8 4-byte truncation " version="0.1" released="20080307" updated="20150427" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+A character that is encoded in UTF-8 can technically be between one and four bytes in length. MySQL's utf8 charsets only support 3-byte characters. When you insert a string containing a 4-byte character into a utf8 column, the default MySQL behaviour is to truncate the rest of the string after (and including) the occurence of the 4-byte character. [break][break]
+This behaviour can cause various security issues such as "WordPress &lt; 4.1.2 Stored XSS vulnerability" discovered by Cedric Van Bockhaven (consult references for more information about this vulnerability). [break][break]
+It was detected that your application is also truncating utf8 4-byte characters and therefore is potentially affected by this MySQL behaviour. Acunetix WVS cannot fully determine if your application is vulnerable, it only confirmed that strings containing utf8 4-byte characters are truncated while strings containing utf8 3-byte characters are not truncated. This vulnerability must be investigated and confirmed manually.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact of this alert depends on the affected web application. </Impact>
+		<Recommendation>It's recommended to use MySQL's strict mode where possible. Where this is not possible, make sure your application is prepared to handle well utf8 4-byte character truncations.</Recommendation>
+		<Reference database="How to support full Unicode in MySQL databases" URL="https://mathiasbynens.be/notes/mysql-utf8mb4"/><Reference database="WordPress &lt; 4.1.2 Stored XSS vulnerability" URL="https://cedricvb.be/post/wordpress-stored-xss-vulnerability-4-1-2/"/><Reference database="RFC3629" URL="https://tools.ietf.org/html/rfc3629"/></TestDescription>
+</WebApplicationTest>

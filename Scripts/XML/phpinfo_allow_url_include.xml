@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP allow_url_include enabled" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>The PHP configuration directive allow_url_include is enabled. When enabled, this directive allows data retrieval from remote locations (web site or FTP server) for functions like fopen and file_get_contents. If user input is not properly validated, this can conduct to remote file inclusion vulnerabilities.  [break][break]allow_url_include is disabled by default. If allow_url_fopen is disabled, allow_url_include is also disabled. This setting is only available since PHP 5.2.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Application dependant - possible remote file inclusion.</Impact>
+		<Recommendation>You can disable allow_url_include from php.ini or .htaccess.[break][break][bold]php.ini[/bold][break]allow_url_include = 'off'[break][break][bold].htaccess[/bold][break]php_flag  allow_url_include off[break]</Recommendation>
+		<Reference database="Runtime Configuration" URL="http://www.php.net/manual/en/filesystem.configuration.php"/></TestDescription>
+</WebApplicationTest>

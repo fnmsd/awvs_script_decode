@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Echo service running" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,denial_of_service,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>An echo service is running on this host. The echo service was intended for testing and measurement purposes and may listen on both TCP and UDP protocols. The server sends back any data it receives, with no modification.[break]
+It's possible to cause a denial of service by connecting the chargen service to the echo service on the same or another machine. Because of the excessively high number of packets produced, the affected machines may be effectively taken out of service.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>It is recommended to disable this service.</Recommendation>
+		<Reference database="Wikipedia echo" URL="http://en.wikipedia.org/wiki/ECHO_protocol"/>
+		<Reference database="CA-1996-01 UDP Port Denial-of-Service Attack" URL="http://www.cert.org/advisories/CA-1996-01.html"/>
+	</TestDescription>
+</WebApplicationTest>

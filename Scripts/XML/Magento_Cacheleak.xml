@@ -1,0 +1,31 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Magento Cacheleak" version="0.1" released="20080307" updated="20160203" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure,missing_update" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Magento Cacheleak is an implementation vulnerability, result of bad implementation of web-server configuration for Magento platform. Magento was developed to work under the Apache web-server which natively works with .htaccess files, so all needed configuration directives specific for various internal Magento folders were placed in .htaccess files. [break][break]
+When Magento is installed on web servers that are ignoring  .htaccess files (such as nginx), an attacker can get access to internal Magento folders (such as the Magento cache directory) and extract sensitive information from cache files.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can access the internal Magento cache and obtain the database password. This password gives access to customer and payment data. </Impact>
+		<Recommendation>Restrict access to internal Magento directories such as /var/, /app/, /includes/, ... [break]
+Consult web references for more information.  [break][break]
+
+Add the following lines to your nginx server configuration:
+[pre]
+    location ^~ /app/ { deny all; }
+    location ^~ /includes/ { deny all; }
+    location ^~ /lib/ { deny all; }
+    location ^~ /media/downloadable/ { deny all; }
+    location ^~ /pkginfo/ { deny all; }
+    location ^~ /report/config.xml { deny all; }
+    location ^~ /var/ { deny all; }
+[/pre]</Recommendation>
+		<Reference database="Securing Magento Cacheleak, Backupleak and Sessionleak" URL="https://magentary.com/kb/securing-magento-cacheleak/"/><Reference database="How to secure Magento Cacheleak" URL="http://support.hypernode.com/knowledgebase/secure-magento-cacheleak/"/></TestDescription>
+</WebApplicationTest>

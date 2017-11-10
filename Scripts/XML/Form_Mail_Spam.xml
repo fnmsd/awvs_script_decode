@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="HTML form susceptible to spam" version="0.1" released="20080307" updated="20140805" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert may be a false positive, manual confirmation is required.[/dark][/coolbox][break]
+
+A HTML form was found in this page that looks susceptible to spam attacks. The form has a hidden input form with an email address as value. This is usually an indication that the recipient of an email sending form is hardcoded in a hidden input form. If that's the case this allows malicious users to send email messages using your server without authorization by changing the input value. A malicious spammer could use this tactic to send large numbers of messages anonymously.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A spammer could abuse this HTML form to send spam. </Impact>
+		<Recommendation>The recipient of a email sending form should not be hardcoded in a hidden input value because hidden inputs are controlled by the client. The value should be set on the server side.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

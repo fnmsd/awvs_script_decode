@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.x version older than 2.0.51" version="0.1" released="20040921" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="missing_update" SendCookies="true" CVE="CVE-2004-0747,CVE-2004-0748,CVE-2004-0751,CVE-2004-0786,CVE-2004-0809" CWE="CWE-119" CVSSVer="2.0" CVSSScore="4.6" CVSSDescr="AV:L/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.7"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]Multiple vulnerabilities have been found in this version of Apache. You should upgrade to the latest version of Apache. [break][break][navy]Affected Apache versions (up to 2.0.50).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Multiple. Check references for details about every vulnerability.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="CAN-2004-0786" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2004-0786"/>
+		<Reference database="CAN-2004-0747" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2004-0747"/>
+		<Reference database="CAN-2004-0751" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2004-0751"/>
+		<Reference database="CAN-2004-0748" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2004-0748"/>
+		<Reference database="CAN-2004-0809" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2004-0809"/>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="DNS open recursion" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,denial_of_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The remote DNS server allows queries for third-party names. Publicly available DNS servers should only response to queries regarding hosts to which they are authoritative. A recursive DNS server processes a domain name request on a domain name for which it is not authoritative (or has not already cached) by querying the root name servers for the IP address of the requested domain name. The root name server will then delegate the query to the appropriate top level domain (TLD) server (.com, .org, .net, etc.), which in turn delegates to the authoritative nameserver for the domain in question. A non-recursive server only provides the information it has available locally.[break]
+
+A malicious attacker may sends several thousand spoofed requests to a DNS server that allows recursion. The DNS server processes these requests as valid and then returns the DNS replies to the spoofed recipient (i.e., the victim). When the number of requests is in the thousands, the attacker could potentially generate a multi-gigabit flood of DNS replies. This is known as an amplifier attack because this method takes advantage of misconfigured DNS servers to reflect the attack onto a target while amplifying the volume of packets.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Check references for detailed information about fixing this vulnerability.</Recommendation>
+		<Reference database="Open Resolvers and the Threat of Reflection Attacks" URL="http://condor.depaul.edu/~jkristof/slides/dns-ctinetseminar.pdf"/>
+		<Reference database="The Continuing Denial of Service Threat Posed by DNS Recursion (v2.0)" URL="http://www.us-cert.gov/reading_room/DNS-recursion033006.pdf"/>
+	</TestDescription>
+</WebApplicationTest>

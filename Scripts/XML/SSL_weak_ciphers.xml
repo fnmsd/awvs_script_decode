@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SSL weak ciphers" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-310" CVSSVer="2.0" CVSSScore="1.9" CVSSDescr="AV:L/AC:M/Au:N/C:P/I:N/A:N" CVSSScoreTemp="2.0" CVSSScoreEnv="2.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The remote host supports the use of SSL ciphers that offer either weak encryption or no encryption at all.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact></Impact>
+		<Recommendation>Reconfigure the affected application to avoid use of weak ciphers.</Recommendation>
+		<Reference database="Informations about ciphers" URL="http://www.openssl.org/docs/apps/ciphers.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

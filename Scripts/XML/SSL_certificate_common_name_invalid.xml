@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SSL certificate common name invalid" version="0.1" released="20080307" updated="20150212" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-295" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The security certificate presented by this website was issued for a different website's address. This happens when the common name to which an SSL Certificate is issued doesn't exactly match the name displayed in the URL bar. Any difference will cause the web browser to halt and display a name mismatch error. For example, you connect to the website via the IP address or an internal name but the certificate was issued to the fully-qualified domain name (or vice versa).</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A secure connection cannot be established with the server.</Impact>
+		<Recommendation>Make sure that the common name that is specified when you generate the certificate request matches the URL that will be used to access the site.</Recommendation>
+		<Reference database="Insufficient Transport Layer Protection" URL="https://www.owasp.org/index.php/Top_10_2010-A9"></Reference>
+	</TestDescription>
+</WebApplicationTest>

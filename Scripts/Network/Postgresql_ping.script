@@ -1,0 +1,10 @@
+#include classPostgresql.inc;
+#include reporting_helpers.inc;
+if (IsPortOpen(5432)) {
+	var db = new calssPostgresql("localhost", 5432);
+	if(db.ping())
+	{
+		Trace("We have a valid postgresql connection here");
+		KBase("PostgreSQL server running", "A PostgreSQL server is running on TCP port 5432.");
+	}
+}

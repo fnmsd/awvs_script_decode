@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla! JomSocial remote code execution" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.7" CVSSScoreEnv="5.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>JomSocial is an award-winning, powerful, social networking component for Joomla!. Matias Fontanini reported a remote code execution vulnerability in JomSocial component (version &lt; 3.1.0.1). [break][break]
+
+The vulnerability is located in the "photos" controller,
+"ajaxUploadAvatar" task. The parameters parsed by the "Azrul" plugin are
+not properly sanitized before being used in a call to the
+"call_user_func_array" PHP function. This allows an attacker to execute
+arbitrary static class functions, using any amount of user-provided
+parameters. This can be leveraged by calling the "escape" method in the
+"CStringHelper" class to execute arbitrary PHP code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of JomSocial.</Recommendation>
+		<Reference database="Joomla! JomSocial component - Remote code execution" URL="http://seclists.org/bugtraq/2014/Jan/110"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,94 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="ASP.NET debugging enabled" version="0.1" released="20070219" updated="20141216" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Backup files" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Reference database="HOW TO: Disable Debugging for ASP.NET Applications" URL="http://support.microsoft.com/default.aspx?scid=kb;en-us;815157"/>
+		<Copyright/>
+		<Description>ASP.NET debugging is enabled on this application. It is recommended to disable debug mode before deploying a production application. By default, debugging is disabled, and although debugging is frequently enabled to troubleshoot a problem, it is also frequently not disabled again after the problem is resolved.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS</WebServer>
+			<ApplicationServer>ASP.NET</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>It may be possible that sensitive information about the web sever is disclosed through the ASP.NET application.</Impact>
+		<Recommendation>Check References for details on how to fix this problem.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>DEBUG</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Command</Name>
+						<Value encoding="text"> stop-debug</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="eq">
+							<Value>OK</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests </Description>
+		<Item encoding="Text">${file}${test}</Item>
+	</Variable>
+</WebApplicationTest>

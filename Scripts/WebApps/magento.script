@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function test_Magento_RCE_Checkpoint(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + '/index.php/admin/dashboard/index/?forwarded=1';
+	http.addCookies = false;
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 302){
+        var locationStr = http.response.headerValue('location');
+        if (locationStr && locationStr.indexOf("index.php/admin/index/login/key/") != -1) {
+            var ri = new TReportItem();
+            ri.LoadFromFile("Magento_RCE_191.xml");
+            ri.affects = path;
+            ri.alertPath = "Scripts/Magento_RCE_191.xml";
+            
+            ri.setHttpInfo(http);
+            AddReportItem(ri);
+        }
+	}
+}
+// **************************************************************************************
+function test_Magento_Cacheleak(dir, path){
+    if (!path.endsWith('/')) path = path + '/';
+    var http = new THTTPJob();
+    http.url = dir.url;
+    http.verb = 'GET';
+    http.uri = path + 'var/.htaccess';
+    http.addCookies = false;
+    http.execute();
+    if (!http.wasError && http.responseStatus == 200){
+        if (http.response.body && http.response.body.startsWith("Order deny,allow")) {
+            var ri = new TReportItem();
+            ri.LoadFromFile("Magento_Cacheleak.xml");
+            ri.affects = path;
+            ri.alertPath = "Scripts/Magento_Cacheleak.xml";
+            ri.setHttpInfo(http);
+            AddReportItem(ri);
+        }
+    }
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppMagento");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppMagento", 1, true);           
+    KBase("Magento web application", "Magento web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_Magento_RCE_Checkpoint(dir, dir.fullPath);
+test_Magento_Cacheleak(dir, dir.fullPath);

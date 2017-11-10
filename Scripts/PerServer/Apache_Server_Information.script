@@ -1,0 +1,128 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.addCookies = false;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestForServerInfo()
+{
+	if (request('/server-info'))
+	{
+		matches.plainArray = [
+							'<title>Server Information</title>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("Apache_server-info_enabled.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestForServerStatus()
+{
+	if (request('/server-status'))
+	{
+		matches.plainArray = [
+							'<title>Apache Status</title>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("Apache_server-status_enabled.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestForStrongholdServerInfo()
+{
+	if (request('/stronghold-info'))
+	{
+		matches.plainArray = [
+							'<h1 align=center>Stronghold Server Information</h1>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("Apache_stronghold-info_enabled.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestForStrongholdServerStatus()
+{
+	if (request('/stronghold-status'))
+	{
+		matches.plainArray = [
+							'<H1>Stronghold Server Status for '
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("Apache_stronghold-status_enabled.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestForPerlStatus()
+{
+	if (request('/perl-status'))
+	{
+		matches.plainArray = [
+							'<a href="/perl-status?env">Environment</a>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("Apache_perl-status_enabled.xml", matchedText);
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestForServerInfo();
+	TestForServerStatus();
+	TestForStrongholdServerInfo();
+	TestForStrongholdServerStatus();
+	TestForPerlStatus();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

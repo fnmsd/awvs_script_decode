@@ -1,0 +1,101 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for Email Header Injection
+	function classEmailHeaderInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.lastJob = null;
+	}
+	
+    /**************************************************************************************************************/
+    classEmailHeaderInjection.prototype.getOrigValue = function()
+    {   
+        var value = "";
+        
+        for (var i=0; i<this.variations.count; i++){
+            var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+            
+            // if the value is not yet set      
+            if(value == "" && varValue != "") {
+                value = varValue;                       
+                break;
+            }
+        }
+        return value;
+    }	
+    
+	classEmailHeaderInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		//this.scheme.setInputValue(this.inputIndex, value);
+		this.scheme.setEncodedInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	
+	classEmailHeaderInjection.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+		return true;
+	}
+	
+	classEmailHeaderInjection.prototype.startTesting = function()
+	{
+        var origValue = this.getOrigValue();
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			this.currentVariation = i;
+			
+			// first test 
+			var reqId = saveTest(this.inputIndex, this.variations.item(this.currentVariation), 10);
+			if (reqId) {
+				var reqIdParts = reqId.split("-");
+				var reqScanId = reqIdParts[0];
+				
+        		var reqHash = plain2md5(this.scheme.path + this.scheme.hash + reqScanId).substring(1,6);
+				var emailAddress = bxss_userId + "." + reqId + "." + reqScanId + "." + reqHash + ".1@bxss.me";
+				
+				payload = origValue + '%0abcc:' + emailAddress;
+				if (!this.testInjection(payload)) continue;
+			}
+			
+			// second test 
+			var reqId = saveTest(this.inputIndex, this.variations.item(this.currentVariation), 11);
+			if (reqId) {
+				var reqIdParts = reqId.split("-");
+				var reqScanId = reqIdParts[0];
+				
+        		var reqHash = plain2md5(this.scheme.path + this.scheme.hash + reqScanId).substring(1,6);
+				var emailAddress = bxss_userId + "." + reqId + "." + reqScanId + "." + reqHash + ".1@bxss.me";
+				
+				payload = 'to@example.com>%0d%0abcc:' + emailAddress;
+				if (!this.testInjection(payload)) continue;
+			}
+		}
+	}
+}
+// main entry point 
+var bxss_enabled = getGlobalValue('blindxss.enabled');
+var bxss_userId = getGlobalValue('blindxss.userid');
+var bxss_url = getGlobalValue('blindxss.url');
+// don't run unless blind xss is enabled and have a valid userid and url
+if (bxss_enabled == 1 && bxss_userId && bxss_url) {
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classEmailHeaderInjection(scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}
+}

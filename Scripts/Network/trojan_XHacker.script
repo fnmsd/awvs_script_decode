@@ -1,0 +1,22 @@
+#include reporting_helpers.inc;
+// test for xhacker rat
+// http://h4ck-y0u.org/viewtopic.php?t=33541
+if (IsPortOpen(5100)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 5100;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		//trace("connected");
+		socket.send("a\n");	
+		data = socket.Receive(true);
+		//trace(data);
+		if (data.search("UNSUPPORTED COMMAND") >= 0)
+		{
+			trace("trojan xhacker detected! - alert here");
+			ReportItem("Trojan.xml", "The XHacker trojan horse is running on TCP port 5100.");
+		}
+		socket.Close();
+	}
+}

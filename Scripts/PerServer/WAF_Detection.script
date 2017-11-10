@@ -1,0 +1,540 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include cookies_helpers.inc;
+var worker = getHTTPWorker();
+var payloads = new TList();
+//****************************************************************************************************
+function preparePayloads() {
+	// req #0 - invalid filename
+	var http = new THTTPJob();
+	
+	var rndStr = 9000000 + random(999999);
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = "/" + rndStr;
+    
+    payloads.add(http);
+    // req #1 - invalid HTTP method
+	var http = new THTTPJob();
+	
+	var rndStr = 9000000 + random(999999);
+	http.url = scanURL;
+	http.verb = 'ACUNETIX';    
+	http.URI = "/" + rndStr;
+    
+    payloads.add(http);
+    
+    // req #2 - directory traversal
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?page=../../../../../../../../../etc/passwd%00.jpg";
+    
+    payloads.add(http);    
+    
+    // req #3 - xss 
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?search=<script>alert(1)</script>";
+    
+    payloads.add(http);        
+    
+    // req #4 - xss encoded
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?search=%3Cscript%3Ealert(1)%3C%2Fscript%3E";
+    
+    payloads.add(http);        
+    
+    // req #5 - cmd.exe
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?param=cmd.exe";
+    
+    payloads.add(http);     
+    
+    // req #6 - union select
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?param=-1+UNION+SELECT+GROUP_CONCAT(table_name)+FROM+information_schema.tables";
+    
+    payloads.add(http);         
+    
+	// req #7 - innocent request
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';    
+	http.URI = http.URI + "?page=1";
+    
+    payloads.add(http);        
+}
+//****************************************************************************************************
+function alert(details, job) {
+    var ri = new TReportItem();
+	ri.LoadFromFile("WAF_detected.xml");
+	ri.affects = "Web Server";
+	ri.Details =  details;
+    
+    if (job)
+        ri.setHttpInfo(job);
+		
+    ri.Details = details;	
+    
+	AddReportItem(ri);	
+}
+//****************************************************************************************************
+function checkForBigIP(job) {
+    // x-cnection header
+    found = job.response.headerValue('x-cnection');
+    if (found) {
+        details = "Detected [bold][dark]BipIP[/bold][/dark] from the x-cnection header.";
+        alert(details, job);
+        return true;
+    }
+    
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("BigIP") != -1) {
+        details = "Detected [bold][dark]BipIP[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }    
+    
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        if (name.indexOf("BIGipServer") != -1) {
+            details = "Detected [bold][dark]BipIP[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+        
+        if (name.match(/TS\w+/) && name.length <= 8) {
+            details = "Detected [bold][dark]F5 ASM[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForWebknight(job) {    
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("WebKnight/") != -1) {
+        details = "Detected [bold][dark]WebKnight[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }    
+    
+    // status code
+    if (job.response.msg2 == 999) {
+        details = "Detected [bold][dark]WebKnight[/bold][/dark] from the response status code.";
+        alert(details, job);
+        return true;
+    }    
+    return false;
+}
+//****************************************************************************************************
+function checkForISAServer(job) {    
+    // server header
+    if (
+        job.response.body.indexOf("The ISA Server denied the specified Uniform Resource Locator") != -1 ||
+        job.response.body.indexOf("The server denied the specified Uniform Resource Locator") != -1
+        ) 
+    {
+        details = "Detected [bold][dark]ISA Server[/bold][/dark] from the response body.";
+        alert(details, job);
+        return true;
+    }    
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForAirlock(job) {
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "AL_LB" && value.startsWith("$xc/")) {
+            details = "Detected [bold][dark]Airlock[/bold][/dark] from the cookie name and value.";
+            alert(details, job);
+            return true;
+        }    
+        if (name == "AL_SESS" && value.startsWith("AAABL")) {
+            details = "Detected [bold][dark]Airlock[/bold][/dark] from the cookie name and value.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForBarracuda(job) {
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "barra_counter_session") {
+            details = "Detected [bold][dark]Barracuda[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForF5trafficshield(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("F5-TrafficShield") != -1) {
+        details = "Detected [bold][dark]F5 Traffic Shield[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+    
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "ASINFO") {
+            details = "Detected [bold][dark]F5 Traffic Shield[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForTeros(job) {
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "st8id" || name == "st8_wat" || name == "st8_wlf") {
+            details = "Detected [bold][dark]Teros/Citrix Application Firewall Enterprise[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForBinarySec(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("BinarySEC") != -1) {
+        details = "Detected [bold][dark]BinarySec[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+    
+    // headers
+    if (job.response.headerExists('x-binarysec-via') || job.response.headerExists('x-binarysec-nocache'))
+    {
+        details = "Detected [bold][dark]BinarySec[/bold][/dark] from the headers.";
+        alert(details, job);
+        return true;
+    }            
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForProfense(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("Profense") != -1) {
+        details = "Detected [bold][dark]Profense[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+    
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "PLBSID") {
+            details = "Detected [bold][dark]Profense[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForNetscaler(job) {
+    // headers
+    if (job.response.headerExists('via') && job.response.headerValue('via').indexOf("NS-CACHE") != -1)
+    {
+        details = "Detected [bold][dark]Citrix Netscaler[/bold][/dark] from the headers.";
+        alert(details, job);
+        return true;
+    }    
+    if (job.response.headerExists('cneonction') && job.response.headerValue('cneonction').indexOf("close") != -1)
+    {
+        details = "Detected [bold][dark]Citrix Netscaler[/bold][/dark] from the headers.";
+        alert(details, job);
+        return true;
+    }     
+    if (job.response.headerExists('nncoection') && job.response.headerValue('nncoection').indexOf("close") != -1)
+    {
+        details = "Detected [bold][dark]Citrix Netscaler[/bold][/dark] from the headers.";
+        alert(details, job);
+        return true;
+    }     
+    
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "ns_af" || name == "citrix_ns_id" || name.startsWith("NSC_")) {
+            details = "Detected [bold][dark]Citrix Netscaler[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }    
+}
+//****************************************************************************************************
+function checkFordotDefender(job) {
+    // headers
+    if (job.response.headerExists('X-dotdefender-denied') && job.response.headerValue('X-dotdefender-denied') == 1)
+    {
+        details = "Detected [bold][dark]dotDefender[/bold][/dark] the headers.";
+        alert(details, job);
+        return true;
+    }    
+}    
+//****************************************************************************************************
+function checkForIBMDatapower(job) {
+    // headers
+    if (job.response.headerExists('x-backside-transport'))
+    {
+        details = "Detected [bold][dark]IBM DataPower[/bold][/dark] the headers.";
+        alert(details, job);
+        return true;
+    }
+}
+//****************************************************************************************************
+function checkForCloudflare(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("cloudflare-nginx") != -1) {
+        details = "Detected [bold][dark]Cloudflare[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+    
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name == "__cfduid") {
+            details = "Detected [bold][dark]Cloudflare[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForIncapsula(job) {
+    // cookies
+    cookies = extractCookiesFromResponse(job.response);
+    
+    for (name in cookies) {
+        value = cookies[name];
+        
+        if (name.indexOf("incap_ses") != -1 || name.indexOf("visid_incap") != -1) {
+            details = "Detected [bold][dark]Incapsula WAF[/bold][/dark] from the cookie name.";
+            alert(details, job);
+            return true;
+        }    
+    }
+    
+    return false;
+}
+//****************************************************************************************************
+function checkForUSPSES(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("Secure Entry Server") != -1) {
+        details = "Detected [bold][dark]USP Secure Entry Server[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+}    
+//****************************************************************************************************
+function checkForCiscoACE(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("ACE XML Gateway") != -1) {
+        details = "Detected [bold][dark]Cisco ACE XML Gateway[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+}
+//****************************************************************************************************
+function checkForModSecurity(job) {
+    // server header
+    server = job.response.headerValue('server');
+    if (server && server.indexOf("mod_security") != -1) {
+        details = "Detected [bold][dark]ModSecurity[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+    if (server && server.indexOf("Mod_Security") != -1) {
+        details = "Detected [bold][dark]ModSecurity[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }    
+    
+    if (server && server== "NOYB") {
+        details = "Detected [bold][dark]ModSecurity[/bold][/dark] from the server header.";
+        alert(details, job);
+        return true;
+    }
+}
+    
+//****************************************************************************************************
+function checkForModSecurity2() {    
+    if (
+        payloads.item(0).response.msg2 == 404 &&
+        payloads.item(2).response.msg2 == 403 &&
+        payloads.item(3).response.msg2 == 403 &&
+        payloads.item(4).response.msg2 == 403 &&
+        payloads.item(5).response.msg2 == 403 &&
+        payloads.item(6).response.msg2 == 403 &&
+        payloads.item(7).response.msg2 == 200
+        )
+    {
+        details = "Detected [bold][dark]ModSecurity[/bold][/dark] from active probing.";
+        alert(details, payloads.item(6));
+        return true;
+    }    
+}
+//****************************************************************************************************
+function checkForNaxsi() {    
+    if (
+        payloads.item(0).response.msg2 == 404 &&
+        payloads.item(2).response.msg2 == 418 &&
+        payloads.item(3).response.msg2 == 418 &&
+        payloads.item(4).response.msg2 == 418 &&
+        payloads.item(5).response.msg2 == 418 &&
+        payloads.item(6).response.msg2 == 418 &&
+        payloads.item(7).response.msg2 == 200
+        )
+    {
+        details = "Detected [bold][dark]Naxsi[/bold][/dark] from active probing.";
+        alert(details, payloads.item(6));
+        return true;
+    }    
+}
+//****************************************************************************************************
+function checkForCustomWAF() {    
+    if (
+        payloads.item(0).response.msg2 == 404 &&
+        payloads.item(2).response.msg2 == payloads.item(3).response.msg2 &&
+        payloads.item(4).response.msg2 == payloads.item(3).response.msg2 &&
+        payloads.item(5).response.msg2 == payloads.item(3).response.msg2 &&
+        payloads.item(6).response.msg2 == payloads.item(3).response.msg2 &&
+        payloads.item(7).response.msg2 == 200 &&				
+				(payloads.item(6).response.msg2.startsWith("4") || payloads.item(6).response.msg2.startsWith("5"))
+				
+        )
+    {
+        details = "Detected unknown Web Application Firewall from active probing.";
+        alert(details, payloads.item(6));
+        return true;
+    }    
+}
+//****************************************************************************************************
+function executePayloadsAndCheckForWAFs() {
+    worker.executeRequests(payloads);
+    
+    foundBigIP = false;
+    foundWebknight = false;
+    foundISAServer = false;
+    foundAirlock = false;
+    foundBarracuda = false;
+    foundF5trafficshield = false;
+    foundTeros = false;
+    foundBinarySec = false;
+    foundProfense = false;
+    foundNetscaler = false;
+    founddotDefender = false;
+    foundIBMDatapower = false;    
+    foundCloudflare = false;   
+    foundIncapsula = false;
+    foundUSPSES = false;
+    foundCiscoACE = false;
+    foundModSecurity = false;
+		foundNaxsi = false;
+    
+    for (var i=0; i<payloads.count; i++) {
+    	if (!payloads.item(i).wasError) {      
+            trace("#" + i + " - " + payloads.item(i).response.msg2);      
+            
+            if (!foundBigIP) if (checkForBigIP(payloads.item(i))) foundBigIP = true;
+            if (!foundWebknight) if (checkForWebknight(payloads.item(i))) foundWebknight = true;            
+            if (!foundISAServer) if (checkForISAServer(payloads.item(i))) foundISAServer = true;            
+            if (!foundAirlock) if (checkForAirlock(payloads.item(i))) foundAirlock = true;            
+            if (!foundBarracuda) if (checkForBarracuda(payloads.item(i))) foundBarracuda = true;            
+            if (!foundF5trafficshield) if (checkForF5trafficshield(payloads.item(i))) foundF5trafficshield = true;            
+            if (!foundTeros) if (checkForTeros(payloads.item(i))) foundTeros = true;            
+            if (!foundBinarySec) if (checkForBinarySec(payloads.item(i))) foundBinarySec = true;            
+            if (!foundProfense) if (checkForProfense(payloads.item(i))) foundProfense = true;            
+            if (!foundNetscaler) if (checkForNetscaler(payloads.item(i))) foundNetscaler = true;           
+            if (!founddotDefender) if (checkFordotDefender(payloads.item(i))) founddotDefender = true;        
+            if (!foundIBMDatapower) if (checkForIBMDatapower(payloads.item(i))) foundIBMDatapower = true;    
+            if (!foundCloudflare) if (checkForCloudflare(payloads.item(i))) foundCloudflare = true;    
+            if (!foundIncapsula) if (checkForIncapsula(payloads.item(i))) foundIncapsula = true;    
+            if (!foundUSPSES) if (checkForUSPSES(payloads.item(i))) foundUSPSES = true;    
+            if (!foundCiscoACE) if (checkForCiscoACE(payloads.item(i))) foundCiscoACE = true;    
+            if (!foundModSecurity) if (checkForModSecurity(payloads.item(i))) foundModSecurity = true; 
+    	}
+    }
+    
+    // alternative checks
+    if (!foundModSecurity) if (checkForModSecurity2()) foundModSecurity = true;
+		if (checkForNaxsi()) foundNaxsi = true;
+    
+    if (!foundBigIP && !foundWebknight && !foundISAServer && !foundAirlock && !foundBarracuda && !foundF5trafficshield && !foundTeros && !foundBinarySec && !foundProfense && !foundNetscaler && !founddotDefender && !foundIBMDatapower && !foundCloudflare && !foundIncapsula && !foundUSPSES && !foundCiscoACE && !foundModSecurity && !foundNaxsi) 
+        checkForCustomWAF();
+}
+//****************************************************************************************************
+// main()
+preparePayloads();
+executePayloadsAndCheckForWAFs();

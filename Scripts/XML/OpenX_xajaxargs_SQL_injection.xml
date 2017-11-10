@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="OpenX xajaxargs SQL injection vulnerability" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:H/RL:OF/RC:C" CVSSScoreTemp="6.0" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A vulnerability has been discovered in OpenX, which can be exploited
+by malicious people to conduct SQL injection attacks.[break][break]
+
+Input passed via the "xajaxargs" parameter to
+www/admin/updates-history.php (when "xajax" is set to "expandOSURow")
+is not properly sanitised in e.g. the
+"queryAuditBackupTablesByUpgradeId()" function
+(lib/OA/Upgrade/DB_UpgradeAuditor.php) before being used in SQL
+queries. This can be exploited to manipulate SQL queries by injecting
+arbitrary SQL code. [break][break]
+
+The vulnerability is confirmed in version 2.8.9. Prior versions may
+also be affected.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information.</Impact>
+		<Recommendation>Update to version 2.8.10.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

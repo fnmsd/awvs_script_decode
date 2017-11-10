@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Insecure response with wildcard '*' in Access-Control-Allow-Origin" version="0.1" released="20080307" updated="20150917" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Cross-origin resource sharing (CORS) is a mechanism that allows restricted resources (e.g. fonts) on a web page to be requested from another domain outside the domain from which the resource originated. The Access-Control-Allow-Origin header indicates whether a resource can be shared based by returning the value of the Origin request header, "[bold][dark]*[/dark][/bold]", or "null" in the response. [break][break]
+If a website responds with Access-Control-Allow-Origin: [bold][dark]*[/dark][/bold] the requested resource allows sharing with every origin. Therefore, any website can make XHR (XMLHTTPRequest) requests to your site and access the responses. It's not recommended to use the Access-Control-Allow-Origin: [bold][dark]*[/dark][/bold] header.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Any website can make XHR requests to your site and access the responses.</Impact>
+		<Recommendation>Is recommended not to use  Access-Control-Allow-Origin: [bold][dark]*[/dark][/bold]. Instead the Access-Control-Allow-Origin header should contain the list of origins that can make COR requests.</Recommendation>
+		<Reference database="Test Cross Origin Resource Sharing (OTG-CLIENT-007)" URL="https://www.owasp.org/index.php/Test_Cross_Origin_Resource_Sharing_(OTG-CLIENT-007)"/><Reference database="Cross-origin resource sharing" URL="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"/><Reference database="Cross-Origin Resource Sharing" URL="http://www.w3.org/TR/cors/"/><Reference database="CrossOriginRequestSecurity" URL="https://code.google.com/p/html5security/wiki/CrossOriginRequestSecurity"/></TestDescription>
+</WebApplicationTest>

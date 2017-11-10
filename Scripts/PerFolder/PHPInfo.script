@@ -1,0 +1,61 @@
+#include helpers.inc;
+#include os_detection.inc;
+#include phpinfo_helpers.inc;
+#include constants.inc;
+var variants = [
+				"phpinfo.php",
+				"phpinfo.php5",
+				"pi.php",
+				"pi.php5",				
+                "php.php",
+                "i.php",
+				"test.php",
+				"temp.php",
+				"info.php"	
+				];
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("PHPinfo.php_enabled_common_files.xml");
+	ri.affects = newUri;
+	ri.alertPath = "Scripts/PHPinfo page found";	
+	
+	ri.Details =  "phpinfo() page found at : [dark]" + newUri + "[/dark]";
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+			
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200) {
+	for (var i=0; i<variants.length; i++) {
+		
+		var dirName = dir.fullPath;
+		if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+		
+		var testURI = dirName + variants[i];
+		var http = new THTTPJob();
+		http.url = dir.url;
+		http.verb = 'GET';
+		http.URI = testURI;
+		http.execute();
+		if (!http.wasError && !http.notFound){	
+			if (http.response.body.indexOf("<title>phpinfo()</title>") != -1)	
+            {
+				alert(dir.fullPath, testURI, http);
+                
+                // audit phpinfo, look for various problems                
+                var auditedPHPInfo = getGlobalValue("auditedPHPInfo");
+                if (!auditedPHPInfo)
+                {
+            	    setGlobalValue("auditedPHPInfo", 1, true);           
+                    auditPHPInfoPage(testURI, http);
+                }
+            }
+		}
+	}
+}

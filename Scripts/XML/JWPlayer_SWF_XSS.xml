@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Cross site scripting vulnerability in JW Player SWF" version="0.1" released="20080307" updated="20151202" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2012-3351, CVE-2012-2904" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>JW Player is the world's most popular embeddable media player. Multiple cross site scripting vulnerabilities were reported in older versions of the JW Player SWF that may allow an attacker to execute arbitrary Javascript code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of JW Player.</Recommendation>
+		<Reference database="Reflected XSS in JW Player 5" URL="https://nealpoole.com/blog/2013/04/unpatched-reflected-xss-in-jw-player-5/"></Reference>
+		<Reference database="JW Player 'playerready' Parameter Cross Site Scripting Vulnerability" URL="https://www.exploit-db.com/exploits/37552/"></Reference>
+		<Reference database="JW player xss security flaw" URL="http://seclists.org/fulldisclosure/2012/May/132"></Reference>
+		<Reference database="JW Player 5.9 Cross Site Scripting / Content Spoofing" URL="http://0day.today/exploit/18495"></Reference>
+		<Reference database="JW Player" URL="http://www.jwplayer.com/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft SQL Server weak password encryption vulnerability" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,abuse_of_functionality,missing_update,network_alert" CVE="CVE-2000-0199" CWE="CWE-310" CVSSVer="2.0" CVSSScore="7.2" CVSSDescr="AV:L/AC:L/Au:N/C:C/I:C/A:C/E:U/RL:W/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>If 'Always prompt for login name and password' is not set, and Windows Integrated Security is not being used, Enterprise Manager for SQL Server 7 will save the login ID and password in the registry key HKCU\SOFTWARE\Microsoft\MSSQLServer\SQLEW\Registered Server X. The algorithm used to encrypt the password consists of XORing each character with a two byte value dependant on the character's position in the string. [break]
+If 'Always prompt for login name and password' is set, or Windows Integrated Security is used, the ID and password are not saved at all.[break]
+Microsoft SQL Server 6.5 stores the password in the same location but in plain text.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may use this flaw to elevate their privileges on the local database.</Impact>
+		<Recommendation>Microsoft suggests using Windows Integrated Security. In this mode, SQL user access is tied to Windows user accounts, and no separate IDs are created. In addition, selecting the option 'Always prompt for login name and password' will prevent passwords from being written to the registry.</Recommendation>
+		<Reference database="Microsoft SQL Weak Password Encryption Vulnerability" URL="http://www.securityfocus.com/bid/1055/info"></Reference>
+	</TestDescription>
+</WebApplicationTest>

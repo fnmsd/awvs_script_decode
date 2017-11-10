@@ -1,0 +1,56 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+    if (matchedText) 
+        ri.Details =  "Installed version: [blue]" + matchedText + "[/blue]";
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function checkVersion(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'SystemInfo';
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.response.body.indexOf("<dd>Release") != -1)){
+        
+        var regex = /<dd>Release ([\d\.]+)\s/gi;
+        var result = [];
+        var e;
+      
+        while (e = regex.exec(http.response.body))
+        if (e && e[1]) 
+        {
+            var found = false;
+            versionStr = e[1];
+            version = parseInt(e[1].replace(/\./g, ""));         
+            if (version <= 195) {
+                alert(path, "moinmoin_rce.xml", http, versionStr);
+                found = true;
+            }
+            
+            if (found) break; 
+        };
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppMoinMoin");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppMoinMoin", 1, true);           
+    KBase("MoinMoin web application", "MoinMoin web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+checkVersion(dir, dir.fullPath);

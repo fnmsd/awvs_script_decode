@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MediaWiki SVG cross-site scripting vulnerability" version="0.1" released="20080307" updated="20151126" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>MediaWiki is a free software open source wiki package written in PHP, originally for use on Wikipedia.  SecuriTeam Secure Disclosure discovered a vulnerability in the way MediaWiki handles SVG files that may allow attackers to cause it to display arbitrary javascript code to users that are presented with an embedded SVG file. The vulnerability is triggered through the use of an encoded ENTITY that doesn't get properly filtered out for malicious content.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>The vulnerability has been fixed in MediaWiki version 1.24.2. It's recommended to upgrade to this version or the latest MediaWiki version.</Recommendation>
+		<Reference database="MediaWiki SVG XSS" URL="https://blogs.securiteam.com/index.php/archives/2669"></Reference>
+	</TestDescription>
+</WebApplicationTest>

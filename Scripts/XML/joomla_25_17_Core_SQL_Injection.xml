@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla! 1.7/2.5 SQL injection vulnerability" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="CVE-2012-1116" CWE="CWE-89" CVSSVer="2.0" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:H/RL:OF/RC:C" CVSSScore="6.8" CVSSScoreTemp="6.0" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>An SQL Injection vulnerability in Joomla! Core was reported on February 29, 2012 and affects Joomla 2.5.1, 2.5.0, 1.7.4 and all earlier 1.7.x variants.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information.</Impact>
+		<Recommendation>Users of these versions are strongly urged to upgrade to 2.5.2 immediately.</Recommendation>
+		<Reference database="[20120301] - Core - SQL Injection" URL="http://developer.joomla.org/security/news/391-20120301-core-sql-injection.html?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+JoomlaSecurityNews+%28Joomla%21+Security+News%29"></Reference>
+		<Reference database="Joomla! Developer Network - Security News" URL="http://www.pngndc.gov.pg/site/index.php/ndc-newsletter/3-joomla-security-news"></Reference>
+	</TestDescription>
+</WebApplicationTest>

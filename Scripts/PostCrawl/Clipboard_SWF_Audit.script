@@ -1,0 +1,81 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("12cc866de2eeef48420fb0f4004f8a3b"); 
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testClipboardSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "/clipboard.swf?highlighterId=\%22%29%29}catch%28e%29{}prompt%28document.domain%29;//";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(dir + "/clipboard.swf", 'clipboard_swf_xss.xml', lastJob);
+            }
+		}
+	}		
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+        
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name == "clipboard.swf") 
+			{
+                dirName = dirName.replace("clipboard.swf", "");
+                
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}	
+    
+    var tested_common_dirs = getGlobalValue("clipboard_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("clipboard_swf_tested_common_dirs", 1, true);
+        
+        dirs.push("/wp-content/plugins/wp-syntaxhighlighter/syntaxhighlighter2/scripts/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testClipboardSWFOnDir(dirs[i]);
+}

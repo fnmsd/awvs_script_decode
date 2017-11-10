@@ -1,0 +1,122 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+var lastJob = false;
+var urls=[
+    '/register.html',
+    '/register.cgi',
+    '/register.asp',
+    '/register.aspx',
+    '/register.jsp',
+    '/registration.html',
+    '/registration.cgi',
+    '/registration.php',
+    '/registration.asp',
+    '/registration.aspx',
+    '/registration.jsp',
+    '/signup.html',
+    '/signup.cgi',
+    '/signup.php',
+    '/signup.asp',
+    '/signup.aspx',
+    '/signup.jsp',
+    '/Register',
+    '/register',
+    '/RegisterUser',
+    '/UserRegister',
+    '/UserRegistration',
+    '/register.php?do=register',
+    '/registration',
+    '/signup/account',
+    '/signup',
+    '/user/register',
+    '/register.php?do=register',
+    '/index.php?app=core&module=global&section=register',
+    '/index.php?title=Special:UserLogin&returnto=Main+Page&type=signup',
+    '/account/register',
+    '/en-us/account/register',
+    '/en/account/register',
+    '/index.php?_a=register',
+    '/index.php?action=register',
+    '/join.php',
+    '/index.php/component/users/?view=registration',
+    '/index.php/customer/account/create/',
+    '/member.php?action=register',
+    '/index.php?route=account/register',
+    '/index.php/register/',
+    '/wp-login.php?action=register'
+]
+// **************************************************************************************							 
+function isRegistrationPage()
+{
+	var pd = getParserData(lastJob.response.body, lastJob.response.headerValue('content-type'));
+    if (pd) {
+    	var forms = pd.getForms();
+    	if (forms.count > 0) {	
+    		for (var i=0; i<forms.count; i++) {
+				var inputPasswordCount = 0;    			
+    			
+				var myform = forms.item(i);
+				// look for a form with two input passwords
+				for (var j=0; j<myform.inputs.count; j++) {
+					var inputType = myform.inputs.item(j).inputType.toLowerCase();
+					if (inputType == 'password') {						
+						inputPasswordCount=inputPasswordCount+1;						
+						if (inputPasswordCount >= 2) return true;
+					}
+				}
+			}
+		}
+    }
+    
+    return false;
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = rootDir + uri;    
+	lastJob.addCookies = false;
+	lastJob.autoRedirect = true;
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function startTesting()
+{
+	var root = getSiteRoot(0);
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			// check if we have a registration page
+			if (isRegistrationPage()) {
+				// trace("FOUND: " + urls[i]);
+				
+				// prepare a KB item
+				var kbi = new TKBaseItem()
+				kbi.Name = 'Possible registration page';
+				kbi.Text = "A page where is possible to register a new user account was found at [dark]" + urls[i] + "[/dark].";
+				AddKBItem(kbi);				
+				
+				addLinkToCrawler(urls[i], root);				
+				// don't look for more pages, exit after one page was found.
+				break;
+			}
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var rootDir = getPathDirectory(scanURL.path);
+startTesting(rootDir);

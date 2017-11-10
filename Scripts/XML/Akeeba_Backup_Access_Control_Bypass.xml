@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Akeeba backup access control bypass" version="0.1" released="20080307" updated="20150226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="authentication_bypass" CVE="" CWE="CWE-287" CVSSVer="2.0" CVSSScore="2.6" CVSSDescr="AV:N/AC:H/Au:N/C:P/I:N/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="2.0" CVSSScoreEnv="2.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Sucuri reported a vulnerability in Akeeba Backup for Joomla! that could allow an attacker to list and download backups created with the Akeeba extension. This vulnerability is present on Joomla websites running Akeeba that have the "Enable front-end and remote backup" option activated.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can enumerate and download Akeeba backups.</Impact>
+		<Recommendation>Upgrade to the latest version of Akeeba Backup for Joomla!.</Recommendation>
+		<Reference database="Security Advisory -  Akeeba Backup for Joomla!" URL="http://blog.sucuri.net/2014/08/security-advisory-akeeba-backup-for-joomla.html"></Reference>
+		<Reference database="The Details Behind the Akeeba Backup Vulnerability" URL="http://blog.sucuri.net/2014/10/the-details-behind-the-akeeba-backup-vulnerability.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

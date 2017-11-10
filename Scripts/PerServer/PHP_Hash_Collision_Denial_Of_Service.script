@@ -1,0 +1,21 @@
+#include os_detection.inc;
+// **************************************************************************************							 
+function alert(fname, version)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.Details =  "Current version is : [dark]" + version + "[/dark]";
+	AddReportItem(ri);	
+}							 
+/***********************************************************************************/
+/* main entry point */
+// php tests
+if (isPHP)
+{
+	var m = null;
+	
+	m = /PHP\/(5.([0-2]\.\d+|3.[0-8]))[^\d]/.exec(banner);
+	if (m) alert('PHP_Hash_Collision_Denial_Of_Service.XML', m[1]);
+	/*-----------------------------------------------------------------------------------------------------------*/	    
+}

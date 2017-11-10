@@ -1,0 +1,101 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat sample files" version="0.1" released="20080612" updated="20140313" protocol="HTTP" mayproxy="true" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="test_files" HasPrecondition="false" SendAuth="true" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>When Apache Tomcat is installed with a default configuration, several example files are also installed. These files may disclose sensitive information that could help a potential attacker.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Remove these files from the server.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${file}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="FullHeaders" type="string">
+					<Description>Get full HTTP headers</Description>
+					<Source source="header">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="ServletsRegex" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(&lt;b&gt;&lt;font\sface="Arial,\sHelvetica,\ssans-serif"&gt;&lt;font\ssize=\+2&gt;Servlet\nExamples\swith\sCode&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="JSPRegex" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(&lt;p&gt;This\sis\sa\scollection\sof\ssamples\sdemonstrating\sthe\susage\sof\sdifferent\nparts\sof\sthe\sJava\sServer\sPages\s\(JSP\)\sspecification)</Source>
+				</SetVariable>
+				<SetVariable name="RIRegex" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(&lt;body\sbgcolor="white"&gt;\n&lt;h1&gt;\sRequest\sInformation\s&lt;/h1&gt;\n&lt;font\ssize="4"&gt;\nJSP\sRequest\sMethod\:)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${ServletsRegex}" test="neq">
+							<Value/>
+						</Compare>
+						<Compare variable="${JSPRegex}" test="neq">
+							<Value/>
+						</Compare>
+						<Compare variable="${RIRegex}" test="neq">
+							<Value/>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

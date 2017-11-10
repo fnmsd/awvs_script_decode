@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Bash code injection vulnerability" version="0.1" released="20080307" updated="20140925" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2014-6271" CWE="CWE-78" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C" CVSSScoreTemp="10.0" CVSSScoreEnv="10.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>GNU Bash through 4.3 processes trailing strings after function definitions in the values of environment variables, which allows remote attackers to execute arbitrary code via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgid modules in the Apache HTTP Server, scripts executed by unspecified DHCP clients, and other situations in which setting the environment occurs across a privilege boundary from Bash execution.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious user may execute arbitrary system commands with the permissions of the web server.</Impact>
+		<Recommendation>Upgrade GNU Bash to the latest version.</Recommendation>
+		<Reference database="CVE-2014-6271" URL="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-6271"></Reference>
+		<Reference database="[CentOS] Critical update for bash released today." URL="http://lists.centos.org/pipermail/centos/2014-September/146099.html"></Reference>
+		<Reference database="Resolution for Bash Code Injection Vulnerability via Specially Crafted Environment Variables (CVE-2014-6271) in Red Hat Enterprise Linux" URL="https://access.redhat.com/solutions/1207723"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="XML quadratic blowup denial of service attack" version="0.1" released="20080307" updated="20140807" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="denial_of_service" CVE="" CWE="CWE-400" CVSSVer="2.0" CVSSScore="7.9" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:C/E:POC" CVSSScoreTemp="7.2" CVSSScoreEnv="7.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress and Drupal are affected by a DoS (denial of service) vulnerability on the PHP XML parser used by their XMLRPC implementations. The issue lies in the XML entity expansion parser that can cause CPU and memory exhaustion and the site's database to reach the maximum number of open connections. The vulnerability is named  XML quadratic blowup attack and was reported by Nir Goldshlager.[break][break]
+
+"An XML quadratic blowup attack is similar to a Billion Laughs attack. Essentially, it exploits the use of entity expansion. Instead of deferring to the use of nested entities, it replicates one large entity using a couple thousand characters repeatedly.
+
+A medium-sized XML document of approximately two hundred kilobytes may require anywhere within the range of one hundred MB to several GB of memory. When the attack is combined with a particular level of nested expansion, an attacker is then able to achieve a higher ratio of success."</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker make can make the server unavailable to its intended users.</Impact>
+		<Recommendation>Update WordPress/Drupal to the latest version or restrict access to the xmlrpc file.</Recommendation>
+		<Reference database="XML Billion laughs attack" URL="http://en.wikipedia.org/wiki/Billion_laughs"></Reference>
+		<Reference database="WordPress and Drupal Denial Of Service Vulnerability Full Disclosure" URL="http://www.breaksec.com/?p=6362"></Reference>
+	</TestDescription>
+</WebApplicationTest>

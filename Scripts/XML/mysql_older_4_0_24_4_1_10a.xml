@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL server older than 4.0.24 or 4.1.10a" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2005-0709,CVE-2005-0710,CVE-2005-0711" CWE="CWE-284" CVSSVer="2.0" CVSSScore="4.6" CVSSDescr="AV:L/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="3.9" CVSSScoreEnv="3.8" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>There are several flaws in the remote version of this database server which may allow an authenticated attacker to execute arbitrary code on the remote host.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The attacker can execute arbitrary code on the remote host.</Impact>
+		<Recommendation>Upgrade the MySQL server to the latest version.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

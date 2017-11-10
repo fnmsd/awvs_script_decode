@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft IIS tilde directory enumeration" version="0.1" released="20080307" updated="20160203" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>It is possible to detect short names of files and directories which have an 8.3 file naming scheme equivalent in Windows by using some vectors in several versions of Microsoft IIS. For instance, it is  possible to detect all short-names of ".aspx" files as they have 4 letters in their extensions. This can be a major issue especially for the .Net websites which are vulnerable to  direct URL access as an attacker can find important files and folders that they are not normally visible. [break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Consult the "Prevention Technique(s)" section from Soroush Dalili's paper on this subject. A link to this paper is listed in the Web references section below.</Recommendation>
+		<Reference database="Windows Short (8.3) Filenames - A Security Nightmare?" URL="http://www.acunetix.com/blog/web-security-zone/windows-short-8-3-filenames-web-security-problem/"></Reference>
+		<Reference database="Microsoft IIS Shortname Scanner PoC" URL="https://github.com/irsdl/iis-shortname-scanner/"></Reference>
+		<Reference database="IIS Short File Name Disclosure is back! Is your server vulnerable?" URL="https://soroush.secproject.com/blog/2014/08/iis-short-file-name-disclosure-is-back-is-your-server-vulnerable/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

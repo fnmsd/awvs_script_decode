@@ -1,0 +1,50 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include os_detection.inc;
+var debug = false;
+//--------------------------------------------------------------------------------------------------------
+function alert(fname, uri, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname;	
+    if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory();
+if ((isJava || debug) && dir.isMarkedAs(MARKED_AS_RealDir)) {
+    var dirName = dir.fullPath;
+    if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+    var testURI = dirName + "dbconsole/login.jsp";
+    var http = new THTTPJob();
+    http.url = dir.url;
+    http.verb = 'GET';
+    http.URI = testURI;
+    http.execute();
+    var pattern = "<title>H2 Console</title>";
+    if (!http.wasError && !http.notFound && http.response.msg2 == 200 && http.response.body.indexOf(pattern) != -1)
+    {
+        var details = "Pattern found: [dark][bold]" + pattern + "[/bold][/dark]";
+        alert("Grails_Database_Console.xml", testURI, http, details);
+    }
+    else {
+        var dirName = dir.fullPath;
+        if (dirName.charAt(dirName.length - 1) != '/') dirName = dirName + '/';
+        var testURI = dirName + "h2console/login.jsp";
+        var http = new THTTPJob();
+        http.url = dir.url;
+        http.verb = 'GET';
+        http.URI = testURI;
+        http.execute();
+        var pattern = "<title>H2 Console</title>";
+        if (!http.wasError && !http.notFound && http.response.msg2 == 200 && http.response.body.indexOf(pattern) != -1) {
+            var details = "Pattern found: [dark][bold]" + pattern + "[/bold][/dark]";
+            alert("Grails_Database_Console.xml", testURI, http, details);
+        }
+    }
+}

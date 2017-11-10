@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Slow response time" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="file" severity="low" alert="success" type="Informational">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="denial_of_service" CVE="" CWE="CWE-400" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This page had a slow response time. This type of files can be targeted in denial of service attacks. An attacker can request this page repeatedly from multiple computers until the server becomes overloaded.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible denial of service.</Impact>
+		<Recommendation>Investigate if it's possible to reduce the response time for this page.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,11 @@
+#include classOracle.inc;
+#include reporting_helpers.inc;
+if (IsPortOpen(8080)) {
+		
+	var db = new classOracle(ScanHost , 1521);
+	if(db.pingHTTP(ScanHost, 8080))
+	{
+		KBase("Oracle HTTP web interface enabled", "Oracle HTTP web interface is enabled on TCP port 8080.");
+		trace("HTTP web interface is enabled");
+	}
+}

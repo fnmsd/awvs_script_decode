@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Horde remote code execution" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,missing_update" CVE="CVE-2014-1691" CWE="CWE-94" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="4.3" CVSSScoreEnv="4.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Horde Groupware Webmail Edition is a free, enterprise ready, browser-based communication suite. 
+Pedro Ribeiro reported a remote code execution bug that is affecting Horde versions from at least horde 3.1.x to 5.1.1.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of Horde.</Recommendation>
+		<Reference database="Remote code execution in horde" URL="http://www.openwall.com/lists/oss-security/2014/01/28/4"></Reference>
+		<Reference database="Fix commit" URL="https://github.com/horde/horde/blob/82c400788537cfc0106b68447789ff53793ac086/bundles/groupware/docs/CHANGES#L215"></Reference>
+		<Reference database="Changelog" URL="https://github.com/horde/horde/commit/da6afc7e9f4e290f782eca9dbca794f772caccb3"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,32 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = ri.details + "[break]Pattern found: [code][pre]" + details + "[/pre][/code]"    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testJoomlaSingleContantSQLInjection(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.verb = 'GET';
+	
+	var origURI = uri + "/index.php/single-contact/";
+	
+	lastJob.URI = uri + "/index.php/single-contact/1@acu";
+	lastJob.execute();
+	var pattern = "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '@acu)'";
+	if (!lastJob.wasError && lastJob.response.body && lastJob.response.body.indexOf(pattern) != -1)
+	{
+		alert(lastJob, origURI, 'Joomla_v322_sql_injection.xml', pattern);		
+	}
+}
+var dir = getCurrentDirectory();
+testJoomlaSingleContantSQLInjection(dir, dir.fullPath);

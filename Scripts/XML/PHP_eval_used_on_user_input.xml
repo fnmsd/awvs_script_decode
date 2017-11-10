@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="PHP eval() used on user input" version="0.1" released="20091116" updated="20140324" protocol="HTTP" mayproxy="true" affects="file" severity="info" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="code_execution" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-95" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+This script is using the PHP function eval() on user input. If the user input is not properly validated, a remote user can supply a specially crafted input to pass arbitrary code to an eval() statement, which can results in code execution. [break][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Manual confirmation is required to evaluate the possible impact of this alert. If the user input is properly validated, there is no security impact.</Impact>
+		<Recommendation>Review the source code of this script and make sure user input is properly validated.</Recommendation>
+		<Reference database="Direct Dynamic Code Evaluation" URL="http://www.owasp.org/index.php/Direct_Dynamic_Code_Evaluation_('Eval_Injection')"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Unserialize;param.*&lt;=ACUTEST</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>Cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>Headers combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

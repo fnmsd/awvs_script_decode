@@ -1,0 +1,30 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+function checkPort(port){
+    var jmx_ping_1 = String.fromCharCode(0x12, 0x34, 0x00, 0x01, 0x0a);
+	var jmx_pong_1 = String.fromCharCode(0x41, 0x42, 0x00, 0x01, 0x09);
+    soc = new TSocket('tcp');
+    soc.host = ScanHost;
+    soc.port = port;
+    soc.timeout = 5;
+    soc.connect();
+    if(soc.IsConnected)
+    {
+        soc.send(jmx_ping_1);
+        var data = soc.receive(true);
+        soc.Close();
+        if(data.length > 0)
+        {
+            if (data.startsWith(jmx_pong_1))
+                ReportItem("Apache_JServ_Protocol.xml", "The AJP service is running on TCP port [bold][dark]" + port + "[/dark][/bold].");
+        }
+    }
+}
+//*************************************************************************************
+//main()
+//*************************************************************************************
+var JMX_PORTS = [8080, 8102, 8081, 6800, 6802, 8009, 8109, 8209, 8309, 8888, 9999]
+for (var i=0;i <JMX_PORTS.length; i++) {
+    checkPort(JMX_PORTS[i]);
+}

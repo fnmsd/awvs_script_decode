@@ -1,0 +1,34 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress 3.8.2 security release" version="0.1" released="20080307" updated="20140411" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,missing_update" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:U/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>WordPress 3.8.2 is now available. This is an important security release for all previous versions and we strongly encourage you to update your sites immediately. [break][break]
+
+This releases fixes a weakness that could let an attacker force their way into your site by forging authentication cookies. This was discovered and fixed by Jon Cave of the WordPress security team.[break][break]
+
+It also contains a fix to prevent a user with the Contributor role from improperly publishing posts.[break][break]
+This release also fixes nine bugs and contains three other security hardening changes:[break]
+[ul]
+[li]
+Pass along additional information when processing pingbacks to help hosts identify potentially abusive requests.
+[/li]
+[li]
+Fix a low-impact SQL injection by trusted users. Reported by Tom Adams of dxw.
+[/li]
+[li]
+Prevent possible cross-domain scripting through Plupload, the third-party library WordPress uses for uploading files. Reported by Szymon Gruszecki.
+[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may force their way into your site by forging authentication cookies.</Impact>
+		<Recommendation>Upgrade to the latest version of WordPress.</Recommendation>
+		<Reference database="WordPress 3.8.2 Security Release" URL="https://wordpress.org/news/2014/04/wordpress-3-8-2/"/></TestDescription>
+</WebApplicationTest>

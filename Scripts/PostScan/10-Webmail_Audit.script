@@ -1,0 +1,206 @@
+#include constants.inc;
+#include helpers.inc;
+#include email_storage.inc;
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+#include credentials_medium.inc;
+var squirrel_path = "";
+var roundcube_path = "";
+var lastJob = null;
+function alert(url, username, password){
+		var ri = new TReportItem();
+		ri.LoadFromFile('Webmail_weak_password.xml');
+		ri.affects = url;
+		ri.alertPath = "Scripts/Webmail_weak_password";
+		
+		ri.setHttpInfo(lastJob);
+		
+		ri.details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";;		
+				
+		AddReportItem(ri);	
+}
+function prepareAccountNames(){
+	var baseDomain = getBaseDomain(scanURL);
+	if (baseDomain) {
+        
+        var emailsStr = GetGlobalValue("emailStorage");
+        if (emailsStr) { 
+            var emails = emailsStr.split("\r\n");
+            if (emails && emails.length > 0) {                                
+        		for (var i=0; i<emails.length; i++) {
+        			if (emails[i]) {			
+        				//trace(emails[i]);
+        				var parts = emails[i].split("@");
+        				if (parts && parts.length > 0){
+        					var accountName = parts[0];
+        					names.push(accountName);
+        				}
+        			}
+        		}
+            }		
+        }
+        
+		for (var i=0; i<Usernames.length; i++) 
+			if (Usernames[i]) names.push(Usernames[i]);
+		
+		Passwords[0] = baseDomain;
+		var parts = baseDomain.split(".");
+		if (parts && parts.length > 0) {
+			var baseDomainSimple = parts[0];
+			Passwords.push(baseDomainSimple);
+		}	
+	}
+}
+function testSMAccount(uri, user, password){
+	//trace(user + ", " + password);
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'POST';
+	http.uri = uri;
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.addCookies = false;
+	http.request.body = 'login_username=' + user + '&secretkey=' + password + '&js_autodetect_results=1&just_logged_in=1';
+	
+	lastJob = http;
+	
+	http.execute();	
+	
+	if ((!http.wasError && !http.notFound && http.response.msg2 == 302 && http.response.headerValue('location') == 'webmail.php')) {
+		return true;
+	}
+	
+	return false;
+}
+function auditSquirrelMail(){
+	//trace("auditSquirrelMail");
+	
+	var auditURL = squirrel_path + "/src/redirect.php";
+	
+	//trace(names);
+	
+	for (var i=0; i<names.length; i++) {
+	
+		// same username and password
+		if (testSMAccount(auditURL, names[i], names[i])) {
+				//trace("found SM " + names[i] + ":" + names[i]);
+				alert(auditURL, names[i], names[i]);
+		}		
+		// don't bruteforce if it takes too long 
+		if (lastJob.responseDuration > 4000) break;
+		
+		if (testSMAccount(auditURL, names[i], capitalize(names[i]) + "1")) {
+				//trace("found SM " + names[i] + ":" + capitalize(names[i]) + "1");
+				alert(auditURL, names[i], capitalize(names[i]) + "1");
+		}		
+		// don't bruteforce if it takes too long 
+		if (lastJob.responseDuration > 4000) break;
+	
+		for(var j=0; j<Passwords.length; j++) {
+			if (testSMAccount(auditURL, names[i], Passwords[j])) {
+				//trace("found SM " + names[i] + ":" + Passwords[j]);
+				alert(auditURL, names[i], Passwords[j]);
+			}
+			// don't bruteforce if it takes too long 
+			if (lastJob.responseDuration > 4000) break;			
+		}
+        
+        ScriptProgress(ComputeProgress(i, totalNames));
+	}	
+}
+function testRCAccount(uri, user, password){
+	//trace(user + ", " + password);
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'POST';
+	http.uri = uri;
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.addCookies = true;
+	http.request.body = '_action=login&_user=' + user + '&_pass=' + password + '&_host=127.0.0.1';
+	
+	lastJob = http;
+	
+	http.execute();	
+	
+	//trace(http.responseDuration);
+	
+	if ((!http.wasError && !http.notFound && http.response.msg2 == 302 && http.response.headerValue('location') == './?_task=mail')) {
+		return true;
+	}
+	
+	return false;
+}
+function auditRoundCube(){
+	//trace("auditRoundCube");
+	
+	var auditURL = roundcube_path + "/";
+	
+	//trace(names);
+	
+	for (var i=0; i<names.length; i++) {	    
+	
+		// same username and password
+		if (testRCAccount(auditURL, names[i], names[i])) {
+				//trace("found RC " + names[i] + ":" + names[i]);
+				alert(auditURL, names[i], names[i]);
+		}		
+		// don't bruteforce if it takes too long 
+		if (lastJob.responseDuration > 4000) break;
+		
+		if (testRCAccount(auditURL, names[i], capitalize(names[i]) + "1")) {
+				//trace("found RC " + names[i] + ":" + capitalize(names[i]) + "1");
+				alert(auditURL, names[i], capitalize(names[i]) + "1");
+		}		
+		// don't bruteforce if it takes too long 
+		if (lastJob.responseDuration > 4000) break;
+	
+		for(var j=0; j<Passwords.length; j++) {
+			if (testRCAccount(auditURL, names[i], Passwords[j])) {
+				//trace("found RC " + names[i] + ":" + Passwords[j]);
+				alert(auditURL, names[i], Passwords[j]);
+			}
+			// don't bruteforce if it takes too long 
+			if (lastJob.responseDuration > 4000) break;			
+		}
+        
+        ScriptProgress(ComputeProgress(i, totalNames));
+	}		
+}
+function lookForWebmail(sf, depth)
+{	
+	//trace(sf.fullPath);
+	if(sf.isDir && !sf.notFound && !sf.ignored && sf.scanSiteFile)
+	{
+		// look for squirrelmail 
+		if (squirrel_path == "" && sf.response.msg2 == 302 && sf.response.headerValue('location') == 'src/login.php')
+		{
+			var loginPage = getSiteFileWithPath(sf.fullPath + "/src/login.php", loadHttp);
+			if (loginPage && loginPage.response.body.indexOf("<title>SquirrelMail - Login</title>") != -1) {
+				squirrel_path = sf.fullPath;
+				//trace("found squirrelmail in " + squirrel_path);
+			}
+		}
+		// look for roundcube
+		if (roundcube_path == "" && sf.response.msg2 == 200 && sf.response.body.indexOf('<div class="boxtitle">Welcome to RoundCube Webmail</div>') != -1) {
+				roundcube_path = sf.fullPath;
+				//trace("found roundcube in " + roundcube_path);			
+		}
+		
+		var child = sf.getFirstChild();
+		while(child != null){
+			if (depth < 2) lookForWebmail(child, depth+1);
+			child = child.getNextSibling();
+		}		
+	}	
+}
+// main entry point
+var names = new Array();
+var root = getSiteRoot(loadHttp);
+lookForWebmail(root, 0);
+if (squirrel_path || roundcube_path) prepareAccountNames();
+var totalNames = 0;
+if (squirrel_path) totalNames = totalNames + names.length;
+if (roundcube_path) totalNames = totalNames + names.length;
+    
+if (squirrel_path) auditSquirrelMail();
+if (roundcube_path) auditRoundCube();
+    

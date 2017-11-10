@@ -1,0 +1,62 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.x version older than 2.2.6" version="0.1" released="20080612" updated="20140313" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="denial_of_service,missing_update" SendCookies="true" HasPrecondition="false" CVE="CVE-2006-5752,CVE-2007-1862,CVE-2007-1863,CVE-2007-3304,CVE-2007-3847" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="4.0"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break][bold]Fixed in Apache httpd 2.2.6:[/bold][break][ul]
+
+[li]
+    [bold]moderate[/bold]: mod_proxy crash CVE-2007-3847[break]
+
+    A flaw was found in the Apache HTTP Server mod_proxy module. On sites where a reverse proxy is configured, a remote attacker could send a carefully crafted request that would cause the Apache child process handling that request to crash. On sites where a forward proxy is configured, an attacker could cause a similar crash if a user could be persuaded to visit a malicious site using the proxy. This could lead to a denial of service if using a threaded Multi-Processing Module.
+
+[/li]
+
+[li]
+    [bold]moderate[/bold]: mod_status cross-site scripting CVE-2006-5752[break]
+
+    A flaw was found in the mod_status module. On sites where the server-status page is publicly accessible and ExtendedStatus is enabled this could lead to a cross-site scripting attack. Note that the server-status page is not enabled by default and it is best practice to not make this publicly available.
+
+[/li]
+
+[li]
+    [bold]moderate[/bold]: Signals to arbitrary processes CVE-2007-3304[break]
+
+    The Apache HTTP server did not verify that a process was an Apache child process before sending it signals. A local attacker with the ability to run scripts on the HTTP server could manipulate the scoreboard and cause arbitrary processes to be terminated which could lead to a denial of service.
+
+[/li]
+
+[li]
+    [bold]moderate[/bold]: mod_cache information leak CVE-2007-1862[break]
+
+    The recall_headers function in mod_mem_cache in Apache 2.2.4 did not properly copy all levels of header data, which can cause Apache to return HTTP headers containing previously used data, which could be used by remote attackers to obtain potentially sensitive information.
+
+[/li]
+
+[li]
+    [bold]moderate[/bold]: mod_cache proxy DoS CVE-2007-1863[break]
+
+    A bug was found in the mod_cache module. On sites where caching is enabled, a remote attacker could send a carefully crafted request that would cause the Apache child process handling that request to crash. This could lead to a denial of service if using a threaded Multi-Processing Module.
+
+[/li]
+
+[/ul][break]
+
+[navy]Affected Apache versions (up to 2.2.4).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Check references for details about every vulnerability.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"/>
+		<Reference database="Apache httpd 2.2 vulnerabilities" URL="http://httpd.apache.org/security/vulnerabilities_22.html"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Proxy accepts CONNECT requests to itself" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The proxy allows the users to perform repeated CONNECT requests to itself. [break]
+This may allow an attacker to perform a denial of service attack by saturating the proxy CPU, memory or file descriptors.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible denial of service.</Impact>
+		<Recommendation>Restrict proxy access to valid users and/or hosts. Deny CONNECT requests.</Recommendation>
+		<Reference database="Wikipedia Open proxy" URL="http://en.wikipedia.org/wiki/Open_proxy"/>
+		<Reference database="Wikipedia Web proxy" URL="http://en.wikipedia.org/wiki/Web_proxy"/>
+		<Reference database="Setting up a Secure Proxy Server using Various Technologies" URL="http://www.suretecsystems.com/our_docs/proxy-guide-en/index.html"/>
+	</TestDescription>
+</WebApplicationTest>

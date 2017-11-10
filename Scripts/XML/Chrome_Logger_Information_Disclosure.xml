@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Chrome Logger information disclosure" version="0.1" released="20080307" updated="20140804" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Chrome Logger is a Google Chrome extension for debugging server side applications in the Chrome console. When enabled, the server side component will return headers named X-ChromePhp-Data or X-ChromeLogger-Data. The value of these headers contains possible sensitive information and should not be present in production systems.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The header value may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Disable debugging helpers in production systems.</Recommendation>
+		<Reference database="Chrome Logger" URL="http://craig.is/writing/chrome-logger"/></TestDescription>
+</WebApplicationTest>

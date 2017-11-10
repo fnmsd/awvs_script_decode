@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Ruby on Rails SQL injection" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="CVE-2012-2695" CWE="CWE-89" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>There is a SQL injection vulnerability in Active Record, in ALL versions. This vulnerability has been assigned the CVE 
+identifier CVE-2012-2695. Due to the way Active Record handles nested query parameters, an attacker can use a specially crafted request to inject 
+some forms of SQL into your application's SQL queries. Impacted code directly passes request params to the `where` method of an ActiveRecord class like this:
+[pre]
+    Post.where(:id =&gt; params[:id]).all
+[/pre]
+An attacker can make a request that causes `params[:id]` to return a specially crafted hash that will cause the WHERE 
+clause of the SQL statement to query an arbitrary table with some value.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>impact</Impact>
+		<Recommendation>All users running an affected release should upgrade immediately. Please note, this vulnerability is a variant of 
+CVE-2012-2661, even if you upgraded to address that issue, you must take action again. [break][break]
+This issue can be mitigated by casting the parameter to an expected value.  For example, change this:
+[pre]
+    Post.where(:id =&gt; params[:id]).all
+[/pre]
+to this:
+[pre]
+    Post.where(:id =&gt; params[:id].to_s).all
+[/pre]</Recommendation>
+		<Reference database="Ruby on Rails SQL Injection (CVE-2012-2695)" URL="http://seclists.org/oss-sec/2012/q2/504"></Reference>
+		<Reference database="CVE-2012-2661: exploitation write-up" URL="http://blog.pentesterlab.com/2012/06/cve-2012-2661-exploitation-write-up.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

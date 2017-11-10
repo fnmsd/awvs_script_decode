@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress 3.4.2 cross site request forgery" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="csrf,known_vulnerabilities" CVE="CVE-2012-4448" CWE="CWE-352" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Cross-site request forgery (CSRF) vulnerability in wp-admin/index.php in WordPress 3.4.2 allows remote attackers to hijack the authentication of administrators for requests that modify an RSS URL via a dashboard_incoming_links edit action.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote attacker can hijack administrators authentication.</Impact>
+		<Recommendation>Upgrade to the latest version of Wordpress.</Recommendation>
+		<Reference database="CVE-2012-4448" URL="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2012-4448"></Reference>
+		<Reference database="WordPress 3.4.2 Cross Site Request Forgery" URL="http://packetstormsecurity.com/files/116785/WordPress-3.4.2-Cross-Site-Request-Forgery.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

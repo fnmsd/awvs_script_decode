@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Barracuda networks products multiple directory traversal vulnerabilities" version="0.1" released="20080307" updated="20150303" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal" CVE="" CWE="CWE-22" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C" CVSSScoreTemp="10.0" CVSSScoreEnv="10.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Multiple vulnerabilities exist in Barracuda Networks products due to improper validation of user-controlled input. User-controllable input supplied to the embedded web server is not properly sanitized for illegal path delimiting characters prior to being used to access files. A specially crafted HTTP request containing directory traversal sequences could allow remote attackers to conduct traversal attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can conduct traversal attacks. The impact of successful exploitation depends upon the contents of the files that were retrieved.</Impact>
+		<Recommendation>The vendor has released Security Definition update v2.0.4 that addresses these vulnerabilities.</Recommendation>
+		<Reference database="Barracuda Networks Products Multiple Directory Traversal Vulnerabilities" URL="http://www.secureworks.com/cyber-threat-intelligence/advisories/SWRX-2010-002/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

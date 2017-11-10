@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Debian OpenSSL predictable random number generator" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,weak_crypto,insecure_admin_access,network_alert" CVE="CVE-2008-0166" CWE="CWE-310" CVSSVer="2.0" CVSSScore="7.9" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:N/A:N/E:F/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The SSH server on this host is using a weak (blacklisted) key. A weakness has been discovered in the random number generator used
+by OpenSSL on Debian and Ubuntu systems.  As a result of this
+weakness, certain encryption keys are much more common than they
+should be, such that an attacker could guess the key through a
+brute-force attack given minimal knowledge of the system.  This
+particularly affects the use of encryption keys in OpenSSH, OpenVPN
+and SSL certificates.  This vulnerability only affects operating systems which (like
+Ubuntu) are based on Debian.  However, other systems can be
+indirectly affected if weak keys are imported into them.
+
+All SSL and SSH keys generated on Debian-based systems (Ubuntu, Kubuntu, etc) between September 2006 and May 13th, 2008 may be affected.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Remote attackers can conduct brute force guessing attacks against cryptographic keys.</Impact>
+		<Recommendation>Upgrade your openssl package and subsequently regenerate any cryptographic material. Check references for detailed information on fixing this vulnerability.</Recommendation>
+		<Reference database="Debian Security Advisory DSA-1571-1 " URL="http://lists.debian.org/debian-security-announce/2008/msg00152.html"></Reference>
+		<Reference database="Ubuntu Security Notice USN-612-1" URL="https://lists.ubuntu.com/archives/ubuntu-security-announce/2008-May/000705.html"></Reference>
+		<Reference database="Debian OpenSSL Package Random Number Generator Weakness" URL="http://www.securityfocus.com/bid/29179/"></Reference>
+		<Reference database="CVE-2008-0166" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-0166"></Reference>
+		<Reference database="Debian Wiki" URL="http://wiki.debian.org/SSLkeys"></Reference>
+	</TestDescription>
+</WebApplicationTest>

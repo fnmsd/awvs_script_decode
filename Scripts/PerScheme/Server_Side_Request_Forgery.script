@@ -1,0 +1,209 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for SSRF
+	function classSSRF(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	classSSRF.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		
+		// for files manipulate also the input filename and set a valid content-type
+		if (this.scheme.hasFileInput && (this.scheme.getInputFlags(this.inputIndex) & INPUT_FLAG_IS_FILE)){
+			this.scheme.setInputFileName(this.inputIndex, value);
+			this.scheme.setInputContentType(this.inputIndex, "image/png");
+			this.scheme.setInputValue(this.inputIndex, value);
+		}
+		else this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classSSRF.prototype.alert = function(testValue, subdomain, reqData)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("SSRF.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/SSRF";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold][break]";
+		if (subdomain) {
+			ri.Details =  ri.Details + "[break]An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to SSRF (Server Side Request Forgery).";
+			if (reqData) {
+				ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";	
+			}
+		}
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}	
+	classSSRF.prototype.alertXXE = function(testValue, subdomain, reqData)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("XML_External_Entity_Injection_And_XML_Injection2.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XML_External_Entity_Injection_And_XML_Injection2";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold][break]";
+		if (subdomain) {
+			ri.Details =  ri.Details + "[break]This URL returned an XML file containing an XML External Entity pointing to the domain " + subdomain + ". An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XXE injection.";
+			if (reqData) {
+				ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";	
+			}
+		}
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}
+    classSSRF.prototype.alertXSLT = function(testValue, subdomain, reqData)
+    {
+        var ri = new TReportItem();
+        ri.LoadFromFile("XSLT_injection.xml");
+        ri.affects = this.scheme.path;
+        ri.alertPath = "Scripts/XSLT_injection.xml";
+        ri.parameter = this.scheme.getInputName(this.inputIndex);
+        ri.parameterValue = testValue;
+        ri.setHttpInfo(this.lastJob);
+        ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold][break]";
+        if (subdomain) {
+            ri.Details =  ri.Details + "[break]This URL returned an XML file containing an XSLT transform that makes a request to the domain " + subdomain + ". An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XSLT injection.";
+            if (reqData) {
+                ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";
+            }
+        }
+        //trace(ri.Details);
+        AddReportItem(ri);
+    }
+	
+	classSSRF.prototype.alertRedirToFile = function(testValue)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("Redirect_To_File_Protocol.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Redirect_To_File_Protocol.xml";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold][break]";
+		ri.Details =  ri.Details + "[break]This URL redirected to file:///etc/passwd and it was possible to read the contents of this file.";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}	
+	
+	classSSRF.prototype.verifyInjection = function(rndToken) {	
+		var http 		= new THTTPJob();
+		http.url 		= new TURL("http://bxss.s3.amazonaws.com/hits/" + rndToken);
+		http.verb 		= "GET";
+		http.timeout 	= 20000;
+		http.retries 	= 0;
+		
+		http.execute();
+		
+		//trace(http.url.url);
+		//trace(http.response.body); //a
+		
+		if (!http.wasError && http.response.body.startsWith("IP address:")){
+			return http.response.body;
+		}	
+		
+		return false;
+	}
+	
+	classSSRF.prototype.redirToFile = function() {	
+		var payload = "http://bxss.me/redirToFile";
+		if (!this.request(payload)) return false;
+		
+		if (!this.lastJob.wasError && this.lastJob.response.body){			
+			var match = this.lastJob.response.body.match(/((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/);
+    		if (match && match[1]) { 			
+				return match[1];
+			}
+		}
+			
+		return false;
+	}
+		
+	classSSRF.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;				
+			this.currentVariation = i;			
+			
+			var rndToken = 'hit' + randStr(10);
+			
+            var payload = "http://" + rndToken + '.bxss.me/';            
+            if (!this.request(payload)) return false;
+            
+            var reqData = this.verifyInjection(rndToken);
+			if (reqData) {
+				this.alert(payload, rndToken, reqData);            
+				
+				// SSRF confirmed, we should test for XXE
+				var hostnameXXE = rndToken + "XXE";
+				var reqDataXXE = this.verifyInjection(hostnameXXE);
+				if (reqDataXXE) {
+					this.alertXXE(payload, hostnameXXE, reqDataXXE);
+				}
+				
+				// also look for redirToFile
+				payload = "http://bxss.me/redirToFile";
+				var redirToFileResp = this.redirToFile();
+				if (redirToFileResp) {				
+					this.alertRedirToFile(payload, redirToFileResp);
+				}
+                // also look for XSLT
+                rndToken = 'hit' + randStr(10);
+                var payload = 'http://bxss.me/xslt?t=' + rndToken;
+                if (!this.request(payload)) return false;
+                var reqDataXSLT = this.verifyInjection(rndToken);
+                if (reqDataXSLT) {
+                    this.alertXSLT(payload, rndToken, reqDataXSLT);
+                }
+			}
+        }
+	}
+}
+// main entry point 
+// don't run if Amazon S3 is not reachable
+var AmazonS3Disabled = getGlobalValue("AmazonS3ScriptsDisabled");
+if (!AmazonS3Disabled) {
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classSSRF(scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}
+}

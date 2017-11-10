@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress PHP Object Injection" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration" CVE="CVE-2013-4338" CWE="CWE-94" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress version 3.6.1 has fixed a number of security vulnerabilities, including one that could lead to remote code execution on vulnerable installations. Older versions of WordPress perform unsafe PHP unserialization that could occur in limited situations and setups, which can lead to remote code execution.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible remote code execution.</Impact>
+		<Recommendation>Update to WordPress version 3.6.1 or newer.</Recommendation>
+		<Reference database="WordPress Version 3.6.1" URL="http://codex.wordpress.org/Version_3.6.1"></Reference>
+		<Reference database="WordPress PHP Object Injection" URL="http://vagosec.org/2013/09/wordpress-php-object-injection/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

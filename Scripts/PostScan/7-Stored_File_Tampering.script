@@ -1,0 +1,21 @@
+#require 6-Stored_Code_Execution.script;
+#include constants.inc;
+#include classFileTampering.inc;
+var targetUrl = new TURL(scanURL.url);
+targetUrl.getVar = "";
+var li = getStoredInjectionList(REFL_TEST_FILETAMP);
+for (var i=0; i<li.count; i++) {	
+	var storedInj = li.item(i);
+	
+	var sf = getSiteFileWithId(storedInj.reflectionId, loadHttp);
+	var job = new THTTPJob();
+	job.request.copyFrom(sf.request);
+	
+	var scheme = getSchemeWithId(storedInj.schemeId);
+	targetUrl.path = scheme.path;
+	
+	var tester = new classFileTampering(targetUrl, null, scheme, storedInj.inputIndex, storedInj.variationIndex, job);
+	tester.startTesting();	
+	
+	ScriptProgress(ComputeProgress(i, li.count));
+}

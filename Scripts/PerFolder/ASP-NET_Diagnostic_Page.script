@@ -1,0 +1,76 @@
+#include constants.inc;
+#include helpers.inc;
+#include perFolder_helpers.inc;
+var variants = [
+	"Dump.aspx"
+];
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+			"<h2>Environment Variables</h2>"
+		];
+		this.regexArray = [
+		];
+	}
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}
+		return false;
+	}
+}
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile("ASP.NET_Diagnostic_Page.xml");
+	ri.affects = newUri;
+	ri.alertPath = "Scripts/DiagnosticPages";
+	if (matchedText) {
+		ri.details = "Pattern found: [dark][bold]" + matchedText + "[/bold][/dark]";
+	}
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	AddReportItem(ri);
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+    // test if the directory returns 200, 301, 302, 403
+    if (dir.response.msg2 == 200 || dir.response.msg2 == 301 || dir.response.msg2 == 302 || dir.response.msg2 == 403)
+    {
+        if (canIScanThisFolder(dir)) {
+            var injectionPatterns = new classInjectionPatterns();
+            for (var i=0; i<variants.length; i++) {
+                var dirName = dir.fullPath;
+                if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+                var testURI = dirName + variants[i];
+                var http = new THTTPJob();
+                http.url = dir.url;
+                http.verb = 'GET';
+                http.URI = testURI;
+                http.execute();
+                if (!http.wasError && !http.notFound && http.response.msg2 == 200){
+                    var matchedText = injectionPatterns.searchOnText(http.response.body);
+                    if (matchedText) {
+                        alert(dir.fullPath, testURI, http, matchedText);
+                    }
+                }
+                ScriptProgress(ComputeProgress(i, variants.length));
+            }
+        }
+    }
+}

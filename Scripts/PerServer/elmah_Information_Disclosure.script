@@ -1,0 +1,41 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("elmah_Information_Disclosure.xml");
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/elmah_Information_Disclosure";	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+function testDir(dirName) {		
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = dirName + "elmah.axd";
+	http.addCookies = false;
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		if (http.response.body.indexOf("Error log for ") != -1)	
+			{
+				var m = /<title>[\r\n\s]+(\s+Error log for .*?on.*? .*?)/.exec(http.response.body);
+				if (m)  {
+	                pattern = m[1];			
+				    			alert(http, pattern);
+	            }
+			}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var dirName = root.path + root.Name;
+testDir(dirName);
+testDir(dirName + "admin/");

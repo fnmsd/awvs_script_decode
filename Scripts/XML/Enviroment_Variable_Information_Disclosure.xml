@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Environment variable information disclosure" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Environment variables are a set of dynamic named values that can affect the way running processes will behave on a computer.  For example, an environment variable with a standard name can designate the location that a particular computer system uses to store temporary files but this may vary from one computer system to another. [break]Acunetix WVS found an environmental variable listed on this page. This is common for debug/test pages that should not be available in production system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The environmental variable may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Restrict access to this file or remove it from your system.</Recommendation>
+		<Reference database="Environment variable" URL="http://en.wikipedia.org/wiki/Environment_variable"></Reference>
+	</TestDescription>
+</WebApplicationTest>

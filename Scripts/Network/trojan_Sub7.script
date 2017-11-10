@@ -1,0 +1,21 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for Sub7 
+// www.sub7legends.com
+if (IsPortOpen(27374)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 27374;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		resp = socket.Receive(true);
+		//trace(resp);
+		if (resp.match(/connected\.\s\d\d:\d\d\s-\s.*,\sver:\s/))
+		{
+			trace("trojan Sub7/SubSeven detected! - alert here");
+			ReportItem("Trojan.xml", "The SubSeven trojan horse is running on TCP port 27374.");
+		}
+		socket.Close();
+	}
+}

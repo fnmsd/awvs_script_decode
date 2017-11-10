@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress 3.x persistent script injection" version="0.1" released="20080307" updated="20141121" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress versions 3.9.2 and earlier are affected by a critical cross-site scripting vulnerability, which could enable anonymous users to compromise a site. Version 4.0 is NOT vulnerable to this problem. [break][break]
+
+From the security advisory:[break]
+"A security flaw in WordPress 3 allows injection of JavaScript into certain text fields. In particular, the problem affects comment boxes on WordPress posts and pages. These don't require authentication by default.[break][break]
+
+The JavaScript injected into a comment is executed when the target user views it, either on a blog post, a page, or in the Comments section of the administrative Dashboard.[break][break]
+
+When a blog administrator goes to the Dashboard/Comments section to review new comments, the JavaScript gets executed. The script can then perform operations with administrator privileges."</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker could exploit the vulnerability by entering carefully crafted comments, containing program code, on WordPress blog posts and pages. Program code injected in comments would be inadvertedly executed in the blog administrator's web browser when they view the comment.</Impact>
+		<Recommendation>Upgrade to the latest version of WordPress (this issue was fixed in version 3.9.3).</Recommendation>
+		<Reference database="WordPress 3.x persistent script injection" URL="http://klikki.fi/adv/wordpress.html"></Reference>
+		<Reference database="WordPress 4.0.1 Security Release" URL="https://wordpress.org/news/2014/11/wordpress-4-0-1/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

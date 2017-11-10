@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Drupal core 7.x SQL injection vulnerability" version="0.1" released="20080307" updated="20141016" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="sql_injection" CVE="CVE-2014-3704" CWE="CWE-89" CVSSVer="2.0" CVSSScore="8.3" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.9" CVSSScoreEnv="7.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Stefan Horst of SektionEins GmbH reported a critical pre-auth SQL injection vulnerability in Drupal core 7.x versions prior to 7.32. Drupal 7 includes a database abstraction API to ensure that queries executed against the database are sanitized to prevent SQL injection attacks.A vulnerability in this API allows an attacker to send specially crafted requests resulting in arbitrary SQL execution. Depending on the content of the requests this can lead to privilege escalation, arbitrary PHP execution, or other attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. Depending on the content of the requests this can lead to privilege escalation, arbitrary PHP execution, or other attacks.</Impact>
+		<Recommendation>It is recommended to upgrade to the latest version of Drupal. (This issue was fixed in version 7.32).</Recommendation>
+		<Reference database="Advisory 01/2014: Drupal - pre Auth SQL Injection Vulnerability" URL="http://www.sektioneins.de/en/advisories/advisory-012014-drupal-pre-auth-sql-injection-vulnerability.html"></Reference>
+		<Reference database="SA-CORE-2014-005 - Drupal core - SQL injection" URL="https://www.drupal.org/SA-CORE-2014-005"></Reference>
+	</TestDescription>
+</WebApplicationTest>

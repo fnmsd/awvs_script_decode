@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="CKEditor 4.0.1 cross-site scripting vulnerability" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.5" CVSSScoreEnv="3.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The sample file [dark][bold]samples/sample_posteddata.php[/dark][/bold] (distributed with CKEditor 4.0.1) is vulnerable to a Cross-Site Scripting Vulnerability.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of CKEditor or remove the sample_posteddata.php file.</Recommendation>
+		<Reference database="ckeditor-xssxsrfdisclose.txt" URL="http://dl.packetstormsecurity.net/1302-exploits/ckeditor-xssxsrfdisclose.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

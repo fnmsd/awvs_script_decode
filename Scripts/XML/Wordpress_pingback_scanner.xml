@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress pingback scanner" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2013-0235" CWE="CWE-918" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:F/RL:OF/RC:C" CVSSScoreTemp="5.3" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Pingback is a method for web authors to request notification when somebody links to one of their documents. Typically, web publishing software will automatically inform the relevant parties on behalf of the user, allowing for the possibility of automatically creating links to referring documents.
+[break][break]
+WordPress accepts Pingback calls via the XMLRPC interface. Using this feature it's possible to list hosts from the internal network and test for open ports.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible information disclosure.</Impact>
+		<Recommendation>Currently there is no official workaround. Disabling pingbacks and trackbacks from the Discussion Settings page doesn't fix the problem. Until a fix is released you can rename the xmlrpc.php file to a hard-to-guess filename.</Recommendation>
+		<Reference database="WordpressPingbackPortScanner" URL="https://github.com/FireFart/WordpressPingbackPortScanner"></Reference>
+	</TestDescription>
+</WebApplicationTest>

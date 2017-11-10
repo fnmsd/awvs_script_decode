@@ -1,0 +1,40 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, lastJob, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function testForJetLeak()
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;			
+	lastJob.addCookies = false;
+	
+	lastJob.request.addHeader("Referer", strFromRawData(0x00).repeat(10), true);
+	
+	lastJob.execute();
+	
+	var pattern = "Illegal character 0x0 in state";
+	if (!lastJob.wasError && lastJob.response.headersString.indexOf(pattern) !=-1)
+	{
+		alert('JetLeak_Vulnerability.xml', lastJob, pattern);
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+testForJetLeak();

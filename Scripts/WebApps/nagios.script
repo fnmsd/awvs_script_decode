@@ -1,0 +1,38 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function test_nagios_xi_core_config_manager_sqli(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = path + 'nagiosql/index.php';
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.request.addHeader('Referer', scanURL.URL, true);
+	http.addCookies = false;
+	http.request.body = "tfUsername=test&tfPassword=%27&Submit=Login";
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 302 && http.response.body.indexOf(":<br>You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ")!=-1){
+		var ri = new TReportItem();
+		ri.LoadFromFile("Nagios_core_config_manager_sql_injection.xml");
+		ri.affects = path + 'nagiosql/index.php';
+		ri.alertPath = "Scripts/SQL Injection";
+		ri.parameter = 'tfPassword';
+		ri.parameterValue = "'";
+		ri.details = "POST input [bold][dark]" + ri.parameter + "[/dark][/bold] was set to [bold][dark]" + ri.parameterValue + "[/dark][/bold]";
+		ri.setHttpInfo(http);		
+		AddReportItem(ri);				
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppNagios");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppNagios", 1, true);           
+    KBase("Nagios web application", "Nagios web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_nagios_xi_core_config_manager_sqli(dir, dir.fullPath);

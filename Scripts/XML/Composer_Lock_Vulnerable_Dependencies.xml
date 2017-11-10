@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Vulnerable project dependencies" version="0.1" released="20080307" updated="20150908" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,missing_update" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>A [bold]composer.lock[/bold] file was discovered in this directory. Composer is a tool for dependency management in PHP. It allows you to declare the libraries your project depends on and it will manage (install/update) them for you. After installing the dependencies, Composer writes the list of the exact versions it installed into a composer.lock file. This locks the project to those specific versions. [break][break]
+Acunetix WVS analyzed all the project dependencies listed in the composer.lock file and found one or more project dependencies with known vulnerabilities. It's recommended to upgrade all the vulnerable packages to the latest versions.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact is different for each vulnerable package.</Impact>
+		<Recommendation>Upgrade each vulnerable package to the latest version.</Recommendation>
+		<Reference database="Composer Basic usage" URL="https://getcomposer.org/doc/01-basic-usage.md"/></TestDescription>
+</WebApplicationTest>

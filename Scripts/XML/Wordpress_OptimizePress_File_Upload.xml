@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress OptimizePress unrestricted file upload" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="arbitrary_file_creation,code_execution,unauthenticated_file_upload" CVE="CVE-2013-7102" CWE="CWE-20" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4"/>
+		<Copyright></Copyright>
+		<Description>Certain versions of the WordPress theme OptimizePress contain a file that can be used by attackers to upload arbitrary files on the web server and execute the code contained in these files. The vulnerable file is [bold]wp-content/themes/OptimizePress/lib/admin/media-upload.php[/bold]. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>It may be possible for an attacker to use this vulnerability to execute arbitrary code.</Impact>
+		<Recommendation>Delete [bold]wp-content/themes/OptimizePress/lib/admin/media-upload.php[/bold] file.</Recommendation>
+		<Reference database="WordPress OptimizePress hack (file upload vulnerability)" URL="http://www.osirt.com/2013/11/wordpress-optimizepress-hack-file-upload-vulnerability/"/></TestDescription>
+</WebApplicationTest>

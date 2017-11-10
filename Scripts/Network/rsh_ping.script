@@ -1,0 +1,26 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for rsh
+if (IsPortOpen(514)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 514;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send(strFromRawData(0x00)); // handshake
+		var str = "root" + strFromRawData(0x00) + // client username
+							"root" + strFromRawData(0x00) + // server username
+							"xterm/38400" + strFromRawData(0x00); // data
+		socket.send(str);
+		data = socket.receive(true);
+		if (data.length > 0)
+		{
+			trace(data);
+			trace("rsh detected!");
+			ReportItem("Rsh.xml", "The rsh server is running on TCP port 514.");
+		}
+		
+		socket.Close();
+	}
+}

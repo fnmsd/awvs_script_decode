@@ -1,0 +1,99 @@
+#include constants.inc;
+#include helpers.inc;
+var acceptedExt	=	[
+					"php", "php3", "php4", "php5", "phtml" // php
+					];
+{
+	// *********************************************************************************************
+	// object used for injection test result
+	// *********************************************************************************************	
+	function InjectionResult(data, adItem){
+		this.data = data;
+		this.adItem = adItem;
+	}
+}	
+// **************************************************************************************							 
+function alert(uri, job, additional)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("PHP_super-globals-overwrite.xml");	
+	ri.name = "PHP super-globals-overwrite (verified)";
+	ri.affects = file.path + file.name;
+	ri.alertPath = "Scripts/PHP super-globals-overwrite";	
+	
+	ri.details = "POST, GET and Cookie inputs were set to [dark][bold]__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite[/bold][/dark]. [break]AcuSensor confirmed that this parameter was set as a global variable.";
+	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}							 
+							 
+// **************************************************************************************
+function testFile(file) {
+	var uri = file.path + file.name + "?__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite";
+	var http = new THTTPJob();
+	http.addAspectHeaders();	
+	http.url = file.url;
+	http.verb = 'POST';
+	http.uri = uri;
+	http.request.addHeader('Cookie', '__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite', true);
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.addCookies = false;
+	http.request.body = '__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite';
+	
+	http.execute();	
+	
+	if ((!http.wasError && !http.notFound))	
+	// if AcuSensor is enabled
+	if (http.hasAspectData) {
+		// get aspect data information
+		var ad = http.getAspectData(); 
+		
+		var injRes = isSuperGlobalOverwrite(ad);
+		
+		if (injRes && injRes.adItem) {				
+			var additional = injRes.adItem.additional;
+			alert(uri, http);
+			return true;
+		}
+	}
+}
+// **************************************************************************************
+function isSuperGlobalOverwrite(ad) {
+	var adItems = ad.getItemsWithKey("Global_Overwrite");
+	if (adItems && adItems.count) 
+	{		
+		var aditem = adItems.item(0);
+		if (aditem) return new InjectionResult(aditem, aditem);						
+	}
+	return false;
+}
+// **************************************************************************************
+function fileShouldBeTested(file, ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+				if (ext.toLowerCase() == acceptedExt[i]) 
+					return true;
+      }	
+	
+	// or if it has some inputs
+	if (file.schemeCount > 0) return true;
+	
+	return false;
+}		
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+if (file.response.msg2 == 200) 
+{
+	if (file.hasAcuSensor && file.isFile) 
+	{
+		var targetUrl = new TURL(scanURL.url);
+		targetUrl.path = file.path;
+		var fileName = getFileName(file.name);
+		var fileExt  = getFileExt(file.name);
+		// verify if the file should be tested
+		if (file.isFile && fileShouldBeTested(file, fileExt)) 
+			testFile(file);
+	}
+}

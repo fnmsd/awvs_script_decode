@@ -1,0 +1,41 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for proxy open port
+// test if the proxy is forwarding our requests
+function TextProxyOpenPort(port){
+	var result = false;
+	//trace("testing port " + port);
+	if(IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if(socket.IsConnected){
+		socket.send("GET http://testphp.vulnweb.com:22/ HTTP/1.1\r\n\r\n");
+		
+		res = "";
+		while( (data = socket.Receive(true)) != ""){
+			res += data;
+		}
+		//trace(res);
+	
+		if (res.search("OpenSSH") >=0 )
+		{
+			//trace('success');
+			ReportItem("Open_proxy_any_port.xml", "The proxy server is running on TCP port " + port + "");	
+			result = true;
+		}
+		
+		socket.Close();
+		}
+	}
+	return result;
+}
+//start
+if (TextProxyOpenPort(3128)){
+		trace('proxy on port 3128 - open port');
+}
+if (TextProxyOpenPort(8080)){
+		trace('proxy on port 8080 - open port');
+}

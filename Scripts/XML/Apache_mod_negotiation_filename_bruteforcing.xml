@@ -1,0 +1,59 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache mod_negotiation filename bruteforcing" version="0.1" released="20090226" updated="20150311" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" HasPrecondition="false" AlertTags="bruteforce_possible,configuration,directory_listing,information_disclosure" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:W/RC:UR" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright/>
+		<Description>mod_negotiation is an Apache module responsible for selecting the document that best matches the clients capabilities, from one of several available documents. If the client provides an invalid Accept header, the server will respond with a 406 Not Acceptable error containing a pseudo directory listing. This behaviour can help an attacker to learn more about his target, for example, generate a list of base names, generate a list of interesting extensions, look for backup files and so on.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>Apache</WebServer><ApplicationServer>All</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Possible information disclosure: directory listing, filename bruteforcing, backup files.</Impact>
+		<Recommendation>Disable the MultiViews directive from Apache's configuration file and restart Apache.[break]
+You can disable MultiViews by creating a [bold].htaccess[/bold] file containing the following line:[break][break]
+[code]Options -Multiviews[/code]</Recommendation>
+		<Reference database="mod_negotiation: directory listing, filename bruteforcing" URL="http://www.ush.it/2008/07/02/mod_negotiation-directory-listing-filename-bruteforcing/"/>
+		<Reference database="Multiviews Apache, Accept Requests and free listing" URL="http://www.wisec.it/sectou.php?id=4698ebdc59d15"/>
+		<Reference database="Apache Module mod_negotiation" URL="http://httpd.apache.org/docs/2.2/mod/mod_negotiation.html"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${file}</URI>
+					<Version>HTTP/1.0</Version>
+					<Header><Name encoding="text">Accept</Name><Value encoding="text"> acunetix/wvs</Value></Header></MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="NotAcceptable" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(&lt;title&gt;406\sNot\sAcceptable&lt;/title&gt;)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>406</Value>
+					<Compare variable="${NotAcceptable}" test="neq">
+						<Value></Value>
+						<!-- /etc/password contents -->
+					</Compare>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item></Variable>
+</WebApplicationTest>

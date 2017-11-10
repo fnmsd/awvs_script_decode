@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="JBoss web service console" version="0.1" released="20080307" updated="20150115" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>JBoss web service console is enabled on this server. All supported stacks provide a web console for getting the list of the endpoints currently deployed on a given host as well as basic metrics regarding invocations to them. The console is available at http://localhost:8080/jbossws/services assuming your application server is currently bound to localhost:8080.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can list all the registered service endpoints and possibly use this information to conduct further attacks.</Impact>
+		<Recommendation>Restrict access to the JBoss web service console.</Recommendation>
+		<Reference database="JBossWS - User Guide" URL="https://developer.jboss.org/wiki/JBossWS-UserGuide"></Reference>
+	</TestDescription>
+</WebApplicationTest>

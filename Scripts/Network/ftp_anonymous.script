@@ -1,0 +1,75 @@
+#include reporting_helpers.inc;
+// FTP Anonymous
+// retrieves directory listing using passive mode
+function get_ftp_dir_listing(socket)
+{
+	var result = "";	
+	// enter passive mode
+	socket.Send("PASV\r\n");
+	data = socket.ReceiveLine();
+	if(data.slice(0, 3) == "227"){
+		//trace(data);
+		
+		// compute passive port number
+		port = data.match(/^227 .* \(?[0-9]+,[0-9]+,[0-9]+,[0-9]+,([0-9]+),([0-9]+)\)?/);
+		if (port && port.length>1) {
+			//trace(port[1]);
+			//trace(port[2]);	
+			portnum = parseInt(port[1]) * 256 + parseInt(port[2]);
+			//trace(portnum);
+			socket.Send("LIST -a\r\n");
+			data = socket.ReceiveLine();
+			//trace(data);
+			psocket = new TSocket("TCP");
+			psocket.Host = ScanHost;
+			psocket.Port = portnum;
+			psocket.Timeout = 3;
+			psocket.Connect();
+			if (psocket.IsConnected)
+			{
+				//trace("get data from passive");
+			
+				while( (pdata = psocket.ReceiveLine()) != ""){
+					result += pdata;
+				}
+				psocket.Close();
+			}
+			
+		}
+	}
+	return result;
+}
+// start
+if(IsPortOpen(21)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 21;
+	socket.Timeout = 5;
+	socket.Connect();
+  if(socket.IsConnected){
+		data = socket.ReceiveLine();
+		if(data.slice(0, 3) == "220"){
+			trace("FTP server running!");
+			KBase("FTP server running", "An FTP server is running on TCP port 21.");
+			// consume all banner
+			socket.timeout = 1;
+			do {data = socket.ReceiveLine();} while (data.length > 0);
+			socket.timeout = 5;
+			socket.Send("USER anonymous\r\n");
+			data = socket.ReceiveLine();
+			if(data.slice(0, 3) == "331"){
+				socket.Send("PASS test@acunetix.com\r\n");
+				data = socket.ReceiveLine();
+				if(data.slice(0, 3) == "230"){
+					dir_listing = get_ftp_dir_listing(socket);
+					trace(dir_listing);
+					socket.Send("QUIT\r\n");
+					ReportItem("FTP_Anonymous.xml", "The FTP server is running on TCP port 21.[break]Directory listing: [break][pre]" + dir_listing + "[/pre]");	
+				  Trace('anonymous enabled');
+				}
+			}
+		}
+    
+    socket.Close();
+	}
+}

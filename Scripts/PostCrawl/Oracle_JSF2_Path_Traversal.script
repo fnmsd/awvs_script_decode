@@ -1,0 +1,79 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+function testURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "/javax.faces.resource.../WEB-INF/web.xml.jsf";	
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) {
+		
+		matches.plainArray = [];
+		
+		matches.regexArray = [
+				/(<web-app[\s\S]+<\/web-app>)/
+			];	
+		trace(lastJob.response.body);	
+			
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText) {
+			if (uri == '') uri = '/';
+			alert(uri, "Oracle_JSF2_Path_Traversal.xml", lastJob, matchedText); 	
+		}
+				
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.Name.endsWith(".jsf")) 
+			{
+				if (files.length < 2) {
+					var lastPos = sf.fullPath.lastIndexOf("/");
+					if (lastPos != -1)
+					{ 
+						var dirName = sf.fullPath.substr(0, lastPos);
+						if (files.indexOf(dirName) == -1) 
+							files.push(dirName);
+					}
+				}
+			}				
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var list = getNewFiles(0);
+// push the root directory by default to be tested there as well
+files.push("");
+prepareFilesToBeTested(list);
+for (var i=0; i<files.length; i++)
+{
+	testURI(files[i]);
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP POST file upload buffer overflow vulnerabilities" version="0.1" released="20040327" updated="20140304" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" SendCookies="true" AlertTags="missing_update" CVE="CVE-2002-0081" CWE="CWE-119" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Reference database="BID 4183" URL="http://www.securityfocus.com/bid/4183/"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]PHP does not perform proper bounds checking on in functions related to Form-based File Uploads in HTML (RFC1867). Specifically, this problem occurs in the functions which are used to decode MIME encoded files. As a result, it may be possible to overrun the buffer used for the vulnerable functions to cause arbitrary attacker-supplied instructions to be executed.  [break][break][navy]Affected PHP versions (up to 4.1.1).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Possible code execution.</Impact>
+		<Recommendation>Upgrade PHP to the latest version.</Recommendation>
+		<Reference database="PHP homepage" URL="http://www.php.net"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Railo administration panel cross-site scripting" version="0.1" released="20080307" updated="20150226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-80" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N" CVSSScoreTemp="6.5" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Railo is an open-source alternative to the popular Coldfusion application server, implementing a FOSSy CFML engine and application server. Multiple critical vulnerabilities were reported in this application server. This test has confirmed a cross-site scripting vulnerability in the administration panel.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of Railo.</Recommendation>
+		<Reference database="Railo Security - Part One - Intro" URL="http://hatriot.github.io/blog/2014/06/25/railo-security-part-one/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

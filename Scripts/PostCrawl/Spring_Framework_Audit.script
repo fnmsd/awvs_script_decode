@@ -1,0 +1,124 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+// site files to be tested
+var files 		= new Array();
+var lastJob 	= null;
+var lastJob2 	= null;
+var confirmJob 	= null;
+var vulnCount 	= 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.addCookies = false;
+	lastJob.execute();	
+	if (!lastJob.wasError)
+	{
+		return true;
+	}
+	
+	return false;
+}		
+// **************************************************************************************							 
+function request2(uri)
+{
+	lastJob2 = new THTTPJob();
+		
+	lastJob2.url = scanURL;
+	lastJob2.verb = 'GET';
+	lastJob2.URI = uri;
+	lastJob2.addCookies = false;
+	lastJob2.execute();	
+	if (!lastJob2.wasError)
+	{
+		return true;
+	}
+	
+	return false;
+}			 			
+/***********************************************************************************/
+function testSiteFile_CVE_2014_3625(sf)
+{	
+	var origResponse = sf.response.body;
+	
+	// don't work with empty responses
+	if (!origResponse) return false;
+	
+	// first, make a request with %01sf.name
+	if (request(sf.path + "%01" + sf.name) && lastJob.responseStatus == 200) {
+		var resp01 = lastJob.response.body;
+		
+		if (resp01 != "" && origResponse == resp01)  {
+			// second, make a request with %21
+			if (request2(sf.path + "%20" + sf.name) && lastJob2.responseStatus == 200) {
+				var resp02 = lastJob2.response.body;		
+				if (resp02 != "" && resp02 == resp01) {
+					// third, make a request with %7F 
+					var uri = sf.path + "%7F" + sf.name;
+					if (request2(uri) && lastJob2.responseStatus == 404) {
+						// this should return 404 (in fixed version returns 200)
+						// logError("alert");
+						alert(sf.fullPath, "Spring_CVE-2014-3625.xml", lastJob);
+						vulnCount += 1;
+					}
+				}
+			}
+		}
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var addedCSS 	= 0;
+	var addedJS  	= 0;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			// add 3 CSSs and 3 JSs
+			
+			// CSS			
+			if (sf.name.endsWith(".css") && addedCSS<3)
+			{
+				files.push(sf);
+				addedCSS+=1;
+			}					
+			// JS
+			if (sf.name.endsWith(".js") && addedJS<3)
+			{
+				files.push(sf);
+				addedJS+=1;
+			}					
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+	  	// don't test on all files (stop after 2 vulnerable action files).
+		if (vulnCount < 2)
+			testSiteFile_CVE_2014_3625(files[i]);
+	}
+}

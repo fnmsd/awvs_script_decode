@@ -1,0 +1,38 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+var lastJob = false;
+// **************************************************************************************
+function alert(path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    AddReportItem(ri);
+}
+// **************************************************************************************
+function getVersion(dir){
+    var version = dir.response.headerValue("MicrosoftSharePointTeamServices");
+    if (version)
+        return version.trim();
+	return false;
+}
+var dir = getCurrentDirectory();
+var versionStr = getVersion(dir);
+var alreadyReportedWebApplication = getGlobalValue("detectedAppSharepoint");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppSharepoint", 1, true);
+    var kbaseText = "SharePoint web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].";
+    if (versionStr)  kbaseText = "SharePoint web application version [dark][bold]" + versionStr + " [/bold][/dark]was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].";
+    
+    KBase("SharePoint web application", kbaseText);
+}
+if (versionStr) {
+	var details = "Current version is [dark][bold]" + versionStr + "[/bold][/dark]";
+	if (version_compare(versionStr, '15.0.4571.1502', '<=') && version_compare(versionStr, '15.0.0.0', '>=')) {
+		alert(dir.fullPath, "SharePoint_CVE-2015-2522.xml", details);
+	}
+}

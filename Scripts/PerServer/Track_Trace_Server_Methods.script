@@ -1,0 +1,33 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + vxml; 	
+		
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(method, fname, vxml)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = method;
+	http.URI = '/' + fname;
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200 && http.response.body.indexOf(http.URI + ' HTTP/1.1') != -1)
+	{
+		alert(http, vxml);
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var rndStr = randStr(10);
+request('TRACK', rndStr, 'TRACK_Method_Enabled.xml');
+request('TRACE', rndStr, 'TRACE_Method_Enabled.xml');

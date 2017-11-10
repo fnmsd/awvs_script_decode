@@ -1,0 +1,47 @@
+#include helpers.inc;
+var variants = [
+				"/_vti_pvt/service.cnf"
+				];
+// **************************************************************************************							 
+function alert(job, URL, vxml)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = URL;
+	ri.alertPath = "Scripts/" + vxml; 	
+		
+	ri.setHttpInfo(job);
+	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function testURL(URL)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = 'GET';	
+	http.URI = URL;
+	
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200 && !http.notFound)
+	{
+		if (http.response.body.indexOf('vti_encoding:') != -1)
+		{
+			alert(http, URL, 'IIS_service_cnf.xml');
+			return 1;
+		}	
+	}	
+	return 0;	
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0; i<variants.length; i++) 
+{
+	if (testURL(variants[i])) break;	
+}

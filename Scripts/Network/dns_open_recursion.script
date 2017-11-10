@@ -1,0 +1,72 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for DNS open recursion
+function prepare_domain_name(domain)
+{
+	var res = "";
+	parts = domain.split(".");
+	for (i=0;i<parts.length;i++)
+	if (parts[i].length > 0)
+	{
+		res += String.fromCharCode(parts[i].length);
+		res += parts[i];
+	}
+	//trace(res);
+	return res;
+}
+function prepare_A_dns_request(domain)
+{
+	var res = "";	
+	res = String.fromCharCode(
+						 0x31, 0x07,   // transaction ID
+             0x00, 0x00,   // flags - standard query
+             0x00, 0x01,   // questions
+             0x00, 0x00,   // answers
+             0x00, 0x00,   // auth rrs
+             0x00, 0x00),  // additional rrs
+	res += prepare_domain_name(domain); 
+	res += String.fromCharCode(
+						 0x00,         // null
+             0x00, 0x01,   // A
+             0x00, 0x01)   // class IN
+	return res;
+}
+// start
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port = 53;
+socket.Timeout = 5;
+socket.Connect();
+if(socket.IsConnected){
+	dns_req = prepare_A_dns_request("testasp.vulnweb.com");
+	//trace(dns_req.toHexString());	
+	socket.Send(dns_req);
+	dnsRespStr = socket.Receive(true);	
+	// get response 
+	if (dnsRespStr.length >= 8 ) {
+		
+			tid = dnsRespStr.getWordAt(0, true);	
+			
+			flags1 = dnsRespStr.getByteAt(2, true);
+			flags2 = dnsRespStr.getByteAt(3, true);
+			respCount = dnsRespStr.getWordAt(6, true);
+			//trace(flags1);
+			//trace(flags2);
+			if ((flags1 & 0x80) == 0x80) 		 // is a response
+			{
+				trace("DNS server running");
+				KBase("DNS server running", "A DNS server is running on UDP port 53.");				
+			}
+			if ( ((flags1 & 0x80) == 0x80) 		 // is a response
+						&& ((flags2 & 0x80) == 0x80) // recursion is enabled
+						&& (respCount) 							 // have responses
+						&& (tid == 0x3107) 					 // valid tid
+				)	
+			{
+				// here we can report success
+				trace("dns open recursion is enabled!");
+				ReportItem("Dns_open_recursion.xml", "The DNS server is running on UDP port 53.");
+			}
+	}
+	socket.Close();
+}

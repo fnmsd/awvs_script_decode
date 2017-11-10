@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="XSS on Apache HTTP Server 413 error pages via malformed HTTP method" version="0.1" released="20080307" updated="20160107" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2007-6203" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>It is possible to cause Apache HTTP server to return client-supplied scripting code by submitting a malformed HTTP method which would actually carry the payload (i.e.: malicious JavaScript) and invalid length data. Consult web references for more information about this vulnerability.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>This type of attack can result in non-persistent defacement of the target site, or the redirection of confidential information (i.e. session IDs) to unauthorised third parties provided that a web browser is tricked to submit a malformed HTTP method.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache.</Recommendation>
+		<Reference database="PR07-37 - XSS on Apache HTTP Server 413 error pages via malformed HTTP method" URL="http://procheckup.com/Vulnerability_PR07-37.php"></Reference>
+		<Reference database="CVE-2007-6203" URL="https://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2007-6203"></Reference>
+	</TestDescription>
+</WebApplicationTest>

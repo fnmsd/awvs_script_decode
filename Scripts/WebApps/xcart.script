@@ -1,0 +1,9 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppXCart");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppXCart", 1, true);
+    KBase("X-Cart web application", "X-Cart web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}

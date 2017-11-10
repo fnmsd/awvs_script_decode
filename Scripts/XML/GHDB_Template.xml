@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+  <TestDescription name="GHDB Template" version="0.1" released="20050302" updated="20050302" protocol="HTTP" mayproxy="true" affects="file" severity="info" alert="success" type="Informational">
+    <WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo=""/>
+    <Reference database="The Google Hacking Database (GHDB) community" URL="http://johnny.ihackstuff.com/"/>
+    <Reference database="Acunetix Google hacking" URL="http://www.acunetix.com/websitesecurity/google-hacking.htm"/>
+    <Copyright/>
+    <Description>GHDB description</Description>
+    <ApplicableTo>
+      <Platform>
+        <OS>All</OS>
+        <Arch>i386</Arch>
+      </Platform>
+      <WebServer>All</WebServer>
+      <ApplicationServer>All</ApplicationServer>
+    </ApplicableTo>
+    <TriggerOn event="scheme_host_port">
+      <Match type="regex">.*</Match>
+    </TriggerOn>
+    <Impact>Not available. Check description.</Impact>
+    <Recommendation>Not available. Check description.</Recommendation>
+  </TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,275 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+#include viewstate_parser.inc;
+#include viewstate_audit.inc;
+#include jsf_viewstate_audit.inc;
+#include reporting_helpers.inc;
+#noretest;
+var debug = false;
+var acceptedExt		=	[
+	"php", "php3", "php4", "php5", "phtml", // php
+	"asp", "aspx", "ascx", "asmx",	// asp
+	"chm", "cfc", "cfmx", "cfml",	// cold fusion
+	"py", 	// python
+	"rb", 	// ruby
+	"pl",	// perl
+	"cgi",	// cgi
+	"jsp", "jhtml", "jhtm", "jws",	// java
+	"do" 
+	];
+// **************************************************************************************
+function interestingExtension(ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+		if (ext.toLowerCase() == acceptedExt[i]) 
+			return true;
+      }	
+	return false;
+}
+	
+// **************************************************************************************
+function alert(matchedText, xml)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(xml);
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function alert2(debugHeader, headerValue, xml)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(xml);
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;
+	
+	if (debugHeader) {
+		ri.Details + "[break]A header named [dark]" + debugHeader + "[/dark] was found in the response. Decoded header value: [pre]" + headerValue + "[/pre]";
+	}
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function alertFormMail(matchedText, xml)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(xml);
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;
+	if (matchedText) {
+		ri.Details =  matchedText;
+	}
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+    // don't search files with invalid content-types, empty bodies or invalid HTTP statuses	
+    if (file.response.body.length == 0) return false;
+    if (file.response.body.length > 250*1024) return false;
+	if (file.response.msg2 == 403 || file.response.msg2 == 401) return false; 
+    
+	// always search files with interesting extensions
+	var fileExt  = getFileExt(file.name);
+	if (interestingExtension(fileExt)) return true;
+    if (file.response.headerValue('content-type').indexOf('text') == -1) return false;
+	
+	return true;
+}
+// **************************************************************************************
+function CheckViewState(file) {
+	function alertViewStateMAC(file, viewstateStr)
+	{
+		var ri = new TReportItem();
+		ri.LoadFromFile("ViewState_MAC_disabled.xml");
+		ri.affects = file.fullPath;
+		ri.alertPath = "Scripts/" + ri.Name;
+		ri.request = file.request.headersString;
+		ri.response = file.response.headersString;
+		ri.fullResponse = file.response.body;
+		if (viewstateStr) {
+			ri.Details =  ri.Details + "[break]View state value (truncated): [dark]" + viewstateStr.trunc(128) + "[/dark].";
+		}
+		AddReportItem(ri);	
+	}
+    function alertJSFViewStateClientSide(file)
+    {
+        var ri = new TReportItem();
+        ri.LoadFromFile("JSF_ViewState_Client_Side.xml");
+        ri.affects = file.fullPath;
+        ri.alertPath = "Scripts/" + ri.Name;
+        ri.request = file.request.headersString;
+        ri.response = file.response.headersString;
+        ri.fullResponse = file.response.body;
+        AddReportItem(ri);
+    }
+    var body = file.response.body;
+	var contentType= file.response.headerValue('content-type');
+	
+	var pd = getParserData(body, contentType);
+    if (pd) {
+    	var forms = pd.getForms();
+    	if (forms.count > 0) {	
+    		for (var i=0; i<forms.count; i++) {
+    				var myform = forms.item(i);
+    				var formAction = myform.action;
+    					for (var j=0; j<myform.inputs.count; j++) {
+    						var inputName = myform.inputs.item(j).name;
+    						var inputType = myform.inputs.item(j).inputType.toLowerCase();
+							var inputValue = url2plain(myform.inputs.item(j).defaultValue);
+//    						if (
+//    							(inputName == '__VIEWSTATE') &&
+//    							(inputType == 'hidden')
+//    							)
+//    						{
+//    							if (!ViewStateMACisEnabled(inputValue)) {
+//    								alertViewStateMAC(file, inputValue);
+//    							}
+//							}
+                            // look for JSF ViewState
+                            if (
+                                (inputName == 'javax.faces.ViewState') &&
+                                (inputType == 'hidden')
+                                )
+                            {
+                                if (JSFViewStateClientSide(inputValue)) {
+                                    alertJSFViewStateClientSide(file);
+                                }
+                            }
+                        }
+			}
+		}
+    }
+    	
+    return false;	
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+var matches = new classMatches();
+var matchedText = "";
+// verify if the file should be searched
+if (file.isFile && fileShouldBeSearched()) 
+{
+    if (debug) trace("1");
+	matchedText = TestForApplicationErrorMessages(matches, file.response.toString());
+	if (matchedText) alert(matchedText, "Application_error_message_on_page.xml");
+	
+    if (debug) trace("2");
+	matchedText = TestForASPNETPathDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "ASP.NET_path_disclosure.xml");
+	
+    if (debug) trace("3");
+	matchedText = TestForColdFusionPathDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "ColdFusion_path_disclosure.xml");
+	
+    if (debug) trace("4");
+	matchedText = TestForEmailAddresses(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Email_address_found.xml");
+		
+    if (debug) trace("5");
+	matchedText = TestForInternalIP(matches, file.response.toString());
+	if (matchedText) alert(matchedText, "Possible_internal_IP_address_disclosure.xml");
+		
+    if (debug) trace("6");
+	matchedText = TestForMicrosoftOfficeInfo(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Microsoft_Office_possible_sensitive_information.xml");
+	
+    if (debug) trace("7");
+	matchedText = TestForPhpInfo(matches, file.response.body);
+	if (matchedText) alert(matchedText, "PHPInfo_page_found.xml", file.response.body);	
+	
+    if (debug) trace("8");
+	matchedText = TestForRemoteSWFInclusion(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Possible_remote_SWF_inclusion.xml");
+		
+    if (debug) trace("9");
+    TestForSensitiveDataCCorSSN(matches, file.response.body);
+    if (debug) trace("10");
+	matchedText = TestForServerPathDisclosureWindows(matches, file.response.toString());
+	if (matchedText) alert(matchedText, "Possible_server_path_disclosure_(Windows).xml");
+    if (debug) trace("11");
+	matchedText = TestForServerPathDisclosureUnix(matches, file.response.toString());
+	if (matchedText) alert(matchedText, "Possible_server_path_disclosure_(Unix).xml");	
+	
+    if (debug) trace("12");
+	matchedText = TestForSourceCodeDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Source_Code_Disclosure.xml");
+		
+    if (debug) trace("13");
+	matchedText = TestForTrojanShellScript(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Trojan_shell_scripts_text_search.xml");	
+	
+    if (debug) trace("14");
+	matchedText = TestForUsernameOrPasswordDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Possible_username_or_password_disclosure.xml");
+	
+    if (debug) trace("15");
+	matchedText = TestForWordpressCredentials(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Wordpress_database_credentials_disclosure.xml");	
+    
+    if (debug) trace("16");
+	matchedText = TestForRSAPrivateKey(matches, file.response.body);
+	if (matchedText) alert(matchedText, "RSA_private_key.xml");	
+    
+    if (debug) trace("17");
+	matchedText = TestMySQLConnectInfo(matches, file.response.body);
+	if (matchedText) alert(matchedText, "MySQL_connect_info.xml");    
+	
+    if (debug) trace("18");
+	matchedText = TestForFlashAllowScriptAccess(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Flash_AllowScriptAccess.xml"); 	
+	
+    if (debug) trace("19");
+	matchedText = TestStruts2DevMode(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Struts_DevMode.xml");	
+	
+    if (debug) trace("20");
+	matchedText = TestDatabaseConnectionStringDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Database_connection_string.xml");		
+	
+    if (debug) trace("21");
+	matchedText = TestMySQLUsernameDisclosure(matches, file.response.body);
+	if (matchedText) alert(matchedText, "MySQL_Username_Disclosure.xml");			
+	
+    if (debug) trace("22");
+	debugHeader = TestChromeLogger(file.response);
+	if (debugHeader) {
+		var headerValue = b642plain(file.response.headerValue(debugHeader));
+		alert2(debugHeader, headerValue, "Chrome_Logger_Information_Disclosure.xml");				
+	}
+	
+    if (debug) trace("23");
+	matchedText = TestSFWebDebugToolbar(matches, file.response.body);
+	if (matchedText) alert(matchedText, "Symfony_Debug_Toolbar.xml");			
+	
+    if (debug) trace("24");
+	matchedText = TestFormMailSpam(file.response.body, file.response.headerValue('content-type'));
+	if (matchedText) alertFormMail(matchedText, "Form_Mail_Spam.xml");
+    if (debug) trace("25");
+    CheckViewState(file);
+    if (debug) trace("26");
+    matchedText = TestDWR(file.response.body);
+    if (matchedText) {
+        KBase("Direct Web Remoting", "DWR is a Java library that enables Java on the server and JavaScript in a browser to interact and call each other as simply as possible. DWR was detected on URL: " + file.fullPath);
+    }
+	if (debug) trace("27");
+	matchedText = TestStrutsDevMode(file.response.body);
+    if (matchedText) alert(matchedText, "Struts_DevMode.xml");
+}

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="XPath injection vulnerability" version="0.1" released="20060126" updated="20140226" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="true" DetaliedInformation="" SendCookies="true" AlertTags="xpath_injection" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-643" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N" CVSSScoreTemp="5.9" CVSSScoreEnv="5.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to XPath Injection attacks.[break][break]XPath Injection is an attack technique used to exploit web sites that construct XPath queries from user-supplied input.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An unauthenticated attacker may extract a complete XML document using  XPath querying. This may compromise the integrity of your database and expose sensitive information.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input.</Recommendation>
+		<Reference database="XPath injection in XML databases" URL="http://palisade.plynt.com/issues/2005Jul/xpath-injection/"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="XPathInvalidToken" type="string">
+					<Description>Test for invalid token</Description>
+					<Source source="body">(?i)(&lt;b&gt;\sException\sDetails:\s&lt;/b&gt;System\.Xml\.XPath\.XPathException:\s'.*'\shas\san\sinvalid\stoken\.&lt;br&gt;&lt;br&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="XPathUnclosedString" type="string">
+					<Description>Test for unclosed string</Description>
+					<Source source="body">(?i)(&lt;b&gt;\sException\sDetails:\s&lt;/b&gt;System\.Xml\.XPath\.XPathException:\sThis\sis\san\sunclosed\sstring\.&lt;br&gt;&lt;br&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="XPathException" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(?i)(System.Xml.XPath.XPathException\:\ )</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>404</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${XPathInvalidToken}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${XPathUnclosedString}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${XPathException}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>MS.Internal.Xml.</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unknown error in XPath</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>org.apache.xpath.XPath</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>A closing bracket expected in</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>An operand in Union Expression does not produce a node-set</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Cannot convert expression to a number</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Document Axis does not allow any context Location Steps</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Empty Path Expression</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Empty Relative Location Path</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Empty Union Expression</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Expected node test or name specification after axis operator</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incompatible XPath key</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incorrect Variable Binding</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>libxml2 library function failed</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>error '80004005'</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>A document must contain exactly one root element.</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>&lt;font face="Arial" size=2&gt;Expression must evaluate to a node-set.</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Expected token '\]'</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>List of cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>List of header combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

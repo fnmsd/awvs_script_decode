@@ -1,0 +1,17 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include drupal_helpers.inc;
+#include backup_file_variants.inc;
+#include webapp_config_backup.inc;
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppDrupal");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppDrupal", 1, true);           
+    KBase("Drupal web application", "Drupal web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+// test for vulnerable plugins
+testForVulnPlugins(dir);  
+// test for config file backup files
+testConfigFileBackupFile(dir, dir.fullPath + "/sites/default", "settings", "php");

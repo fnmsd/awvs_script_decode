@@ -1,0 +1,41 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, uri)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);	
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function Test()
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = '/application/configs/application.ini';
+    
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{		
+		matches.plainArray = [];	
+		matches.regexArray = [/resources\..*?\s+=\s*/];	
+	
+		var matchedText = matches.searchOnText(lastJob.response.body);		
+		if (matchedText) {			
+			alert('Zend_Framework_Config_File.xml', lastJob.URI);
+		}
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var lastJob = null;
+var matches = new classMatches();
+Test();

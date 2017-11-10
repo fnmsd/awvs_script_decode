@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="SSL 2.0 deprecated  protocol" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="The remote service accepts connections encrypted using SSL 2.0,  which suffers from several cryptographic flaws and has been deprecated." AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.8" CVSSScoreEnv="6.8"/>
+		<Copyright/>
+		<Description>The remote service encrypts traffic using an old deprecated protocol with known weaknesses.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact> An attacker may be able to exploit these issues to conduct man-in-the-middle attacks or decrypt communications between the affected service and clients. </Impact>
+		<Recommendation>Disable SSL 2.0 and use SSL 3.0 or TLS 1.0 instead. </Recommendation>
+		<Reference database="Original Advisory" URL="http://www.schneier.com/paper-ssl.pdf"/>
+	</TestDescription>
+</WebApplicationTest>

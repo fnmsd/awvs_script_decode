@@ -1,0 +1,40 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = "Current version: [bold]" + details + "[/bold]";    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testAkeebaBackup(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.verb = 'GET';
+	lastJob.url = dir.url;
+	
+	lastJob.URI = uri + "/administrator/components/com_akeeba/akeeba.xml";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.body.indexOf("<version>") != -1){
+		var vulnRegex = /<version>([\d\.]+)<\/version>/;
+		var m = vulnRegex.exec(lastJob.response.body);            
+		if (m && m.length>1 && m[1].length == 6) {
+			var versionText = m[1];
+			// convert it to number
+			var versionNumber = versionText.replace(".", "").replace(".", "");
+			// check version number
+			// trace(versionNumber);
+			if (versionNumber <= 3114) {
+				alert(lastJob, lastJob.URI, "Akeeba_Backup_Access_Control_Bypass.xml", versionText);
+			}
+		}
+	}	
+}
+var dir = getCurrentDirectory();
+testAkeebaBackup(dir, dir.fullPath);

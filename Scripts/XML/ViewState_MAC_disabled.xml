@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="View state MAC disabled" version="0.1" released="20080307" updated="20140805" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>View state MAC does not appear to be enabled on this page. View state MAC setting determines whether ASP.NET should check message authentication code (MAC) in the page's view state when the page is posted back from the client. When view state MAC is disabled, an attacker can modify the value of the view state and resubmit the modified value.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Depending on how the web application is using the view state data, a page with MAC disabled can conduct to various security issues. It's recommended to enable view state MAC to prevent this problem.</Impact>
+		<Recommendation>You can enable view state MAC by setting the  enableViewStateMac property to [bold]true[/bold] using a code similar to the one below.
+[code][pre]
+&lt;pages enableViewStateMac="true" /&gt;
+[/pre][/code]</Recommendation>
+		<Reference database="Page.EnableViewStateMac Property" URL="http://msdn.microsoft.com/en-us/library/system.web.ui.page.enableviewstatemac(v=vs.110).aspx"/></TestDescription>
+</WebApplicationTest>

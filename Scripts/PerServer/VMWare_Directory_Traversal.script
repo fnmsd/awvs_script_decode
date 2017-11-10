@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(job, fname)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function TestForDirectoryTraversal(matches, job)
+{
+	var res = null;
+	
+		matches.plainArray = [
+						  ];
+		
+		matches.regexArray = [
+							/((\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3})/
+						  ];	
+	
+	var matchedText = matches.searchOnText(job.response.body);	
+	if (matchedText) { alert(job, "Directory_traversal_vulnerability_in_VMware_Server.xml"); res = 1; }
+	
+	return res;
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	var http = new THTTPJob();
+		
+	http.addCookies = false;
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	if (!http.wasError && !http.notFound)
+	{
+		return TestForDirectoryTraversal(matches, http);
+	}	
+}
+// **************************************************************************************	
+function startTesting()
+{
+	if (request('/sdk/../../../../../../../../../../../../../etc/passwd')) return;	
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+startTesting();

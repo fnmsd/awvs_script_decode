@@ -1,0 +1,81 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	addHTTPJobToCrawler(job, 1, 1);
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testFCKOnURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.addCookies = false;
+	lastJob.request.addHeader("Content-Type", "multipart/form-data; boundary=---------------------------29565348729577", true);
+	
+	lastJob.request.body = '-----------------------------29565348729577' + CRLF() +
+											   'Content-Disposition: form-data; name="NewFile"; filename="Acunetix_WVS_File_Upload_test.txt"' + CRLF() +
+												 'Content-Type: text/plain' + CRLF() +
+												 '' + CRLF() +
+												 'Testing file upload.' +CRLF() +
+												 '-----------------------------29565348729577--' + CRLF();
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('OnUploadCompleted') != -1 && lastJob.response.body.indexOf('Acunetix_WVS_File_Upload_test') != -1)
+		{
+				// upload was successful
+				alert(uri, 'ColdFusion_8_FCKEditor_File_Upload_Vulnerability.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function testFCKOnDir(dir)
+{	
+	//trace("testing FCK on dir: " + dir);
+	if (testFCKOnURI(dir + "editor/filemanager/connectors/cfm/connector.cfm")) return;
+	if (testFCKOnURI(dir + "editor/filemanager/connectors/cfm/cf_connector.cfm")) return;
+	if (testFCKOnURI(dir + "editor/filemanager/connectors/cfm/cf5_connector.cfm")) return;
+	if (testFCKOnURI(dir + "editor/filemanager/upload/cfm/upload.cfm")) return;
+}
+// **************************************************************************************	
+function ColdFusionIsDetected()
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/" + randStr(10) + ".cfm";;	
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.notFound && lastJob.response.body.indexOf('<title>Error Occurred While Processing Request</title>') != -1)
+	{
+		return true;
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+if (ColdFusionIsDetected())
+{
+	testFCKOnDir('/CFIDE/scripts/ajax/FCKeditor/');
+	testFCKOnDir('/www/CFIDE/scripts/ajax/FCKeditor/');
+	testFCKOnDir('/FCKeditor/');
+}

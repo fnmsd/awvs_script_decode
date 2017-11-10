@@ -1,0 +1,25 @@
+#include reporting_helpers.inc;
+// test for POP3 server
+if (IsPortOpen(110)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 110;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		data = socket.ReceiveLine();
+		//trace(data);
+		if (data.indexOf("+OK") == 0) {
+		socket.send("USER \"acunetix\" \r\n");
+		data = socket.ReceiveLine();			
+		//trace(data);
+		if (data.indexOf("+OK") == 0)
+			{
+				trace("kbase: pop3 server detected!");
+				KBase("POP3 server running", "A POP3 server is running on TCP port 110.");
+				socket.send("QUIT \r\n");
+			}
+		}
+		socket.Close();
+	}
+}

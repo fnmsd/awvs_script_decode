@@ -1,0 +1,37 @@
+#include constants.inc;
+#include helpers.inc;
+#include dir_listing_helpers.inc;
+#noretest;
+// **************************************************************************************
+function alert(matchedText)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile("Directory_Listing.xml");
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/Directory listing found";
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+	if (file.response.msg2 != 200) return false;
+	if (file.response.headerValue('content-type').indexOf('text') == -1) return false;
+	if (file.response.body.length == 0) return false;
+	return true;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+var matches = new classDirListingMatches();
+// verify if the file should be searched
+if (file.isDir && fileShouldBeSearched()) 
+{
+	var matchedText = matches.searchOnText(file.response.body);		
+	if (matchedText) alert(matchedText);
+}

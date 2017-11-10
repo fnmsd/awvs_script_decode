@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Cross site scripting vulnerability in ZeroClipboard.swf" version="0.1" released="20080307" updated="20151124" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The ZeroClipboard library provides an easy way to copy text to the clipboard using an invisible Adobe Flash movie and a JavaScript interface. A cross site scripting vulnerability was reported in older versions of the ZeroClipboard library that may allow an attacker to execute arbitrary Javascript code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of ZeroClipboard.</Recommendation>
+		<Reference database="XSS (cross site scripting) in ZeroClipboard swf files" URL="https://github.com/zeroclipboard/zeroclipboard/issues/14"></Reference>
+		<Reference database="XSS vulnerabilities in ZeroClipboard" URL="http://seclists.org/fulldisclosure/2013/Feb/103"></Reference>
+		<Reference database="ZeroClipboard " URL="http://zeroclipboard.org/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

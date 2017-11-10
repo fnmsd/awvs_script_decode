@@ -1,0 +1,39 @@
+#include reporting_helpers.inc;
+var soc = new TSocket('udp');
+soc.host = ScanHost;
+soc.port = 7;
+soc.timeout = 4;
+soc.connect();
+var strEchoTest = "Hello there from acunetix.";
+if(soc.IsConnected)
+{
+	soc.send(strEchoTest);
+	var data = soc.receive(true);
+	soc.Close();
+	
+	if((data.length > 0) && (data == strEchoTest))
+	{
+		trace("UDP Echo server detected!");
+		ReportItem("Echo.xml", "Echo server is running on UDP port 7.");
+	}
+}
+if (IsPortOpen(7)) {
+	soc = new TSocket('tcp');
+	soc.host = ScanHost;
+	soc.port = 7;
+	soc.timeout = 4;
+	soc.connect();
+	var strEchoTest = "Hello there from acunetix.";
+	if(soc.IsConnected)
+	{
+		soc.send(strEchoTest);
+		var data = soc.receive(true);
+		soc.Close();
+		
+		if((data.length > 0) && (data == strEchoTest))
+		{
+			trace("TCP Echo server detected!");
+			ReportItem("Echo.xml", "Echo server is running on TCP port 7.");
+		}
+	}
+}

@@ -1,0 +1,85 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.0.43 Win32 file reading vulnerability" version="0.1" released="20040327" updated="20140313" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="information_disclosure,missing_update" CVE="CVE-2003-0017" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.8"/>
+		<Reference database="CAN 2003-0017" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2003-0017"/>
+		<Copyright/>
+		<Description>Apache 2.0 before 2.0.44 on Windows platforms allows remote attackers to obtain certain files via an HTTP request that ends in certain illegal characters such as &gt;, which causes a different filename to be processed and served. [break][break][navy]Affected Apache versions (up to 2.0.43).[/navy]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Sensitive file disclosure.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="Apache Homepage" URL="http://httpd.apache.org"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}/&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="ServerBannerCheck" type="string">
+					<Description>Get the server banner</Description>
+					<Source source="header">Server:\s(Apache/2.*\(Win32\))</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>301</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<!-- /etc/password contents -->
+						<Compare variable="${FullBody}" test="cont">
+							<Value>&lt;title&gt;301 Moved Permanently&lt;/title&gt;</Value>
+							<Compare variable="${ServerBannerCheck}" test="cont">
+								<Value>Apache</Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

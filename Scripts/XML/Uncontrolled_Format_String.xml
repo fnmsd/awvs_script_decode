@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Uncontrolled format string" version="0.1" released="20080307" updated="20140728" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,buffer_overflow" CVE="" CWE="CWE-134" CVSSVer="2.0" CVSSScore="5.1" CVSSDescr="AV:N/AC:H/Au:N/C:P/I:P/A:P" CVSSScoreTemp="5.2" CVSSScoreEnv="5.2"/>
+		<Copyright></Copyright>
+		<Description>This web application/server uses externally-controlled format strings in printf-style functions, which can lead to buffer overflows or data representation problems. Format string attacks alter the flow of an application by using string formatting library features to access other memory space. Vulnerabilities occur when user-supplied data are used directly as formatting string input for certain C/C++ functions (e.g. fprintf, printf, sprintf, setproctitle, syslog, ...). If an attacker passes a format string consisting of printf conversion characters (e.g. "%f", "%p", "%n", etc.) as a parameter value to the web application, they may: [break]
+[ul]
+[li]Execute arbitrary code on the server[/li]
+[li]Read values off the stack[/li]
+[li]Cause segmentation faults/software crashes[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can possibly read values from the stack, cause segmentation faults/software crashes and even execute arbitrary code on the server.</Impact>
+		<Recommendation>Ensure that all format string functions are passed a static string which cannot be controlled by the user and that the proper number of arguments are always sent to that function as well. If at all possible, use functions that do not support the %n operator in format strings.</Recommendation>
+		<Reference database="Format string attack" URL="https://www.owasp.org/index.php/Format_string_attack"/><Reference database="scut (TESO): Exploiting Format String Vulnerabilities" URL="http://julianor.tripod.com/bc/formatstring-1.2.pdf"/></TestDescription>
+</WebApplicationTest>

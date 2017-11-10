@@ -1,0 +1,41 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";	
+	
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function test_register_enabled(dir, path)
+{
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'wp-login.php?action=register';
+	
+	http.execute();
+	
+	if (!http.wasError && (http.responseStatus == 200 || http.responseStatus == 206)){		
+		var regex = /(<form id="setupform" method="post" action="[^"]*wp-signup\.php[^"]*">|<form name="registerform" id="registerform" action="[^"]*wp-login\.php[^"]*")/i;
+		
+		var match  = regex.exec(http.response.body);    
+	    if (match && match[1]) {
+	    	var matchStr = match[1].trunc(1024);
+	    	//trace(matchStr);
+	    	alert("WordPress_registration_enabled.xml", http, http.uri, matchStr);
+	    }
+	}
+}
+var dir = getCurrentDirectory();
+test_register_enabled(dir, dir.fullPath);

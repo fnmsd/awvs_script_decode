@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Multiple critical vulnerabilities in Apache Struts2" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2012-0393" CWE="CWE-264" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.1" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>Apache Struts2 is a web framework for creating Java web applications. It is
+using the OpenSymphony XWork and OGNL libraries. By default, XWork's
+ParametersInterceptor treats parameter names provided to actions as OGNL
+expressions. A OGNL (Object Graph Navigation Language) expression is a limited
+language similar to Java that is tokenized and parsed by the OGNL parser which
+invokes appropriate Java methods.  Under certain circumstances it's possible to send custom OGNL statements and execute
+malicious Java code.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote attacker can send custom OGNL statements and execute arbitrary Java code on the vulnerable server.</Impact>
+		<Recommendation>Upgrade to Struts version 2.3.1.1</Recommendation>
+		<Reference database="Multiple critical vulnerabilities in Apache Struts2" URL="http://www.exploit-db.com/exploits/18329/"/><Reference database="22 January 2011 - Struts 2.3.1.2 General Availability Release" URL="http://struts.apache.org/announce.html"/></TestDescription>
+</WebApplicationTest>

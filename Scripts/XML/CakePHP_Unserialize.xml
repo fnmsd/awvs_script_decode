@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="CakePHP 1.3.5 / 1.2.8 unserialize() vulnerability" version="0.1" released="20080307" updated="20160107" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2010-4335" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>CakePHP is a rapid development framework for PHP that provides an extensible
+architecture for developing, maintaining, and deploying applications. Using
+commonly known design patterns like MVC and ORM within the convention over
+configuration paradigm, CakePHP reduces development costs and helps developers
+write less code. [break][break]
+
+CakePHP is vulnerable to a file inclusion attack because of its use of the "unserialize()" function on unchecked user input. This makes it possible to inject arbitary objects into the scope.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute any PHP code on your server.</Impact>
+		<Recommendation>Upgrade CakePHP to the latest version.</Recommendation>
+		<Reference database="CakePHP &lt;= 1.3.5 / 1.2.8 unserialize() Vulnerability" URL="https://www.exploit-db.com/exploits/16011/"/><Reference database="CakePHP website" URL="http://cakephp.org"/></TestDescription>
+</WebApplicationTest>

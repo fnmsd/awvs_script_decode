@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="JIRA Security Advisory 2013-02-21" version="0.1" released="20080307" updated="20150303" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>This advisory details critical security vulnerabilities that we have found in JIRA and fixed in recent versions of JIRA. These vulnerabilities affect all versions of JIRA up to and including [bold]5.1.4[/bold]. [break][break]
+[ul]
+[li]Issue 1: File Overwrite Vulnerability[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Consult web references to determine the impact of each particular vulnerability.</Impact>
+		<Recommendation>Customers who have downloaded and installed JIRA should upgrade their existing JIRA installations or apply the patches to fix these vulnerabilities.  </Recommendation>
+		<Reference database="JIRA Security Advisory 2013-02-21" URL="https://confluence.atlassian.com/display/JIRA/JIRA+Security+Advisory+2013-02-21"/></TestDescription>
+</WebApplicationTest>

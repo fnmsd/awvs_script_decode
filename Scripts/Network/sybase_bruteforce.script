@@ -1,0 +1,42 @@
+#include classMSSQL.inc;
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+function bruteforceSybase(host, port)
+{
+	var loginRetval, i, j;
+		for(i = 0; i < Usernames.length; i++)
+		{
+			for(j = 0; j < Passwords.length; j++)
+			{
+			
+				var Sybase = new mySQLHandlerClass(host, port);
+								
+				var strUser = Usernames[i];
+				var strPass = Passwords[j];
+				
+				var loginRetval = Sybase.login(strUser, strPass);
+				
+				ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+				
+				if(loginRetval == -2) // connection error
+					return(null);
+				if(loginRetval == 1)
+					return({"username" : strUser, "password": strPass});				
+			}
+		}
+	return(null);
+}
+var port = 5000;
+if(IsPortOpen(port))
+{
+	var obj =	bruteforceSybase(ScanHost, port);
+	if(obj != null)
+	{
+		trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+		ReportItem("Sybase_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.password + "[/dark]");	
+	}
+	else 
+	{
+		trace ("Can not guess login credentials.");
+	}
+}

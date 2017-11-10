@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Arbitrary local file read via file upload" version="0.1" released="20080307" updated="20150216" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="unauthenticated_file_upload" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Acunetix WVS uploaded a ZIP file containing a symlink to /etc/passwd. It looks like that web application processed this file and returned the contents of /etc/passwd in response.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read arbitrary files accessible to the web server.</Impact>
+		<Recommendation>The web application should filter symlinks included inside ZIP files.</Recommendation>
+		<Reference database="Reading local files from Facebook's server" URL="http://josipfranjkovic.blogspot.fr/2014/12/reading-local-files-from-facebooks.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

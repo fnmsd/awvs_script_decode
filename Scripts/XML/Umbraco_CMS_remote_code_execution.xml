@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Umbraco CMS remote code execution" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Umbraco CMS version 4.7.0 is vulnerable to a remote code execution vulnerability. An attacker can upload files via an unsecured web service located at /umbraco/webservices/codeEditorSave.asmx (method [bold]SaveDLRScript[/bold]). Acunetix WVS created a file named [bold]testAcunetix.test[/bold] to test for this vulnerability.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of Umbraco CMS.</Recommendation>
+		<Reference database="Find Bugs Faster With A WebMatrix Local Reference Instance" URL="http://blog.gdssecurity.com/labs/2012/7/3/find-bugs-faster-with-a-webmatrix-local-reference-instance.html"></Reference>
+		<Reference database="Umbraco CMS download" URL="http://umbraco.org/download/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

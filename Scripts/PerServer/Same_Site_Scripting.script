@@ -1,0 +1,26 @@
+#engine 3.2;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;	
+  
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// determine basehost
+var baseHost = scanHost;
+var m = /^www\d?\.(.*)$/.exec(scanHost);
+if (m) {baseHost = m[1];}
+var localHostDomain = "localhost." + baseHost;
+var localHostDomainIP = getHostByName(localHostDomain);
+if (localHostDomainIP && localHostDomainIP.startsWith("127.0.0.")) {
+	var alertDetails = "Host: [dark][bold]" + localHostDomain + "[/bold][/dark] resolves to [dark]" + localHostDomainIP + "[/dark]";
+	alert("Same_Site_Scripting.xml", alertDetails);
+}

@@ -1,0 +1,150 @@
+#include constants.inc;
+#include helpers.inc;
+#include error_messages_helpers.inc;
+#include os_detection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for RailsMassAssignment
+	function classRailsMassAssignment(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.lastJob = null;
+		this.lastJobConfirm = null;
+	}
+	
+	
+	classRailsMassAssignment.prototype.request = function(inputName, value)
+	{	
+		this.scheme.setTempInputName(this.inputIndex, inputName);
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}
+	
+	classRailsMassAssignment.prototype.requestConfirm = function(inputName, value)
+	{	
+		this.scheme.setTempInputName(this.inputIndex, inputName);
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJobConfirm = new THTTPJob();
+		this.lastJobConfirm.url = targetUrl;
+		scheme.populateRequest(this.lastJobConfirm);
+ 
+		this.lastJobConfirm.execute();
+		return ((!this.lastJobConfirm.wasError || (this.lastJobConfirm.wasError && this.lastJobConfirm.errorCode == 0xF0003))); 
+	}	
+	
+	classRailsMassAssignment.prototype.alert = function(inputName, testValue)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("Rails_Mass_Assignment.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Rails Mass Assignment";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + inputName + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		ri.Details =  ri.Details + "[break]The server returned HTTP status code 500 (internal server error).";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classRailsMassAssignment.prototype.testInjection = function(inputName, value, oldName)
+	{
+		// make a request with the new input name
+		if (!this.request(inputName, value)) return false;		
+		
+		//trace(this.lastJob.response.body);
+		// look for internal server error
+		if (this.lastJob.responseStatus == 500) {
+			// confirm with the original name		
+			if (!this.requestConfirm(oldName, value)) return false;
+			// look for a valid response
+			if (this.lastJobConfirm.responseStatus != 500) {		
+				this.alert(inputName, value);
+				return false;			
+			}
+		}		
+		
+		return true;
+	}
+	
+	classRailsMassAssignment.prototype.getOrigValue = function()
+	{   
+        var value = "";
+        
+        for (var i=0; i<this.variations.count; i++){
+            var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+            
+            // if the value is not yet set      
+            if(value == "" && varValue != "") {
+                value = varValue;                       
+                break;
+            }
+        }
+        return value;
+	}	
+	
+	classRailsMassAssignment.prototype.startTesting = function()
+	{
+		var inputName = scheme.getInputName(this.inputIndex);
+		// don't test some parameters
+		if (inputName == 'authenticity_token') return;
+		if (inputName == 'commit') return;
+		if (inputName == 'utf8') return;
+	
+		//trace('testing ' + scheme.getInputName(i));		
+		
+		if (this.variations.count > 0) {
+				this.currentVariation = 0;
+				this.scheme.loadVariation(this.variations.item(this.currentVariation));
+				var origValue = this.getOrigValue();
+				//trace(origValue);
+				
+				var newName = inputName.replace(/(.*%5(b|B))(.+)(%5(d|D))/, '$1acunetix$4');				
+				if (newName.indexOf("acunetix") == -1) newName = newName + "acunetix";
+				//trace(newName);
+							
+				// test for mass assignment
+				this.testInjection(newName, origValue, inputName);
+		}
+	}	
+}
+// main entry point 
+// first, let's check if it's a rails application (only test in that case)
+var railsScheme = false;
+if (isRails) {
+    for (var i=0;i<scheme.inputCount; i++)
+    {
+    	var inputName = scheme.getInputName(i);
+    	
+    	// look for an input name that looks like input[name]
+    	if (inputName.match(/.*(.*%5(b|B))(.+)(%5(d|D).*)/)) {
+    		railsScheme = true;
+    		break;
+    	}    	
+    }
+    // let's test it
+    if (railsScheme) 
+    for (var i=0;i<scheme.inputCount; i++)
+    {
+        if ( scheme.inputHasFlag(i, INPUT_FLAG_CAN_BE_ARRAY) ) 
+        {
+        	var tester = new classRailsMassAssignment(scheme, i);
+        	tester.startTesting();
+        	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+        	tester = null;
+        }
+    }
+}

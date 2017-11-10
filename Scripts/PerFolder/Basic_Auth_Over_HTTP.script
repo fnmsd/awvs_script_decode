@@ -1,0 +1,28 @@
+#include helpers.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri)
+{	
+	var ri = new TReportItem();	
+	ri.LoadFromFile("Basic_Auth_Over_HTTP.xml");		
+	
+	ri.affects = uri;
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+// only test directories that are returning 401
+if (dir.response.msg2 == 401)  
+{
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';	
+	
+	// check if over http/https
+	var scheme = dir.url.scheme.toLowerCase();	
+	if (scheme == 'http') {
+        // look for Basic auth scheme
+        var match = dir.response.headersString.match(/.*(WWW\-Authenticate\s*:\s*Basic).*/);
+        if (match && match[1]) {
+            alert(dirName);
+        }
+    }
+}

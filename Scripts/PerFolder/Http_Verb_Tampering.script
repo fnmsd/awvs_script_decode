@@ -1,0 +1,439 @@
+#include helpers.inc;
+var variants = [
+				"passwd", "users.txt", "user.txt", "info.txt", "log.txt", "log", ".gitignore",
+				"users.ini", "users.db", 
+                "databases.yml", "propel.ini", "schema.yml", "sqlnet.log",
+                "private.key", "id_rsa", "id_dsa", "id_dsa.ppk",
+				"db.inc", "database.inc", "config.inc", "common.inc", "connect.inc", "sql.inc", 
+				"debug.inc", "debug.php", "admin.php",
+				"bigdump.php",	
+				".htaccess", ".htpasswd", ".passwd",
+                "htaccess.bak", "htaccess.txt",
+				"database.log", "database.sql", "database.csv", 
+				"db.log", "db.csv", "db.sql", 
+                "dbaccess.log",
+				"admin.htm", "admin.html",
+				"install.txt", "install.log", "INSTALL.txt",
+                "CHANGELOG.txt", "changelog.txt", "CHANGELOG", 
+				"error.log", "errors.log", "debug.log",	"cleanup.log",
+				"access_log", "access-log", "accesslog", "access.log",
+				"error_log", "error-log", "errorlog", "error.log",
+				"server.log", "system.log",
+                "localhost.sql",
+				".bash_history", ".bashrc", ".cvsignore", ".history",
+				"test", "test_", "_test", "test0", "test1",                
+				"test.txt", "test.htm", "test.html", "test.php", "test.jsp", "test.asp", "test.aspx", "test.chm",
+				"webstats.html", "wwwstats.htm",                
+				"auth_user_file.txt", 
+				"web.config", 
+				"global.asa.bak", "global.asa.old", "global.asa.tmp", "global.asa.temp", "global.asa.orig",
+				"web.config.bak", "web.config.bakup", "web.config.old", "web.config.tmp", "web.config.temp",
+				"global.asax.bak", "global.asax.old", "global.asax.tmp", "global.asax.temp", "global.asax.orig",
+				"service.asmx", "citydesk.xml",
+				"php.ini", ".user.ini", ".DS_Store",
+				"validator.php",
+				"output-build.txt",
+                "schema.sql", "publication_list.xml",
+                ".listing",
+    
+				"log.htm", "log.txt", "logs.htm", "log.html", "logs.html", 
+				"customers.log", "customers.csv", "customers.xls", "customers.txt", "customers.sql", "customers.sql.gz", 
+				"members.log", "members.csv", "members.xls", "members.txt", "members.sql", "members.sql.gz", 
+				"users.log", "users.csv", "users.xls", "users.txt", "users.sql", "users.sql.gz",
+    
+        		"home.php", "login.php", "members.php", "forgot.php", "recover.php", "join.php", "index.php", "install.php", "functions.php", "export.php", "cp.php", "mysql.php", "sql.php", "header.php", "footer.php", "info.php", "misc.php", "account.php", "callback.php", "redirect.php", "download.php", "stats.php", "log.php", "upload.php", "fileupload.php", "file_upload.php", "Upload.php",  "cache.php", "customers.php", "modules.php", "tools.php", "database.php", "orders.php", "file_manager.php", "manager.php", "files.php", "signup.php", "register.php",
+        		"home.asp", "login.asp", "members.asp", "forgot.asp", "recover.asp", "join.asp", "index.asp", "install.asp", "functions.asp", "export.asp", "cp.asp", "mysql.asp", "sql.asp", "header.asp", "footer.asp", "info.asp", "misc.asp", "account.asp", "callback.asp", "redirect.asp", "download.asp", "stats.asp", "log.asp", "upload.asp", "fileupload.asp", "file_upload.asp", "Upload.asp",  "cache.asp", "customers.asp", "modules.asp", "tools.asp", "database.asp", "orders.asp", "file_manager.asp", "manager.asp", "files.asp", "signup.asp", "register.asp",   
+        		"home.aspx", "login.aspx", "members.aspx", "forgot.aspx", "recover.aspx", "join.aspx", "index.aspx", "install.aspx", "functions.aspx", "export.aspx", "cp.aspx", "mysql.aspx", "sql.aspx", "header.aspx", "footer.aspx", "info.aspx", "misc.aspx", "account.aspx", "callback.aspx", "redirect.aspx", "download.aspx", "stats.aspx", "log.aspx", "upload.aspx", "fileupload.aspx", "file_upload.aspx", "Upload.aspx",  "cache.aspx", "customers.aspx", "modules.aspx", "tools.aspx", "database.aspx", "orders.aspx", "file_manager.aspx", "manager.aspx", "files.aspx", "signup.aspx", "register.aspx",  
+        		"home.jsp", "login.jsp", "members.jsp", "forgot.jsp", "recover.jsp", "join.jsp", "index.jsp", "install.jsp", "functions.jsp", "export.jsp", "cp.jsp", "mysql.jsp", "sql.jsp", "header.jsp", "footer.jsp", "info.jsp", "misc.jsp", "account.jsp", "callback.jsp", "redirect.jsp", "download.jsp", "stats.jsp", "log.jsp", "upload.jsp", "fileupload.jsp", "file_upload.jsp", "Upload.jsp",  "cache.jsp", "customers.jsp", "modules.jsp", "tools.jsp", "database.jsp", "orders.jsp", "file_manager.jsp", "manager.jsp", "files.jsp", "signup.jsp", "register.jsp",
+        		"home", "login", "members", "forgot", "recover", "join", "index", "install", "functions", "export", "cp", "mysql", "sql", "header", "footer", "info", "misc", "account", "callback", "redirect", "download", "stats", "log", "upload", "fileupload", "file_upload", "Upload",  "cache", "customers", "modules", "tools", "database", "orders", "file_manager", "manager", "files", "signup", "register",
+                "mt-check.cgi",     
+                "ajax.php", "uploadify.php", "phpThumb.php",    
+                "register.php",
+                "README.txt", "readme.txt", "README",
+                "config.php", "configuration.php", "database.php", "settings.php",
+                "xmlrpc_server.php",
+                    
+                "acesso.php",
+                "acesso-admin.php",
+                "acesso_admin.php",
+                "ajuda.php",
+                "cliente.php",
+                "clientes.php",
+                "cadastro.php",
+                "cadastrar.php",
+                "cadastrar-cliente.php",
+                "cadastrar_cliente.php",
+                "cadastrar-clientes.php",
+                "cadastrar_clientes.php",
+                "cadastro-clientes.php",
+                "cadastro_clientes.php",
+                "cadastro-cliente.php",
+                "cadastro_cliente.php",
+                "usuarios.php",
+                "configuracao.php",
+                "administrativo.php",
+                "contato.php",
+                "top.php",
+                "topo.php",
+                "menu_top.php",
+                "menu-top.php",
+                "menuTop.php",
+                "menu_topo.php",
+                "menu-topo.php",
+                "menuTopo.php",
+                "menu-esquerda.php",
+                "menu_esquerda.php",
+                "menuEsquerda.php",
+                "menu-left.php",
+                "menu_left.php",
+                "menu_direita.php",
+                "menu-direita.php",
+                "menuDireita.php",
+                "menu-lateral.php",
+                "menuLateral.php",
+                "menu_lateral.php",
+                "defaultLateral.php",
+                "default-lateral.php",
+                "default_lateral.php",
+                "lado-esquerdo.php",
+                "lado_esquerdo.php",
+                "ladoEsquerdo.php",
+                "pagina-esquerda.php",
+                "pagina_esquerda.php",
+                "paginaEsquerda.php",
+                "parceiros.php",
+                "idioma.php",
+                "noticias.php",
+                "anuncio.php",
+                "ticket.php",
+                "ticker.php",
+                "Suporte.php",                    
+    
+				"sales.log", "sales.csv", "sales.xls", "sales.txt", "sales.sql", "sales.sql.gz",
+				"orders.log", "orders.csv", "orders.xls", "orders.txt", "orders.sql", "orders.sql.gz",
+    
+				"${dirName}.dump", "${dirName}.sql", "${dirName}.sql.gz", "${dirName}.sql.bz2", "${dirName}.zip", "${dirName}.gz", "${dirName}.bz2", "${dirName}.tar", 
+				"${dirName}.tar.gz", "${dirName}.sln", "${dirName}.tar.bz2", "${dirName}.7z", "${dirName}.ini", "${dirName}.cfg", "${dirName}.sh", "${dirName}.csv", "${dirName}.pst", "${dirName}.ost", "${dirName}.old", "${dirName}.bak",  
+                    
+				"../${dirName}.dump", "../${dirName}.sql", "../${dirName}.sql.gz", "../${dirName}.sql.bz2", "../${dirName}.zip", "../${dirName}.gz", "../${dirName}.bz2", "../${dirName}.tar", 
+				"../${dirName}.tar.gz", "../${dirName}.sln", "../${dirName}.tar.bz2", "../${dirName}.7z", "../${dirName}.ini", "../${dirName}.cfg", "../${dirName}.sh", "../${dirName}.csv", "../${dirName}.pst", "../${dirName}.ost", "../${dirName}.old", "../${dirName}.bak"
+			   ];
+var sensitive_dirs = [				
+				"admin-console", "adminconsole", "jmx-console", 
+                "_layouts",
+				"_private",	".ssh", "bin",
+				"phpsysinfo", "phpldapadmin", "uploadify", "phpThumb",
+                "session", "sessions", 
+				"_source", "_src", "_www", "spool",
+				"tar.gz", "tar.bz2", "tar", 				
+				"uploader", "uploads", "upload", "Upload", "incomming", "user_uploads",
+                "New Folder", "New folder (2)",    
+				"log", "logs", "_logs", "logfile", "logfiles", "~log", "~logs",
+				"settings", "global", "globals",     				
+				"admin", "Admin", "ADMIN", "adminpanel", "admin0", "admin1", "admin_", "_admin", "_adm", "administrator", ".adm", ".admin", "~admin", "admin_files", "Administrator", "site_admin", "fileadmin",  "adminfiles", "administration", "sysadmin", "administrative", "webadmin", "admins", "administrivia", "useradmin", "sysadmins", "admin_login", "admin_logon", "INSTALL_admin", "fpadmin", "siteadmin",	 
+                ".subversion",
+                "_sqladm", "sqladm",
+				"client", "clients", "cmd",     
+				"restricted", "_pages",
+                "webmin",
+				"reseller", "personal",  "updates",
+				"err", "error", "_errors",  "errors", 
+				"secret", "secrets", "Secret",
+				"msql", "mysql", "mssql", "oracle", 	    
+				"db", "DB", "db2", 
+                "sql", "SQL", "__SQL", "_SQL",
+                "dbase", "database", 
+                "cvs", "CVS", "svn", "SVN", 
+				"member", "members", "orders", "billing", "memberlist",
+				"dump", "ftp", "accounts", "warez",
+				"conf", "config", "Config", 
+				"phpmyadmin", "phpmyadmin0", "phpmyadmin1", "phpMyAdmin", "phpMyAdmin0", "phpMyAdmin1", 
+                "phpPgAdmin", "phppgadmin", "pgadmin",
+				"customer", "customers",
+				"intranet",  "users",
+				"setup", "install", "Install", "INSTALL", "_install", "install_", "ainstall", "!install", "installer",				
+				"oldfiles", "old_files", "_files",     
+				"sysbackup", "export",    
+				"TEMP", "TMP", "TODO", "WS_FTP",
+				"temp", "tmp", "test", "_test", "test_", "!test", "tst", "tests", "tools", "save", "testing", "_tests",
+				"secure", "secured", "internal", 
+				"prv", "private", "csv", "CSV",
+				"staff", "src", "etc", 
+				"system", "dev", "devel", "devels", "developer", "developers",
+				"share", "beta", "bugs",
+				"auth", "import", "stats", "statistics",
+				"access-log", "error-log", "access_log", "error_log", "accesslog", "errorlog",
+				"backup", "backups", "bak", "bac", "old", "_old", "inc", "include", "ini", "_include",
+				"pass", "passwd", "password", "Password", "passwords",
+				"jdbc", "odbc", "xls",
+				"FCKeditor", "fckeditor", "filemanager", 'UserFiles', 'UserFile', "userfiles",
+				"management", "manager",
+                "swfupload", "js", "lib", "libs", "swf",
+                "ad", "ads", "banner", "banners",     
+                "blogs", "apps", "chat", "console", "addons",
+                "invoker", "cp", "testweb", "pma",
+                "plugins", "themes", "upgrade", "text-base",
+                "wp-content", "wp-admin", "wp-includes",
+                "iishelp", "iisadmin", "tsweb", "xmlrpc", 
+                "cache", "cache_html",
+                "common", "shell", "core", "menu", "v1", "types", "base", "group", "languages", "english", "smarty",
+                "example", "examples", "sample", "samples", "script", "scripts", "list", "mime", "threads", "fonts",
+				"class", "classes", "download", "downloads", "Downloads", "Download", "modules", "down", "oauth", "json",
+                "compat", "recaptcha", "html", "controller",
+				"signup", "login", 
+				"WebService", "aspnet", "Exchange", "webaccess", "web",
+				"~root", "root", "htdocs", "www", "Root",
+				"~ftp", "~guest", "~nobody", "~www",
+                "CMS", "cms", 
+                "wizards", "editor", "fck", "edit",
+    			"info", "dat", "data", "file", "files", "zip", "zipfiles", "zips", "mp3",
+                "search", "rss", "feed", "atom",
+                "image", "images", "img", "Images", "pictures", "icons", "resources", "graphics", "pics", "icon", "thumb", "thumbnail", "photo",
+                "tag", "tags", "messages",
+                "audio", "dl", "package", "build", "snapshot",
+                "profile", "Profile",
+                "Default", "default", "archives", "documents",
+                "'", "!", "!!", "!!!", "@", "_", "$", "#", "-", "+", "?",
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "q", "v", "w", "z",
+                "0", "00", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+                "2008", "2009", "2010", "2011", "2012", "2013",
+                "security", "content", "main", "media", "templates", "forms", "flash", "portal",
+                "xml", "user", "view", "browse", "demo", "includes", "thread",
+                "php", "PHP", "index.php",
+                "index", "Index", "music", "contents",
+                "projects", "site", "version", "static", "space", "folder", "servlet", "storage",
+                "misc", "page", "doc", "access", "release", "latest", "manual", "manuals", "usercp",
+                "cerberusweb", "uri", "url", "utf8",
+                "lostpassword", "forgot", 
+                "index_files", "reset", "wp",
+                "fileserver",
+                "de", "fr", "en", "mt",
+                "phpBB", "phpBB2", "phpbb", "phpnuke", "sqlnet", "vb", "vbulletin", "wwwboard", "zope", "viewcvs", 
+                "nagios", "cacti", "munin", "zenoss",
+                "cubecart", "cc", "cpg", "coppermine", "4images", "cart", "SugarCRM", "sugarcrm", "gallery", 
+                "joomla", "drupal",  "oscommerce", "zencart", "eticket", "moodle", "piwik", "zenphoto", "nusoap", "tinymce", "firephp", 
+                "wordpress", "bbpress", "zenpage", "openx", "mambo", "buddypress", "aMember", "ATutor", "b2evolution", "autocms",
+                "bbpress", "bitweaver", "bmforum", "cerberus", "ckeditor", "cmsmadesimple", "cs-cart", "cs-whois", "cutenews",
+                "deluxebb", "dchat", "phpFreeChat", "phpfreechat", "livechat", "livezilla", "trac", "e107", "ezPublish",
+                "FusionBB", "geeklog", "ImageVue", "kayako", "mantis", "mint", "Mint", "multihost", "mybb", "opencart",
+                "osTicket", "photopost", "phpAddressBook", "phpfusion", "phpgedview", "PHPizabi", "phplinks", "phplist",
+                "phpmyfaq", "phponline", "phpshop", "pligg", "pmwiki", "postnuke", "punbb", "runcms", "serendipity", "smf", "ipb",
+                "sphider", "typolight", "ubb_threads", "ultrastats", "vanilla", "videodb", "xoops", "x-cart", "alegrocart",
+                "dotproject", "fluxbb", "interspire", "magento", "lifetype", "minibb", "modx", "prestashop", "silverstripe",
+                "tikiwiki", "mediawiki", "dokuwiki", "piwigo", "phpCollab", "phpads", "noah", "redmine", "flyspray", "dolphin",
+                "twiki", "vtiger",
+                "owa", "mrtg",                    
+                "squirrel", "squirrelmail", "roundcube", "atmail",
+                "whmcs",
+                "ibill", "ccbill",                        
+				"juddi", 
+                "anoncvs",
+                "tomcat",   
+                "bugzilla",       
+                "django",
+                "moinmoin",                              
+                "xampp",     
+                "cfdocs", "CFIDE", 
+                "jrun",         
+                "forum", "blog", "help", "poll", "support",
+                "register", "tracker",    
+                "software", "category",
+                "appengine", "symfony",
+                "webstats",                    
+                "webmail", "cpanel", "mail", "email", "mailman", 
+				"WebApplication1", "WebApplication2", "WebApplication3"        
+			   ];
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job)
+{	
+	var ri = new TReportItem();	
+	if (job.verb == "POST")	ri.LoadFromFile("HTTP_verb_tampering_post.xml");
+	else ri.LoadFromFile("HTTP_verb_tampering.xml");
+		
+	ri.affects = uri;
+	ri.alertPath = "HTTP Verb Tampering";	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function preCondition(dir, verb, uri) {
+    var ret = false;
+    
+    if (uri.charAt(uri.length-1) != '/') uri = uri + '/'; 		
+    
+    // first check (file with .html extension)
+	var uri = uri + randStr(5) + ".html";
+	var http = new THTTPJob();
+	
+	http.url = dir.url;
+	http.verb = verb;
+	http.URI = uri;
+	http.autoAuthenticate = false;
+	http.execute();	
+	
+	//trace(http.response.msg2);
+	if (!http.wasError && (http.notFound || http.response.msg2 == 501)) {
+        // second check (without extension)
+    	var uri = uri + randStr(5);
+    	var http = new THTTPJob();
+    	
+    	http.url = dir.url;
+    	http.verb = verb;
+    	http.URI = uri;
+    	http.autoAuthenticate = false;
+    	http.execute();	
+      
+		//trace(http.responseStatus);
+		ret = (!http.wasError && (http.notFound || http.response.msg2 == 501));
+    }
+    
+    return ret;
+}
+// **************************************************************************************
+function testFile(verb, dirName, uri, variant, dir) {
+	var fname = variant.replace("${dirName}", dirName);
+	if (uri.charAt(uri.length-1) != '/') uri = uri + '/'; 		
+	
+	var http = new THTTPJob();
+	
+	http.url = dir.url;
+	http.verb = verb;
+	http.uri = uri + plain2url(fname);
+	http.autoAuthenticate = false;
+	http.execute();	
+	
+	if (!http.wasError && !http.notFound && (http.responseStatus == 200 || http.responseStatus == 406)){
+			// escape of some false positives
+			if (http.response.body.search(/(page|file|url)\s?not\s?found/i) == -1) 
+			{		
+				addLinkToCrawler(http.uri, dir);
+			}
+	}
+}
+// **************************************************************************************
+function testDir(verb, dirName, uri, variant, dir) {
+	var fname = variant.replace("${dirName}", dirName);
+	if (uri.charAt(uri.length-1) != '/') uri = uri + '/'; 		
+	
+	var http = new THTTPJob();
+	
+	http.url = dir.url;
+	http.verb = verb;
+	http.uri = uri + plain2url(fname);
+	http.autoAuthenticate = false;
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 301){
+			// escape of some false positives
+			if (http.response.body.search(/(page|file|url)\s?not\s?found/i) == -1) 
+			{		
+				addLinkToCrawler(http.uri + "/", dir);
+			}
+	}
+}
+// **************************************************************************************
+function lookForSensitiveFiles(verb, uri, dirName, dir) {
+    if (preCondition(dir, verb, uri))
+    {
+    	var total = variants.length + sensitive_dirs.length;
+        
+    	// test it with all files
+    	for (var i=0; i<variants.length; i++) 
+    	{	
+    		testFile(verb, dirName, uri, variants[i], dir);
+    		ScriptProgress(ComputeProgress(i, total));
+    	}
+        
+    	// test it with all dirs
+    	for (var j=0; j<sensitive_dirs.length; j++) 
+    	{	
+    		testDir(verb, dirName, uri, sensitive_dirs[j], dir);
+    		ScriptProgress(ComputeProgress(i+j, total));
+    	}
+    }
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+// only test directories that are returning 401
+if (dir.response.msg2 == 401)  
+{
+	var found = false;
+	var testURI = dir.fullPath;
+	
+	// make sure the directory name ends in /
+	if (testURI.charAt(testURI.length-1) != '/') testURI = testURI + '/';	
+    
+    //trace(testURI);
+    //trace(testURI.charAt(testURI.length-1));
+			
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.URI = testURI;
+	http.autoAuthenticate = false;
+	http.execute();
+	if (!http.wasError && !http.notFound){	
+		if (http.response.msg2 == 200 || http.response.msg2 == 301 || http.response.msg2 == 302)	
+		{
+            var falsePositive = false;
+            
+            if (http.response.msg2 == 301 || http.response.msg2 == 302)
+            { 
+							location = http.response.headerValue('location');
+							location = location.replace(/^\s+|\s+$/g, '');
+							
+                            if (location.indexOf('error') != -1) falsePositive = true; 
+              
+							if (!falsePositive) {
+								var re = new RegExp("http(s)?:\/\/" + scanURL.host + "\/(index(.html|.php|.htm)?)?");
+								if (re.exec(location)) falsePositive = true;
+							}
+            }
+            if (!falsePositive && http.response.body.search(/not found/i) != -1) falsePositive = true;
+            
+            if (!falsePositive) 
+            {
+							alert(testURI, http);
+                            lookForSensitiveFiles("POST", testURI, dir.name, dir);
+							found = true;
+            }
+		}	
+	}
+	
+	if (found == false) {
+		var testURI = dir.fullPath;
+		
+		// make sure the directory name ends in /
+		if (testURI.charAt(testURI.length-1) != '/') testURI = testURI + '/';	
+		
+		var http = new THTTPJob();
+		http.url = dir.url;
+		http.verb = 'WVS';
+		http.URI = testURI;
+		http.autoAuthenticate = false;
+		http.execute();
+		if (!http.wasError && !http.notFound){
+    		if (http.response.msg2 == 200 || http.response.msg2 == 301 || http.response.msg2 == 302)	            
+    		{	
+            var falsePositive = false;
+            if (http.response.msg2 == 301 || http.response.msg2 == 302)
+            { 
+							location = http.response.headerValue('location');
+							location = location.replace(/^\s+|\s+$/g, '');
+							
+                            if (location.indexOf('error') != -1) falsePositive = true; 
+							if (!falsePositive) {
+								var re = new RegExp("http(s)?:\/\/" + scanURL.host + "\/(index(.html|.php|.htm)?)?");
+								if (re.exec(location)) falsePositive = true;
+							}
+            }
+            if (!falsePositive) 
+            {
+							alert(testURI, http);
+                            lookForSensitiveFiles("WVS", testURI, dir.name, dir);
+							found = true;
+            }
+    		}	
+        }
+	}
+}

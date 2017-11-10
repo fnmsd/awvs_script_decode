@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.x version older than 2.0.48" version="0.1" released="20040327" updated="20140313" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="denial_of_service,information_disclosure,missing_update" SendCookies="true" CVE="CVE-2003-0542,CVE-2003-0789" CWE="CWE-119" CVSSVer="2.0" CVSSScore="7.2" CVSSDescr="AV:L/AC:L/Au:N/C:C/I:C/A:C/E:U/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]Apache has reported a vulnerability in the mod_cgid module when the threaded MPM is used. This could potentially expose sensitive information or incorrectly grant unauthorized access.[break][break][navy]Affected Apache versions (up to 2.0.47).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Information disclosure, unauthorized access or denial of service.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="BID 8926" URL="http://www.securityfocus.com/bid/8926"/>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="SMTP open mail relay" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,abuse_of_functionality,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>The remote SMTP server is acting as an open mail relay. An open mail relay is an SMTP server configured in such a way that it allows anyone on the Internet to send e-mail through it, not just mail destined to or originating from known users. By processing mail that is neither for nor from a local user, an open relay makes it possible for an unscrupulous sender to route large volumes of spam. In effect, the owner of the server -- who is typically unaware of the problem -- donates network and computer resources to the sender's purpose.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious user can use your server to send spam.</Impact>
+		<Recommendation>You need to secure your mail system against third-party relay. Check references for details on fixing this problem.</Recommendation>
+		<Reference database="Wikipedia Open mail relay" URL="http://en.wikipedia.org/wiki/Open_mail_relay"/>
+	</TestDescription>
+</WebApplicationTest>

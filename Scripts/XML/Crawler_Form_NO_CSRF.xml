@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="HTML form without CSRF protection" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="file" severity="medium" alert="success" type="Informational">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="csrf" CVE="" CWE="CWE-352" CVSSVer="2.0" CVSSScore="2.6" CVSSDescr="AV:N/AC:H/Au:N/C:N/I:P/A:N" CVSSScoreTemp="2.7" CVSSScoreEnv="2.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert may be a false positive, manual confirmation is required.[/dark][/coolbox][break]
+Cross-site request forgery, also known as a one-click attack or session riding and abbreviated as CSRF or XSRF, is a type of malicious exploit of a website whereby unauthorized commands are transmitted from a user that the website trusts.
+
+[break][break]Acunetix WVS found a HTML form with no apparent CSRF protection implemented. Consult details for more information about the affected HTML form.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may force the users of a web application to execute actions of the attacker''s choosing. A successful CSRF exploit can compromise end user data and operation in case of normal user. If the targeted end user is the administrator account, this can compromise the entire web application.</Impact>
+		<Recommendation>Check if this form requires CSRF protection and implement CSRF countermeasures if necessary.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

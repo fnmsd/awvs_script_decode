@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP Hash Collision denial of service vulnerability" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="denial_of_service" CVE="CVE-2011-4885" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="4.2" CVSSScoreEnv="4.2"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]
+Hash tables are a commonly used data structure in most programming languages. Web 
+application servers or platforms commonly parse attacker-controlled POST form data into 
+hash tables automatically, so that they can be accessed by application developers. If the language does not provide a randomized hash function or the application server does not recognize attacks using multi-collisions, an attacker can degenerate the hash table by sending lots of colliding keys. The algorithmic complexity of inserting n elements into the 
+table then goes to O(n**2), making it possible to exhaust hours of CPU time using a single HTTP request.
+[break][break][navy]Affected PHP versions (up to 5.3.8).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service</Impact>
+		<Recommendation>Upgrade PHP to version 5.3.9 or higher.</Recommendation>
+		<Reference database="#2011-003 multiple implementations denial-of-service via hash algorithm collision" URL="http://www.ocert.org/advisories/ocert-2011-003.html"/><Reference database="Denial of Service through hash table multi-collisions" URL="http://www.nruns.com/_downloads/advisory28122011.pdf"/><Reference database="PHP 5.3.9 Changelog" URL="http://www.php.net/ChangeLog-5.php#5.3.9"/></TestDescription>
+</WebApplicationTest>

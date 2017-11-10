@@ -1,0 +1,143 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include debug_helpers.inc;
+var debug = false;
+// buckets to be tested
+var buckets = new Array();
+var bucketBlobs = new Array();
+var variants = ['backup', 'Backup', 'backups', 'Backups', 'archive', 'Archive', 'log', 'Log', 'logs', 'Logs', 'database', 'Database', 'databases', 'Databases', 'vhds', 'Vhds', 'sql', 'SQL', 'Sql', 'db', 'DB', 'Db', 'dump', 'Dump', 'files', 'Files', 'admin', 'Admin', 'upload', 'Upload', 'uploads', 'Uploads', 'src', 'Src', 'svn', 'Svn', 'git', 'Git', 'clients', 'Clients', 'mssql', 'Mssql', 'MSSQL', 'accounts', 'Accounts', 'dbase', 'Dbase', 'Install', 'install', 'export', 'Export', 'temp', 'Temp', 'internal', 'Internal', 'private', 'Private', 'csv', 'CSV', 'bugs', 'Bugs', 'stats', 'Stats', 'beta', 'Beta', 'alpha', 'Alpha', 'dev', 'Dev', 'DEV', 'statistics', 'Statistics', 'xls', 'XLS', 'UserFile', 'UserFiles', 'userfiles', 'error', 'Error', 'errors', 'Errors'];
+var lastJob = null;
+var regex = /((https?:\/\/[^\.]+\.blob\.core\.windows.net\/)[^/]+\/)/i;
+// **************************************************************************************							 
+function alert(vxml, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = "/";
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	if (details) 
+		ri.details = "Azure blob storage open resource: [dark]" + details + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function prepareBucketsList(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		//trace(i);
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{		
+            //trace(sf.response.body);
+			var tokens = htmlTokens(sf.response.body);
+			var token = null;
+			while (token = tokens.nextToken()) {
+				// marker is present in token?
+				if (token.isTag) {
+	                
+					// look for A HREF
+	                if (token.tagName == 'A')
+	                {
+						for(var j=0; j<token.paramCount; j++) {
+							var paramName = token.getParamName(j).toLowerCase();
+							var paramValue = token.getParamValue(j);	                        
+							
+							if (paramName == "href") 
+	                        {
+	                        	m = regex.exec(paramValue);
+	                        	if (m && m[1] && m[2]) {
+                                    if (buckets.indexOf(m[2]) == -1)
+                                        buckets.push(m[2]);
+                                    if (bucketBlobs.indexOf(m[1]) == -1)
+                                        bucketBlobs.push(m[1]);
+                                }
+	                        }
+	                    }
+	                }	
+	                
+					// look for IMG/SCRIPT/FRAME/IFRAME SRC
+	                if (token.tagName == 'IMG' || token.tagName == 'SCRIPT' || token.tagName == 'FRAME' || token.tagName == 'IFRAME')
+	                {
+						for(var j=0; j<token.paramCount; j++) {
+							var paramName = token.getParamName(j).toLowerCase();
+							var paramValue = token.getParamValue(j);	                        
+							
+							if (paramName == "src") 
+	                        {
+	                        	m = regex.exec(paramValue);
+                                if (m && m[1] && m[2]) {
+                                    if (buckets.indexOf(m[2]) == -1)
+                                        buckets.push(m[2]);
+                                    if (bucketBlobs.indexOf(m[1]) == -1)
+                                        bucketBlobs.push(m[1]);
+                                }
+                            }
+	                    }
+	                }	                
+	                                
+				}
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+function testBucketBlob(url)
+{
+    //return false;
+	//trace(url);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = new TURL(url + "?restype=container&comp=list");
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('<EnumerationResults ContainerName=') != -1 )
+		{
+			alert('Azure_Cloud_Storage_Open_Resource.xml', lastJob, url);
+			return true;				
+		}
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+// don't test this vulnerability twice
+var tested = getGlobalValue("azure_blobs_audit");
+if (!tested || debug)
+{	
+	var list = getNewFiles(loadHttp);
+	prepareBucketsList(list);
+	if (buckets.length > 0) 
+	{
+		SetGlobalValue("azure_blobs_audit", 1, true);
+		
+		// prepare a KB item
+		var kbi = new TKBaseItem()
+		kbi.Name = 'Azure cloud storage resources';
+		kbi.Text = 'List of Azure blob storage resources used by this web application: [break][ul]';
+		for (var i=0; i<bucketBlobs.length; i++)
+			kbi.Text = kbi.Text + "[li]" + bucketBlobs[i] + "[/li]";
+		kbi.Text = kbi.Text + "[/ul]";
+		AddKBItem(kbi);
+		// buckets
+		for (var i=0; i<buckets.length; i++){
+            if (debug) trace("bucket " + buckets[i]);
+            for (var j=0; j<variants.length; j++)
+            {
+                var blobUrl = buckets[i] + variants[j] + "/";
+			    if (bucketBlobs.indexOf(blobUrl) == -1)
+                    bucketBlobs.push(blobUrl);
+            }
+		}
+        // test bucket blobs
+        for (var i=0; i<bucketBlobs.length; i++){
+            //if (debug) trace("bucketBlob " + bucketBlobs[i]);
+            testBucketBlob(bucketBlobs[i]);
+        }
+    }
+}

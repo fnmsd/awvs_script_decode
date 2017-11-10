@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Universal Plug and Play service running" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,network_alert" CVE="" CWE="CWE-287" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A UPNP (Universal Plug and Play) service is running on this host. The UPnP protocol does not implement any authentication, so UPnP device implementations must implement their own authentication mechanisms, or implement the Device Security Service. Unfortunately, many UPnP device implementations lack authentication mechanisms, and by default assume local systems and their users are completely trustworthy. Most notably, Routers and firewalls running the UPnP IGD protocol are vulnerable to attack since the framers of the protocol omitted to add any standard authentication method.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it.</Recommendation>
+		<Reference database="Hacking The Interwebs" URL="http://www.gnucitizen.org/blog/hacking-the-interwebs/"></Reference>
+		<Reference database="Wikipedia UPNP" URL="http://en.wikipedia.org/wiki/Universal_Plug_and_Play"></Reference>
+		<Reference database="UnPlug n' Pray" URL="http://www.grc.com/unpnp/unpnp.htm"></Reference>
+		<Reference database="Flash UPnP Attack FAQ" URL="http://www.gnucitizen.org/blog/flash-upnp-attack-faq/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

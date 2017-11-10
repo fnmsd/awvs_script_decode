@@ -1,0 +1,46 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include rest_helpers.inc;
+// files to be tested
+var files = new Array();
+var debug = false;
+/***********************************************************************************/
+function testFile(sf)
+{
+    if (sf.response.body.indexOf("<application" !== -1)) {
+        try {
+            processWADL(sf.response.body);
+        }
+        catch(err) {
+            if (debug) logError(err.message);
+        }
+    }
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var foundFile = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		if(!sf.ignored)
+		{
+			if (sf.name.endsWith(".wadl") || sf.name.endsWith(".xml"))
+			{
+				files.push(sf);
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		if (testFile(files[i])) break;
+	}
+}

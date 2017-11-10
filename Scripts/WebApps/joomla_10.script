@@ -1,0 +1,30 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = ri.details + "[break]Pattern found: [code][pre]" + details + "[/pre][/code]"    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testJoomla323SQLInjection(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.verb = 'GET';
+	var origURI = uri + "/index.php";
+	lastJob.URI = uri + "/index.php?option=com_contenthistory&view=history&list[select]=1";
+	lastJob.execute();
+	var pattern = "Error: 500 Unknown column 'Array' in 'order clause' SQL=SELECT 1";
+	if (!lastJob.wasError && lastJob.response.body && lastJob.response.body.indexOf(pattern) != -1)
+	{
+		alert(lastJob, origURI, 'Joomla_v323_sql_injection.xml', pattern);
+	}
+}
+var dir = getCurrentDirectory();
+testJoomla323SQLInjection(dir, dir.fullPath);

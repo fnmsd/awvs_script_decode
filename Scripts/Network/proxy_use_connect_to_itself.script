@@ -1,0 +1,49 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test proxy for repeated connects to itself
+// test for connects to itself
+function TextConnectToItselfForProxyOnPort(port){
+	var result = false;
+	if(IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if(socket.IsConnected){
+			// try repeated connects to itself
+			for (i=0;i<3;i++){
+				//trace(i);
+				socket.send("CONNECT " + ScanHost + ":" + port + " HTTP/1.0\r\n\r\n");
+				
+				data = socket.Receive(true);		
+				//trace(data);
+				var response = data.match(/HTTP\/1\.\d\s+(200)/i);
+						
+				//traceObject(response);
+				var success = false;
+				if (response && response.length > 0 && response[1] == "200")	
+				{
+					success = true;
+				}
+				else {break; }		
+			}
+			if (i == 3 && success) {
+				result = true;
+				//trace("success");
+				ReportItem("Open_proxy_connect_to_itself.xml", "The proxy server is running on TCP port " + port + ".");			
+			}
+			
+			socket.Close();
+		}
+	}
+	return result;
+}
+//start
+if (TextConnectToItselfForProxyOnPort(3128)){
+		trace('proxy on port 3128 supports repeated CONNECTs to iteself');
+}
+if (TextConnectToItselfForProxyOnPort(8080)){
+		trace('proxy on port 8080 supports repeated CONNECTs to iteself');
+}

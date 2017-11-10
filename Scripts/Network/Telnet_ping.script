@@ -1,0 +1,9 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for Telnet server
+if (IsPortOpen(23)){
+  if (PortBanner(23).length > 0) {
+			trace("Telnet server detected!");
+			ReportItem("Telnet.xml", "The Telnet server is running on TCP port 23.");	
+	}
+}

@@ -1,0 +1,114 @@
+#include constants.inc;
+#include classSQLInjection.inc;
+#include dir_listing_helpers.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(path, value, job, matchedText, sourceFile, sourceLine, additionalInfo, acuSensor)
+{	
+	var ri = new TReportItem();	
+	
+	ri.LoadFromFile("SQL_Injection.xml");	
+	if (acuSensor) ri.name = ri.name + " (verified)";
+		
+	ri.affects = path;
+	ri.alertPath = "Scripts/SQL injection in URI";	
+	ri.setHttpInfo(job);
+	
+	ri.sensorSourceFile = sourceFile;
+	ri.sensorSourceLine = sourceLine;
+	ri.sensorAdditional = additionalInfo;
+	
+	ri.details = "URI and/or header was set to [bold][dark]1\"[/dark][/bold]";
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+function request(dir, withAop, path)
+{	
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.uri = path;		
+	
+	if (withAop) lastJob.addAspectHeaders();		
+	
+	lastJob.request.addHeader('User-Agent', '1\'"2000', true);	
+	lastJob.request.addHeader('referer', '1\'"3000', true);	
+	lastJob.request.addHeader('client-ip', '1\'"4000', true);
+	lastJob.request.addHeader('x-forwarded-for', '1\'"5000', true);
+	lastJob.request.addHeader('accept-language', '1\'"6000', true);
+	lastJob.request.addHeader('via', '1\'"7000', true);	
+	
+	lastJob.execute();
+	
+	return (!lastJob.wasError); 
+}	
+//--------------------------------------------------------------------------------------------------------
+function testInjection(dir, withAop, path, value, tester)
+{
+	// trace("testInjection: " + value);
+	if (!request(dir, withAop, value)) return false;
+	
+	var job = lastJob;
+	// if AcuSensor is enabled
+	if (job.hasAspectData) 
+	{
+		// get aspect data information
+		var ad = job.getAspectData();
+		var injRes = tester.isSQLInjection(ad);
+		
+		if (injRes && injRes.adItem) {				
+			var additional = "SQL query: " + injRes.data + "\r\n" + injRes.adItem.additional;
+			alert(path, value, job, "", injRes.adItem.FileName, injRes.adItem.lineNumber, additional, 1);
+			return false;
+		}
+	}		
+	
+	else 
+	{
+			// AcuSensor is NOT enabled
+			var matchedText = errorMessages.searchOnText(job.response.body);		
+			if (matchedText) {
+				alert(path, value, job, matchedText);
+				return false;
+			}
+	}
+	
+	return true;
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); 
+if (!dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200)
+{
+	// don't test directories that have directory listing (waste of time)
+	var matches = new classDirListingMatches();	
+	if (!matches.searchOnText(dir.response.body)) 
+	{
+		var lastJob = null;
+		var errorMessages = new classSQLErrorMessages();
+		var dirName = dir.fullPath;
+		if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';	
+		
+		var tester = new classSQLInjection(scanURL, errorMessages, null, 0);	
+		
+		if (dir.hasAcuSensor) 
+		{	
+			// simple
+			if (testInjection(dir, true, dirName, dirName + "1ACUSTART'\"ACUEND", tester, dirName))
+			// index
+			if (testInjection(dir, true, dirName, dirName + "index/1ACUSTART'\"ACUEND", tester, dirName))
+      // in parameter
+			testInjection(dir, true, dirName, dirName + "?id=1ACUSTART'\"ACUEND", tester, dirName);
+		}		
+		else 
+		{		
+			// simple
+			if (testInjection(dir, false, dirName, dirName + "1'\"1000"))
+			// index
+			if (testInjection(dir, false, dirName, dirName + "index/1'\"1000"))
+			// in parameter
+			testInjection(dir, false, dirName, dirName + "?id=1'\"1000");
+		}
+	}
+}

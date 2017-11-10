@@ -1,0 +1,67 @@
+#include constants.inc;
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;		
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.details = details;	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function testFile(sf)
+{
+	var m = /Name:\sTCPDF\nVersion:\s([\d\.]+)/.exec(sf.response.body);
+	if (m && m[1]) {
+		var version = m[1];
+		if (version_compare(version, '6.2.0', '<')) {
+			var details = "Current version: [dark][bold]" + version + "[/bold][/dark]";
+			alert(sf.fullPath, "TCPDF_arbitrary_file_read.xml", details);
+            var alreadyReportedWebApplication = getGlobalValue("detectedAppTCPDF");
+            if (!alreadyReportedWebApplication)
+            {
+                setGlobalValue("detectedAppTCPDF", 1, true);
+                var kbaseText = "TCPDF version [bold][dark]" + version + "[/dark][/bold] was detected in directory [dark][bold]" + sf.path + "[/bold][/dark].";
+                KBase("TCPDF library", kbaseText);
+            }
+            return true;
+		}
+	}
+    return false;
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var foundFile = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.name == 'README.TXT' || sf.name == 'README')
+			{
+				files.push(sf);
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		if (testFile(files[i])) break;
+	}
+}

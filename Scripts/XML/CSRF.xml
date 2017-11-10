@@ -1,0 +1,34 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+  <TestDescription name="Possible CSRF (Cross-site request forgery)" version="0.1" released="20080416" updated="20080416" protocol="HTTP" mayproxy="true" affects="file" severity="info" alert="success" type="Validation">
+    <WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="true" HasPrecondition="false" AlertTags="csrf" SendCookies="true"/>
+    <Copyright/>
+    <Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+This script is possibly vulnerable to cross-site request forgery. Cross Site Reference Forgery (CSRF/XSRF) is a class of attack that affects web based applications with a predictable structure for invocation. An attacker tricks the user into performing an action of the attackers choosing by directing the victim's actions on the target application with a link or other content.[break]
+The attack works by including a link or script in a page that accesses a site to which the user is known (or is supposed) to have authenticated. Here is an example:
+[pre]
+&lt;img src="http://bank.example/withdraw?from=victim&amp;amount=1000000&amp;to=attacker"&gt;
+[/pre]
+If the bank keeps authentication information in a cookie, and if the cookie hasn't expired, then victim's browser's attempt to load the image will submit the withdrawal form with his cookie.[break][break]
+This vulnerability is also known by several other names including Session Riding and One-Click Attack.
+</Description>
+    <ApplicableTo>
+      <Platform>
+        <OS>All</OS>
+        <Arch>i386</Arch>
+      </Platform>
+      <WebServer>All</WebServer>
+      <ApplicationServer>All</ApplicationServer>
+    </ApplicableTo>
+    <TriggerOn event="scheme_host_port">
+      <Match type="regex">.*</Match>
+    </TriggerOn>
+    <Impact>Depends on implementation.</Impact>
+    <Recommendation>Insert custom random tokens into every form and URL that will not be automatically submitted by the browser. Check References for detailed information on protecting against this vulnerability.</Recommendation>
+    <Reference database="Cross Site Reference Forgery" URL="http://www.isecpartners.com/files/XSRF_Paper_0.pdf"/>
+    <Reference database="Cross-Site Request Forgeries" URL="http://shiflett.org/articles/cross-site-request-forgeries"/>
+    <Reference database="The Cross-Site Request Forgery (CSRF/XSRF) FAQ" URL="http://www.cgisecurity.com/articles/csrf-faq.shtml"/>
+    <Reference database="Cross-site request forgery" URL="http://en.wikipedia.org/wiki/Cross-site_request_forgery"/>
+    <Reference database="Top 10 2007-Cross Site Request Forgery" URL="http://www.owasp.org/index.php/Top_10_2007-A5"/>
+  </TestDescription>
+</WebApplicationTest>

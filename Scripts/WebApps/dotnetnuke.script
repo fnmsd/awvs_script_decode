@@ -1,0 +1,47 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+		var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************
+function test_dotnetnuke_613_vulns(dir){
+    var path = dir.fullPath;
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.uri = path + '/Install/UpgradeWizard.aspx';
+	http.verb = 'GET';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200){
+		var m = /<span id="wizInstall_currentVersionLabel">Current Version\s+-\s+(\d+\.\d+\.\d+)<\/span>/.exec(http.response.body);
+		var versionInfo = "";
+		if (m) versionInfo = m[1];
+		if (versionInfo) {
+			var m = /(06\.01\.0[0-2]|05\.0[1-5]\..*|05\.06\.0[1-7])/.exec(versionInfo);
+			if (m) {
+				vxml = "DotNetNuke_Multiple_Vulnerabilities.xml";
+				details = "Current DotNetNuke version [bold][dark]" + versionInfo + "[/dark][/bold]."
+				alert(http, path, vxml, details);
+			}
+		}	    
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppDotNetNuke");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppDotNetNuke", 1, true);           
+    KBase("DotNetNuke web application", "DotNetNuke web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_dotnetnuke_613_vulns(dir);

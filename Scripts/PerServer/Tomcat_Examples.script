@@ -1,0 +1,99 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+		
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function Test1()
+{
+	var urls = [
+					"/examples/servlets/index.html",
+					"/examples/jsp/index.html",
+					"/examples/jsp/snp/snoop.jsp"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+						/<b><font\sface="Arial,\sHelvetica,\ssans-serif"><font\ssize=\+2>Servlet\nExamples\swith\sCode<\/font><\/font><\/b>/,
+						/<p>This\sis\sa\scollection\sof\ssamples\sdemonstrating\sthe\susage\sof\sdifferent\nparts\sof\sthe\sJava\sServer\sPages\s\(JSP\)\sspecification/,
+						/<body\sbgcolor="white">\n<h1>\sRequest\sInformation\s<\/h1>\n<font\ssize="4">\nJSP\sRequest\sMethod\:/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Apache_Tomcat_sample_files.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************
+function Test2()
+{
+	var urls = [
+					"/examples/servlets/servlet/SessionExample"
+				];
+	
+	matches.plainArray = [
+							"<title>Sessions Example</title>"
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("apache_tomcat_examples_vuln.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	Test1();
+	Test2();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

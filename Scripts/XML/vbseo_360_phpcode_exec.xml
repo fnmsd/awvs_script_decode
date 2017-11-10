@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="vBSEO 3.6.0 PHP code injection" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2012-5223" CWE="CWE-94" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>vBSEO is the leading SEO Plugin for vBulletin. There is a vulnerability in the 'proc_deutf()' function defined in /includes/functions_vbseocp_abstract.php. User input passed through  'char_repl' POST parameter isn't properly sanitized before being used in a call to preg_replace() function which uses the 'e' modifier. This can be exploited to inject and execute arbitrary code leveraging the PHP's complex curly syntax.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Unauthenticated remote PHP code execution.</Impact>
+		<Recommendation>Upgrade to the latest version of vBSEO.</Recommendation>
+		<Reference database="vBSEO Security Bulletin" URL="http://www.vbseo.com/f5/vbseo-security-bulletin-all-supported-versions-patch-release-52783/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

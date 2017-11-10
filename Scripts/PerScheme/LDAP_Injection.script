@@ -1,0 +1,140 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{
+	function InjectionPatterns(){
+		this.plainArray = [
+							'supplied argument is not a valid ldap',
+							'javax.naming.NameNotFoundException',
+							'LDAPException',
+							'com.sun.jndi.ldap',
+							'Protocol error occurred',
+							'Size limit has exceeded',
+							'An inappropriate matching occurred',
+							'A constraint violation occurred',
+							'The syntax is invalid',
+							'Object does not exist',
+							'The distinguished name has an invalid syntax',
+							'The server does not handle directory requests',
+							'The alias is invalid',
+							'There was a naming violation',
+							'There was an object class violation',
+							'Results returned are too large',
+							'The search filter is incorrect',
+							'The search filter is invalid',
+							'The search filter cannot be recognized',
+							'Invalid DN syntax',
+							'No Such Object'
+						];
+		this.regexArray = [
+							/(IPWorksASP\.LDAP.*800a4f70.*\[335\]\s\(no description\savailable\))/,
+							/(<span><H1>Server Error in '.*?' Application.*<h2>\s<i>The.*search filter is invalid\.<\/i>)/
+						  ];											
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();
+{ // class for testing for LDAP Injection
+	function classLDAPInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	classLDAPInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		
+		// for files manipulate also the input filename and set a valid content-type
+		if (this.scheme.hasFileInput && (this.scheme.getInputFlags(this.inputIndex) & INPUT_FLAG_IS_FILE)){
+			this.scheme.setInputFileName(this.inputIndex, value);
+			this.scheme.setInputContentType(this.inputIndex, "image/png");
+			this.scheme.setInputValue(this.inputIndex, value);
+		}
+		else this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+        // populate referer tag - some sites may need it
+        if (!this.lastJob.request.headerExists('Referer'))
+            this.lastJob.request.addHeader('Referer', scanURL.url, false);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classLDAPInjection.prototype.alert = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		var ri = new TReportItem();
+		ri.LoadFromFile("LDAP_injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/LDAP injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classLDAPInjection.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+		var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.body);		
+		if (matchedText) {
+			this.alert(value, matchedText);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	classLDAPInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;	
+			this.currentVariation = i;
+			if (!this.testInjection(")")) continue;
+			if (!this.testInjection("!(()&&!|*|*|")) continue;
+			if (!this.testInjection("^(#$!@#$)(()))******")) continue;
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classLDAPInjection(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

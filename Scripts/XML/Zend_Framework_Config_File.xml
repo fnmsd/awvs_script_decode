@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Zend framework configuration file information disclosure" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:F/RL:W/RC:C" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>The Zend Framework uses a file named [bold]application.ini[/bold] where various sensitive data is stored (such as database credentials). This file is located in the [bold]/application/configs[/bold] directory. Normally this file is not dirrectly accessible but some developers improperly set the application root and make this file acessible from the web.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Restrict access to this file or set your document_root to myapp/public and not myapp.. 
+
+To restrict access to the file, create a .htaccess file in the directory "/application/configs" that contains the following line:
+[code][pre]
+  deny from all
+[/code]
+[/pre]</Recommendation>
+		<Reference database="Zend_Application Quick Start" URL="http://framework.zend.com/manual/1.12/en/zend.application.quick-start.html"/><Reference database="Zend-Framework Full Info Disclosure" URL="http://www.exploit-db.com/exploits/29921/"/></TestDescription>
+</WebApplicationTest>

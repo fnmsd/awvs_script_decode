@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="webadmin.php script" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P" CVSSScoreTemp="7.5" CVSSScoreEnv="7.5"/>
+		<Copyright></Copyright>
+		<Description>webadmin.php is a simple Web-based file manager. This file manager should not be installed on production systems because it doesn't employ any user authentication in the default configuration. Therefore an attacker can read and create random files in your system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read and create random files in your system.</Impact>
+		<Recommendation>Restrict access to this file or remove it from the system.</Recommendation>
+		<Reference database="webadmin homepage" URL="http://cker.name/webadmin/"/></TestDescription>
+</WebApplicationTest>

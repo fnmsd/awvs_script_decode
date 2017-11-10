@@ -1,0 +1,122 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testCKXSSOnURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "/samples/sample_posteddata.php";		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = "<script>prompt(1);</script>=ACUNETIX";
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('<th style="vertical-align: top"><script>prompt(1);</script></th>') != -1)
+		{
+				// successful
+				alert(lastJob.uri, 'ckeditor_sample_posteddata_xss.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function directoryExists(dir)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir;		
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && (lastJob.responseStatus == 301 || lastJob.responseStatus == 302))
+    {
+        var locationStr = lastJob.response.headerValue('location');
+				if (locationStr && locationStr.indexOf(dir + "/") != -1)  
+        {
+            // add directory to crawler
+            var root = getSiteRoot(0);
+    		addLinkToCrawler(dir, root);
+            
+            return true;				
+        }
+    }
+	else return false;
+}
+/***********************************************************************************/
+function testCKOnDir(dir)
+{	
+    if (directoryExists(dir)) 
+    {
+    	trace("testing CK on dir: " + dir);
+    	
+    	// check for XSS
+    	testCKXSSOnURI(dir);    	
+    }
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	var foundCKEditorDir = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;
+			if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+			if (sf.Name == "ckeditor" || sf.Name == "CKEditor") 
+			{
+				foundCKEditorDir = true;				
+				dirs.push(dirName);
+			}				
+		}	
+	}	
+	
+	// if nothing is found, add by default these directories
+	if (!foundCKEditorDir)
+	{
+        var ckeditor_tested_common_dirs = getGlobalValue("ckeditor_tested_common_dirs");
+        if (!ckeditor_tested_common_dirs)
+        {
+    	    setGlobalValue("ckeditor_tested_common_dirs", 1, true);
+            
+    		dirs.push("/ckeditor"); 
+    		dirs.push("/admin/ckeditor"); 
+        }
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+if (!directoryExists("/" + randStr(8)))
+{
+	for (var i=0; i<dirs.length; i++)
+	{
+		testCKOnDir(dirs[i]);
+	}
+}

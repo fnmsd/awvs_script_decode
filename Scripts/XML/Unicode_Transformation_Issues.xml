@@ -1,0 +1,32 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Unicode transformation issues" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-176" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3"/>
+		<Copyright></Copyright>
+		<Description>This page is vulnerable to various Unicode transformation issues such as Best-Fit Mappings, Overlong byte sequences, Ill-formed sequences. [break][break]
+
+[bold]Best-Fit Mappings[/bold] occurs when a character X gets transformed to an entirely different character Y. In general, best-fit mappings occur when characters are transcoded between Unicode and another encoding. [break][break]
+[bold]Overlong byte sequences[/bold] (non-shortest form) - UTF-8 allows for different representations of characters that also have a shorter form.  For security reasons, a UTF-8 decoder must not accept UTF-8 sequences that are longer than necessary to encode a character. For example, the character U+000A (line feed) must be accepted from a UTF-8 stream only in the form 0x0A, but not in any of the following five possible overlong forms:
+[ul]
+[li]  0xC0 0x8A [/li]
+[li]  0xE0 0x80 0x8A [/li]
+[li]  0xF0 0x80 0x80 0x8A [/li]
+[li]  0xF8 0x80 0x80 0x80 0x8A [/li]
+[li]  0xFC 0x80 0x80 0x80 0x80 0x8A [/li]
+[/ul][break]
+[bold]Ill-Formed Subsequences[/bold] As REQUIRED by UNICODE 3.0, and noted in the Unicode Technical Report #36, if a leading byte is followed by an invalid successor byte, then it should NOT consume it.
+[break]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Software vulnerabilities arise when Best-Fit mappings occur. For example, characters can be manipulated to bypass string handling filters, such as cross-site scripting (XSS) or SQL Injection filters, WAF's, and IDS devices. Overlong UTF-8 sequence could be abused to bypass UTF-8 substring tests that look only for the shortest possible encoding.
+ </Impact>
+		<Recommendation>Identify the source of these Unicode transformation issues and fix them. Consult the web references below for more information.</Recommendation>
+		<Reference database="Unicode Security" URL="http://www.blackhat.com/presentations/bh-usa-09/WEBER/BHUSA09-Weber-UnicodeSecurityPreview-PAPER.pdf"/><Reference database="UTF-8 and Unicode FAQ for Unix/Linux" URL="http://www.cl.cam.ac.uk/~mgk25/unicode.html"/><Reference database="A couple of unicode issues on PHP and Firefox" URL="http://sirdarckcat.blogspot.ro/2009/10/couple-of-unicode-issues-on-php-and.html"/><Reference database="Unicode Security Considerations" URL="http://www.unicode.org/reports/tr36/"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache version older than 1.3.34" version="0.1" released="20051109" updated="20140312" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="missing_update" SendCookies="true" CVE="CVE-2005-2088" CWE="CWE-20" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:H/RL:OF/RC:C" CVSSScoreTemp="3.9" CVSSScoreEnv="3.8"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]Two potential security issues have been fixed in Apache version 1.3.34:[break][ul]
+[li]If a request contains both Transfer-Encoding and Content-Length headers, remove the Content-Length, mitigating some HTTP Request Splitting/Spoofing attacks.[/li]
+[li]Added TraceEnable [on|off|extended] per-server directive to alter the behavior of the TRACE method.[/li]
+[/ul][navy]Affected Apache versions (up to 1.3.33).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Multiple. Check references for details about every vulnerability.</Impact>
+		<Recommendation>Upgrade Apache to the latest version.</Recommendation>
+		<Reference database="Apache HTTP Server 1.x announcement" URL="http://archive.apache.org/dist/httpd/Announcement1.3.html"/>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"/>
+	</TestDescription>
+</WebApplicationTest>

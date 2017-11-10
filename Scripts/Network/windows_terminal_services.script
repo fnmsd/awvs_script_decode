@@ -1,0 +1,37 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for Windows terminal services
+function prepare_ms_ts_req(){
+	var res = strFromRawData(
+							//x.224 - connection request (0xe0)
+							0x03, 0x00, 0x00, 0x0B, 0x06, 0xE0,
+							0x00, 0x00, 0x00, 0x00, 0x00);
+	return res;
+}
+if (IsPortOpen(3389)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 3389;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		req = prepare_ms_ts_req();
+		socket.send(req);	
+		data = socket.ReceiveBytes(11);
+		if (data && data.length >= 11) {
+			// do some basic checks to make sure it's the right protocol
+			var version = data.getByteAt(0);
+			var len     = data.getWordAt(2);
+			var code		= data.getByteAt(5);
+			if ((version == 3) 
+					&&  (len == 11)
+					&&  (code == 0xd0)
+				 )	
+				{
+					trace("alert here - windows terminal services running!");
+					ReportItem("Terminal_services.xml", "The Windows Terminal Services server is running on TCP port 3389.");	
+				}
+		}
+		socket.Close();
+	}
+}

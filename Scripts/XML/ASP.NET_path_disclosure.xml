@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="ASP.NET path disclosure" version="0.1" released="20051108" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Informational">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="information_disclosure" SendCookies="true" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This page contains an error message that discloses the installation path and other data.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>A remote user can determine the full path to the web root directory and other potentially sensitive information.</Impact>
+		<Recommendation>Review the source code for this script.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

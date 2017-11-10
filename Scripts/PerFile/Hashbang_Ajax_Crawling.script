@@ -1,0 +1,73 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+#noretest;
+var debug = false;
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+	// only files with some content
+	if (file.response.body.length == 0) return false;
+	// and right content type
+	var ct = file.response.headerValue('content-type');
+	if (ct && ct.toLowerCase().indexOf("text/html") == -1) return false;
+	return true;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+// verify if the file should be searched
+if (file.isFile && fileShouldBeSearched()) {
+    if (debug) trace("file should be searched");
+    var tokens = htmlTokens(file.response.body);
+    var token = null;
+    while (token = tokens.nextToken()) {
+        // only interested in tags
+        if (token.isTag) {
+            // tagname (only interested in two tags)
+            if (token.tagName == "A" || token.tagName == "META") {
+                var metaFragment = false;
+                var metaContent = false;
+                // check parameters
+                for (var i = 0; i < token.paramCount; i++) {
+                    var parName = token.getParamName(i);
+                    var parValue = token.getParamValue(i);
+                    if (token.tagName == 'META') {
+                        if (parName == "NAME" && parValue.toLowerCase().trim() == "fragment")
+                            metaFragment = true;
+                    }
+                    if (token.tagName == 'META') {
+                        if (parName == "CONTENT")
+                            metaContent = parValue;
+                    }
+                    if (token.tagName == 'A' && parName == "HREF") {
+                        // have a link
+                        var url = parValue;
+                        // link contains #!?
+                        if (url && url.indexOf("#!") != -1)
+                        {
+                            // parse the url
+                            var up = new TURL(url);
+                            if(up.anchor.startsWith("!")) {
+                                // remove hashbang and add it to the canonicalizez url
+                                var canonUrl = file.url.canonicalize(url);
+                                var newURL = canonUrl.url + "?_escaped_fragment_=" + plain2url(up.anchor.substring(1));
+                                if (debug) trace(newURL);
+                                // add link to crawler
+                                addLinkToCrawler(newURL, file);
+                            }
+                        }
+                    }
+                }
+                // handle <meta name="fragment" content="!">
+                if (metaFragment && metaContent) {
+                    var newURL = file.url.url + "?_escaped_fragment_=" + plain2url(metaContent.substring(1));
+                    if (debug) trace(newURL);
+                    // add link to crawler
+                    addLinkToCrawler(newURL, file);
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP version older than 5.2.1" version="0.1" released="20070212" updated="20140303" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="missing_update" CVE="CVE-2007-1376,CVE-2007-1380,CVE-2007-1453,CVE-2007-1454" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.0" CVSSScoreEnv="5.9"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]This release is a major stability and security enhancement of the 5.X branch, and all users are strongly encouraged to upgrade to it as soon as possible. [break][break][bold]Security Enhancements and Fixes in PHP 5.2.1:[/bold][break][break][ul] [li]Fixed possible safe_mode &amp; open_basedir bypasses inside the session extension.[/li]
+[li]Prevent search engines from indexing the phpinfo() page.[/li]
+[li]Fixed a number of input processing bugs inside the filter extension.[/li]
+[li]Fixed unserialize() abuse on 64 bit systems with certain input strings.[/li]
+[li]Fixed possible overflows and stack corruptions in the session extension.[/li]
+[li]Fixed an underflow inside the internal sapi_header_op() function.[/li]
+[li]Fixed allocation bugs caused by attempts to allocate negative values in some code paths.[/li]
+[li]Fixed possible stack overflows inside zip, imap &amp; sqlite extensions.[/li]
+[li]Fixed several possible buffer overflows inside the stream filters.[/li]
+[li]Fixed non-validated resource destruction inside the shmop extension.[/li]
+[li]Fixed a possible overflow in the str_replace() function.[/li]
+[li]Fixed possible clobbering of super-globals in several code paths.[/li]
+[li]Fixed a possible information disclosure inside the wddx extension.[/li]
+[li]Fixed a possible string format vulnerability in *print() functions on 64 bit systems.[/li]
+[li]Fixed a possible buffer overflow inside mail() and ibase_{delete,add,modify}_user() functions.[/li]
+[li]Fixed a string format vulnerability inside the odbc_result_all() function.[/li]
+[li]Memory limit is now enabled by default.[/li]
+[li]Added internal heap protection.[/li]
+[li]Extended filter extension support for $_SERVER in CGI and apache2 SAPIs.[/li]
+ [/ul][break][break][navy]Affected PHP versions (up to 5.2.0).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Denial of service or ultimately arbitrary code execution.</Impact>
+		<Recommendation>Upgrade PHP to the latest version.</Recommendation>
+		<Reference database="PHP 5.2.1 Release Announcement" URL="http://www.php.net/releases/5_2_1.php"/>
+		<Reference database="PHP Homepage" URL="http://www.php.net"/>
+	</TestDescription>
+</WebApplicationTest>

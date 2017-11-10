@@ -1,0 +1,41 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, lastJob, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function mongoDGHTTPStatusInterface()
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.port = 28017;
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/";	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	
+	lastJob.execute();
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf("<p><a href=\"/_commands\">List all commands</a>") !=-1)
+	{
+		alert('mongodb_http_status_interface.xml', lastJob);
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+mongoDGHTTPStatusInterface();

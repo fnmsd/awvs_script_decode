@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="JIRA Security Advisory 2012-08-28" version="0.1" released="20080307" updated="20150303" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This advisory details critical security vulnerabilities that we have found in JIRA and fixed in recent versions of JIRA. These vulnerabilities affect all versions of JIRA up to and including [bold]5.0.6[/bold]. [break][break]
+[ul]
+[li]Issue 1: Privilege escalation vulnerability[/li]
+[li]Issue 2: XSS Vulnerabilities[/li]
+[li]Issue 3: XSRF Vulnerability[/li]
+[li]Issue 4: Open Redirect Vulnerabilities[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Consult web references to determine the impact of each particular vulnerability.</Impact>
+		<Recommendation>Customers who have downloaded and installed JIRA should upgrade their existing JIRA installations or apply the patches to fix these vulnerabilities.</Recommendation>
+		<Reference database="JIRA Security Advisory 2012-08-28" URL="https://confluence.atlassian.com/display/JIRA/JIRA+Security+Advisory+2012-08-28"></Reference>
+	</TestDescription>
+</WebApplicationTest>

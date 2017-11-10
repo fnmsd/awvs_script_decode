@@ -1,0 +1,85 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var lastJob = null;
+var debug   = false;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;
+	ri.setHttpInfo(job);
+    if (matchedText) {
+        ri.details = "Pattern found: [dark][bold]" + matchedText + "[/bold][/dark].";
+    }
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function testOnDir(dir)
+{
+	if (debug) trace("testOnDir " + dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "/examples/feed-viewer/feed-proxy.php?feed=http://testasp.vulnweb.com/t/fit.txt";
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+        var pattern = "63c19a6da79816b21429e5bb262daed863c19a6da79816b21429e5bb262daed8";
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf(pattern) != -1)
+		{
+            alert(dir + "/examples/feed-viewer/feed-proxy.php", "extjs_SSRF_Arbitrary_File_Read.xml", lastJob, pattern);
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{
+            var regex = /(.*?\/extjs.*?\/([\d\.]+\/)?)/;
+            var match = regex.exec(sf.fullPath);
+            if (match && match.length > 0 && match[1])  {
+                var path = match[1];
+                if (dirs.indexOf(path) == -1) {
+                    if (debug) trace("found " + path);
+                    dirs.push(path);
+                }
+            }
+		}
+	}
+    
+    var tested_common_dirs = getGlobalValue("extjs_examples_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("extjs_examples_tested_common_dirs", 1, true);
+        
+        dirs.push("/contrib/extjs/");
+        dirs.push("/extjs/");
+        dirs.push("/js/extjs/");
+        dirs.push("/lib/js/extjs/");
+        dirs.push("/libs/js/extjs/");
+        dirs.push("/include/js/extjs/");
+        dirs.push("/lib/extjs/");
+        dirs.push("/libs/extjs/");
+        dirs.push("/include/extjs/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testOnDir(dirs[i]);
+}

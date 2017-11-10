@@ -1,0 +1,81 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testFile(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + '?f=' + uri.replace("/min/index.php", "/min/config.php") + '%00.css';		
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('$min_errorLogger') != -1)
+		{
+			alert(uri, 'Minify_file_disclosure.xml', lastJob);
+			return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var foundFile = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			filePath = sf.fullPath;
+			if (filePath.indexOf("/min/index.php")!=-1) 
+			{
+				foundFile = true;				
+				files.push(filePath);
+			}				
+		}	
+	}	
+	
+	// if nothing is found, add by default these files
+	if (!foundFile)
+	{
+        var minify_common_dirs = getGlobalValue("minify_common_dirs");
+        if (!minify_common_dirs)
+        {
+    	    setGlobalValue("minify_common_dirs", 1, true);
+            
+    		files.push("/min/index.php"); 
+    		files.push("/minify/min/index.php"); 
+        }
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		testFile(files[i]);
+	}
+}

@@ -1,0 +1,21 @@
+#require 1-Stored_Vulnerabilities.script;
+#include constants.inc;
+#include classXSS.inc;
+var targetUrl = new TURL(scanURL.url);
+targetUrl.getVar = "";
+var li = getStoredInjectionList(REFL_TEST_XSS);
+for (var i=0; i<li.count; i++) {	
+	var storedInj = li.item(i);
+	
+	var sf = getSiteFileWithId(storedInj.reflectionId, loadHttp);
+	var job = new THTTPJob();
+	job.request.copyFrom(sf.request);
+	
+	var scheme = getSchemeWithId(storedInj.schemeId);
+	targetUrl.path = scheme.path;
+	
+	var tester = new classXSS(targetUrl, scheme, storedInj.inputIndex, storedInj.variationIndex, job);
+	tester.startTesting();
+	
+	ScriptProgress(ComputeProgress(i, li.count));
+}

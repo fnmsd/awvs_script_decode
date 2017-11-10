@@ -1,0 +1,63 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+var variants = [
+					"/snoop.jsp",
+					"/examples/jsp/snp/snoop.jsp",
+					"/examples/servlet/SnoopServlet",
+					"/servlet/SnoopServlet",
+					"/j2ee/servlet/SnoopServlet",
+					"/jsp/viewer/snoop.jsp"
+				];
+var matches = [
+				"<h1> Request Information </h1>",
+				"JSP Snoop page"
+			  ]
+// **************************************************************************************							 
+function alert(job, URL, vxml, matchStr)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = URL;
+	ri.alertPath = "Scripts/" + vxml; 
+	ri.details = "Pattern found: [bold][dark]" + matchStr + "[/dark][/bold]"; 	
+		
+	ri.setHttpInfo(job);
+	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function testURL(URL)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.verb = 'GET';	
+	http.URI = URL;
+	http.addCookies = false;
+	
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200 && !http.notFound)
+	{
+		var body = http.response.body;
+		
+		for (var i=0;i<matches.length;i++) {		
+			if (body.indexOf(matches[i]) != -1)
+			{
+				alert(http, URL, 'Snoop_Servlet.xml', matches[i]);
+				return true;
+			}
+		}
+	}	
+	
+	return false;	
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0; i<variants.length; i++) 
+{
+	if (testURL(variants[i])) break;	
+}

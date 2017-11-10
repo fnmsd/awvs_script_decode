@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="File upload XSS (Java applet)" version="0.1" released="20080307" updated="20140801" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,arbitrary_file_creation,unauthenticated_file_upload" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The web application supports file uploads and Acunetix WVS was able to upload a Java Applet (.class/.jar) file. If a web browser loads a Java applet from a trusted site, the browser provides no security warning. If an attacker can upload a CLASS/JAR file with an applet, the file is executed even if the web page, which embeds the applet is located on a different site. An attacker could use a file upload function to build an XSS attack using active content.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Restrict file types accepted for upload: check the file extension and only allow certain files to be uploaded. Use a whitelist approach instead of a blacklist. Check for double extensions such as .php.png. Check for files without a filename like .htaccess (on ASP.NET, check for configuration files like web.config). Change the permissions on the upload folder so the files within it are not executable. If possible, rename the files that are uploaded.</Recommendation>
+		<Reference database="OWASP Unrestricted File Upload" URL="http://www.owasp.org/index.php/Unrestricted_File_Upload"></Reference>
+		<Reference database="Why File Upload Forms are a major security threat" URL="http://www.acunetix.com/websitesecurity/upload-forms-threat.htm"></Reference>
+	</TestDescription>
+</WebApplicationTest>

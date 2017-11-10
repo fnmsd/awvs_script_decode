@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="FTP anonymous logins" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal,information_disclosure,configuration,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The remote FTP server allows anonymous logins. Anonymous FTP allows users without accounts to have restricted access to certain directories on the system.
+The configuration of systems allowing anonymous FTP should be checked carefully, as improperly configured FTP servers are frequently attacked.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it or at least deny anonymous logins.</Recommendation>
+		<Reference database="Anonymous FTP Abuses" URL="http://www.bristol.ac.uk/it-services/advice/networks/documentation/anonftp/anonftp2.html"/>
+		<Reference database="FTP Security Considerations" URL="http://www.faqs.org/rfcs/rfc2577.html"/>
+	</TestDescription>
+</WebApplicationTest>

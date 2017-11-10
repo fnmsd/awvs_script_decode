@@ -1,0 +1,275 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include wordpress_functions.inc;
+#include versioning_helpers.inc;
+#include wordpress_vulns_core.inc;
+#include dir_listing_helpers.inc;
+#include reporting_helpers.inc;
+var lastJob = null;
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.details =  "Current WordPress version [dark]" + details + "[/dark]";
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function alert2(uri, version, minVer, maxVer, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, request, response)
+{
+	if (uri == '//') uri='/';
+	
+	var ri = new TReportItem();
+	
+	ri.severity = 'high';
+	ri.affects = uri;
+	ri.alertPath = "Scripts/WordPress vulns";
+	// alert info
+	ri.name = title;
+	ri.description = descr;
+	ri.recommendation = recomm;
+	ri.request = request;
+	ri.response = response;
+	ri.impact = "The impact of this vulnerability is not available.";
+	// alert details
+	ri.details = "Current WordPress version: [dark]" + version + "[/dark].[break]";
+	
+	if (minVer != maxVer) ri.details = ri.details + "WordPress versions between [bold]" + minVer + "[/bold] and [bold]" + maxVer + "[/bold] are affected." ;
+	else ri.details = ri.details + "WordPress version [bold]" + minVer + "[/bold] is affected."; 
+	
+	// references
+	if (ref1 != '')
+		ri.addReference(ref1, ref1);
+	if (ref2 != '')
+		ri.addReference(ref2, ref2);
+	if (ref3 != '')
+		ri.addReference(ref3, ref3);
+	if (ref4 != '')
+		ri.addReference(ref4, ref4);
+	if (ref5 != '')
+		ri.addReference(ref5, ref5);
+	// scores
+	ri.CVE = cve;
+	ri.CWE = cwe;
+	ri.CVSSscore = cvss;
+    ri.CVSS3 = cvss3;
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function alert3(uri, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function getWordPressVersionFromMetaGenerator(dir) {
+	//#1. detect WordPress version from meta generator 
+	var regex = /<meta\s+name="generator"\s+content="WordPress ([\d\.]+)"\s+\/>/i;
+    var m = regex.exec(dir.response.body);
+    if (m && m[1]) {
+    	// make a check for readme.html anyway (for the alert)
+    	getWordPressVersionFromReadMe(dir);
+    	
+    	return m[1];    	
+    } 
+	
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromReadMe(dir) {
+	//#2. detect WordPress version from readme.html
+	var regex = /<br \/> Version ([\d\.]+)/i;
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "readme.html")) {
+		if (lastJob.response.body.indexOf("<title>WordPress") != -1) {
+			var m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+				alert3(dirPath + "readme.html", "WordPress_readme_html.xml");
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromSiteMap(dir) {
+	//#3. detect WordPress version from sitemap.xml
+	
+	var regex = /generator="wordpress\/([\d\.]+)"/i;
+	
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "sitemap.xml")) {
+		if (lastJob.response.body.indexOf("generator") != -1) {
+			var m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromRSSfeeds(dir) {
+	//#4. detect WordPress version from RSS feeds
+	var feedURLs = ['/?feed=rss2', '/?feed=rss', '/feed/rss/', '/feed/', '/comments/feed/', '/wp-rss.php']
+	var regex = /<generator>http:\/\/wordpress.org\/\?v=([\d\.]+)<\/generator>/i;
+	
+	for (var i=0; i<feedURLs.length; i++) {	
+		if (request(dir, dir.fullPath + feedURLs[i])) {
+			if (lastJob.response.body.indexOf("generator") != -1) {
+				var m = regex.exec(lastJob.response.body);
+				if (m && m[1]) {
+			    	return m[1];
+				}
+			}
+		}					
+	}
+	
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromRDFfeeds(dir) {
+	//#5. detect WordPress version from RDF feeds
+	var feedURLs = ['/?feed=rdf', '/feed/rdf/']
+	var regex = /<admin:generatorAgent rdf:resource="http:\/\/wordpress.org\/\?v=([\d\.]+)"/i;
+	
+	for (var i=0; i<feedURLs.length; i++) {	
+		if (request(dir, dir.fullPath + feedURLs[i])) {
+			if (lastJob.response.body.indexOf("generator") != -1) {
+				var m = regex.exec(lastJob.response.body);
+				if (m && m[1]) {
+			    	return m[1];
+				}
+			}
+		}					
+	}
+	
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromAtomfeeds(dir) {
+	//#6. detect WordPress version from Atom feeds
+	var feedURLs = ['/?feed=atom', '/feed/atom/']
+	var regex = /<generator uri="http:\/\/wordpress.org\/" version="([\d\.]+)">/i;
+	
+	for (var i=0; i<feedURLs.length; i++) {	
+		if (request(dir, dir.fullPath + feedURLs[i])) {
+			if (lastJob.response.body.indexOf("generator") != -1) {
+				var m = regex.exec(lastJob.response.body);
+				if (m && m[1]) {
+			    	return m[1];
+				}
+			}
+		}					
+	}
+	
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromCSSVersions(dir) {
+	//#7. detect WordPress version from css versions
+	var feedURLs = ['/?feed=atom', '/feed/atom/']
+	var regex = /<generator uri="http:\/\/wordpress.org\/" version="([\d\.]+)">/i;
+	
+	for (var i=0; i<feedURLs.length; i++) {	
+		if (request(dir, dir.fullPath + feedURLs[i])) {
+			if (lastJob.response.body.indexOf("generator") != -1) {
+				var m = regex.exec(lastJob.response.body);
+				if (m && m[1]) {
+			    	return m[1];
+				}
+			}
+		}					
+	}
+	
+	return false;
+}
+// **************************************************************************************
+function getWordPressVersionFromOPML(dir) {	
+	//#8. detect WordPress version from wp-links-opml.php
+	
+	var regex = /generator="wordpress\/([\d\.]+)"/i;
+	
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "wp-links-opml.php")) {
+		if (lastJob.response.body.indexOf("generator") != -1) {
+			var m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function versionAudit(dir) {
+	var wpVersion = (
+			getWordPressVersionFromMetaGenerator(dir)
+		|| 	getWordPressVersionFromReadMe(dir)
+		||	getWordPressVersionFromSiteMap(dir)
+		||	getWordPressVersionFromRSSfeeds(dir)
+		|| 	getWordPressVersionFromRDFfeeds(dir)
+		|| 	getWordPressVersionFromAtomfeeds(dir)
+		|| 	getWordPressVersionFromOPML(dir)
+		);
+    
+	var alreadyReportedWebApplication = getGlobalValue("detectedAppWordPress_" + dir);
+	if (!alreadyReportedWebApplication)
+	{
+	    setGlobalValue("detectedAppWordPress_" + dir, 1, true);           
+	    if (wpVersion) KBase("WordPress web application", "WordPress web application version [bold]" + wpVersion + "[/bold] was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	    else KBase("WordPress web application", "WordPress web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	}
+    
+    // we were able to detect the WordPress version?
+    if (wpVersion != "") {
+    	for (var i=0; i<vulns.length; i++) {
+			var minVersion = vulns[i][1];
+			var maxVersion = vulns[i][2];
+			
+			if (version_compare(wpVersion, minVersion, '>=') && version_compare(wpVersion, maxVersion, '<=')) {
+				// prepare alert details
+				var title = (vulns[i][0]);
+				var descr = vulns[i][3];
+				var ref1 = vulns[i][4];
+				var ref2 = vulns[i][5];
+				var ref3 = vulns[i][6];
+				var ref4 = vulns[i][7];
+				var ref5 = vulns[i][8];
+				var cve = vulns[i][9];
+				var cwe = vulns[i][10];
+				if (cwe.indexOf(",") != -1) {
+					cwe = cwe.split(",")[0].trim();
+				}
+				var cvss = vulns[i][11];
+				var cvss3 = vulns[i][12];
+				var recomm = vulns[i][13];
+				if (!recomm.trim().endsWith(".")) recomm = recomm + ".";
+				
+				alert2(dir.fullPath + "/", wpVersion, minVersion, maxVersion, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, dir.request.toString(), dir.response.headersString);
+			}
+		}
+	}  
+}
+// main()
+var dir = getCurrentDirectory();
+versionAudit(dir);
+//trace(version_compare('3.8.2', '4.2', '<='));

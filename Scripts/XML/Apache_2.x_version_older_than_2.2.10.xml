@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Apache 2.x version older than 2.2.10" version="0.1" released="20090226" updated="20140313" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="xss,missing_update" SendCookies="true" HasPrecondition="false" SendAuth="true" CVE="CVE-2008-2939,CVE-2010-2791" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.5" CVSSScoreEnv="3.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break][bold]Fixed in Apache httpd 2.2.10:[/bold][break][ul]
+
+[li]
+       [bold]low[/bold]: mod_proxy_ftp globbing XSS CVE-2008-2939[break]
+
+    A flaw was found in the handling of wildcards in the path of a FTP URL with mod_proxy_ftp. If mod_proxy_ftp is enabled to support FTP-over-HTTP, requests containing globbing characters could lead to cross-site scripting (XSS) attacks.
+
+[/li]
+
+[/ul][break]
+
+[navy]Affected Apache versions (2.2.9, 2.2.8, 2.2.6, 2.2.5, 2.2.4, 2.2.3, 2.2.2, 2.2.0).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Check references for details about every vulnerability.</Impact>
+		<Recommendation>Upgrade Apache 2.x to the latest version.</Recommendation>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org"></Reference>
+		<Reference database="Apache httpd 2.2 vulnerabilities" URL="http://httpd.apache.org/security/vulnerabilities_22.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,41 @@
+#include classSSH.inc;
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+function bruteforceSSH(host, port)
+{
+	var loginRetval, i, j;
+	var ssh = new classSSH(host, port, 10);
+	for(i = 0; i < Usernames.length; i++)
+	{
+		for(j = 0; j < Passwords.length; j++)
+		{							
+			var strUser = Usernames[i];
+			var strPass = Passwords[j];
+			
+			trace("Trying [" + strUser + "] [" + strPass + "]");
+			var loginRetval = ssh.Login(strUser, strPass, true);
+			
+			ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));			
+			
+			if(loginRetval < 0) // connection error
+				return(null);
+			if(loginRetval == 1)
+				return({"username" : strUser, "password": strPass});				
+		}
+	}
+	return(null);
+}
+var port = 22;
+if(IsPortOpen(port))
+{
+	var obj =	bruteforceSSH(ScanHost, port);
+	if(obj != null)
+	{
+		trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+		ReportItem("Ssh_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.password + "[/dark]");
+	}
+	else 
+	{
+		trace ("Can not guess login credentials.");
+	}
+}

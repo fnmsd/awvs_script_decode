@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Cross site scripting vulnerability in flowplayer SWF" version="0.1" released="20080307" updated="20151203" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2013-7342, CVE-2013-7343" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>flowplayer is minimalistic, yet full-featured HTML5/Flash video player. Multiple cross site scripting vulnerabilities were reported in older versions of the flowplayer SWF that may allow an attacker to execute arbitrary Javascript code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of flowplayer.</Recommendation>
+		<Reference database="https://flowplayer.org/" URL="https://flowplayer.org/"></Reference>
+		<Reference database="Reflected Cross-Site Scripting (XSS) in Flash Version of Flowplayer" URL="https://github.com/flowplayer/flash/issues/263"></Reference>
+		<Reference database="XSS vulnerability in Flash fallback" URL="https://github.com/flowplayer/flowplayer/issues/381"></Reference>
+	</TestDescription>
+</WebApplicationTest>

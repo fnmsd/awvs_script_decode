@@ -1,0 +1,56 @@
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+// test for SMTP open relay
+function TestSMTPOpenRelay(port){
+var	result = false;
+	if (IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port	= port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if (socket.IsConnected) {
+			// receive banner
+			data = socket.Receive(true);
+			//trace(data);
+			socket.send("HELO acunetix.com\r\n");
+			data = socket.ReceiveLine();
+			//trace(data);
+			if (data.match(/^[2-3][0-9][0-9] .*/)) {
+				socket.send("MAIL FROM: testrelay1@acunetix.com\r\n");
+				data = socket.ReceiveLine();
+				//trace(data);
+				if (data.match(/^[2-3][0-9][0-9] .*/)) {
+					socket.send("RCPT TO: testrelay2@acunetix.com\r\n");
+					data = socket.ReceiveLine();	
+					//trace(data);
+						
+					if (data.match(/^250 .*/)) {
+					socket.send("DATA\r\n");
+					data = socket.ReceiveLine();	
+					//trace(data);				
+					if (data.match(/^[2-3][0-9][0-9] .*/)) {
+							trace("success - mail relaying is enabled!");	
+							ReportItem("SMTP_open_relay.xml", "The SMTP server is running on TCP port " + port + ".");								
+							result = true;
+					}
+					}
+				}
+			}		
+			socket.Close();
+		}
+	}
+	return result;
+}
+// start
+if(!IsPrivateIpAddress(scanip)){
+	if (TestSMTPOpenRelay(25)){
+		Trace("smtp mail relaying enabled on port 25");
+	}
+	if (TestSMTPOpenRelay(587)){
+			Trace("smtp mail relaying enabled on port 587");
+		}
+	if (TestSMTPOpenRelay(465)){
+			Trace("smtp mail relaying enabled on port 465");
+		}
+}

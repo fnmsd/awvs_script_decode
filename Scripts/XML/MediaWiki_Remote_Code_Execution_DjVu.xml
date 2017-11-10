@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MediaWiki remote code execution" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration,missing_update" CVE="CVE-2014-1610" CWE="CWE-20" CVSSVer="2.0" CVSSScore="6.0" CVSSDescr="AV:N/AC:M/Au:S/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.7" CVSSScoreEnv="4.7"/>
+		<Copyright></Copyright>
+		<Description>MediaWiki version older than 1.22.2, 1.21.5 and 1.19.11 are affected by a remote code execution
+vulnerability if file upload support for DjVu is enabled (natively
+supported by MediaWiki) or PDF file upload support is enabled (in combination with the PdfHandler
+extension). Neither file type is enabled by default in MediaWiki installations. If you are affected, we strongly urge you to update
+immediately.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the affected server. </Impact>
+		<Recommendation>Update to the latest version of MediaWiki.</Recommendation>
+		<Reference database="MediaWiki Security Releases: 1.22.2,	1.21.5 and 1.19.11" URL="http://lists.wikimedia.org/pipermail/mediawiki-announce/2014-January/000140.html"/></TestDescription>
+</WebApplicationTest>

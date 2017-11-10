@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla! SQL injection vulnerability " version="0.1" released="20080307" updated="20151023" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="sql_injection" CVE="CVE-2015-7297,CVE-2015-7857,CVE-2015-7858" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Trustwave SpiderLabs researcher Asaf Orpani has discovered an SQL injection vulnerability in versions [bold][dark]3.2[/dark][/bold] through [bold][dark]3.4.4[/dark][/bold] of Joomla!, a popular open-source Content Management System (CMS). Combining that vulnerability with other security weaknesses, our Trustwave SpiderLabs researchers are able to gain full administrative access to any vulnerable Joomla site.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may gain full administrative access to any vulnerable Joomla site.</Impact>
+		<Recommendation>Upgrade to Joomla! version 3.4.5.</Recommendation>
+		<Reference database="Joomla SQL Injection Vulnerability " URL="https://www.trustwave.com/Resources/SpiderLabs-Blog/Joomla-SQL-Injection-Vulnerability-Exploit-Results-in-Full-Administrative-Access/#.Vij3kM3YoQQ.twitter"></Reference>
+		<Reference database="Joomla! 3.4.5 Released" URL="https://www.joomla.org/announcements/release-news/5634-joomla-3-4-5-released.html"></Reference>
+		<Reference database="[20151001] - Core - SQL Injection" URL="http://developer.joomla.org/security-centre/628-20151001-core-sql-injection.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,75 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Unprotected phpMyAdmin interface" version="0.1" released="20090325" updated="20140314" protocol="HTTP" mayproxy="true" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="information_disclosure,configuration,abuse_of_functionality,insecure_admin_access" HasPrecondition="false" SendAuth="true" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.8" CVSSScoreEnv="6.9"/>
+		<Copyright/>
+		<Description>phpMyAdmin is an application written in the PHP language that provides a web-based interface for the administration of MySQL databases. The initial MySQL root account password is empty, so anyone can connect to the MySQL server as root, without a password and be granted all privileges.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Your MySQL server is open to intrusion and you fix this security hole by setting a password for user 'root'.</Impact>
+		<Recommendation>If you have never set a root password for MySQL, the server does not require a password at all for connecting as root. To setup root password for first time, use the mysqladmin tool. Check References for detailed information.</Recommendation>
+		<Reference database="Securing the Initial MySQL Accounts" URL="http://dev.mysql.com/doc/refman/5.1/en/default-privileges.html"/>
+		<Reference database="How To Change MySQL Root Password" URL="http://www.thegeekstuff.com/2009/07/change-reset-mysql-root-password-on-unix-linux/"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${file}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="FullHeaders" type="string">
+					<Description>Get full HTTP headers</Description>
+					<Source source="header">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>&lt;div class="warning"&gt;Your configuration file contains settings (root with no password) that correspond to the default MySQL privileged account.</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

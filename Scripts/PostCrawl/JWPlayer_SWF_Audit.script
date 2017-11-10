@@ -1,0 +1,115 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("871b04f5173390640497989b5eae416c");
+hashes.push("025ac80708a4ac72ac99648e576d0a59");
+hashes.push("ef69302c8cee97ac9b923af6b02aef25");
+hashes.push("4c14527e45088dca5ecaa64dc78611e6");
+hashes.push("65da64b1f7ca4fcc061137e978a480f0");
+hashes.push("c60894a902f355fbac265a4397b84c69");
+hashes.push("2bfa545b734ca30a8d2b79fa1c527745");
+hashes.push("f81c9fdc8ca6f77212e967cd87e7ae3e");
+hashes.push("17d911fbf7a0b04f2ba23f70768e63df");
+hashes.push("0d0d09de4c4a3d96cd3eea21dd34a208");
+hashes.push("5151618571a4919c8b1d9c1dc6ed3353");
+hashes.push("0b6daa200ccc32cc8fd96ae0a34a7eba");
+hashes.push("9d41ed9db89f62a828d09cd8bd7462b2");
+hashes.push("9d3a89a3113007ea7704af319a59c556");
+hashes.push("fb1f4dfce49f462a6e4c4b48fa92f4a3");
+hashes.push("de7fc21b9711f60e3ecc54705525f6fc");
+hashes.push("3f9099e08d7fa901171691eb3e803a22");
+hashes.push("82078c6fb331c139d4073e92e1ce194e");
+hashes.push("9334425f5bc9884e546a6e61e413c4a9");
+hashes.push("ca42af8f44668ccffb173bac8fe30a5e");
+hashes.push("06c953399ed719784ef218a8a16eb688");
+hashes.push("ddd2d0b88f2d72a8530973cd76a458fc");
+hashes.push("f97a45431640d021c776370f83ed0eec");
+hashes.push("81df72c5bd7b7e1c32f5395bfe0b95eb");
+hashes.push("db2f13c98453a4dd8382204f2e457796");
+hashes.push("0f736a38ee6e7f504ec4a82789968694");
+hashes.push("86cf2f0146569f444703cbc238e761d8");
+hashes.push("168171383eb5b79b4a29fb6f8ea26cbe");
+hashes.push("58e79b52d205ffbd57456e86d3abd799");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+    var exploit = "?playerready=alert(document.domain)&debug=function(){alert(document.domain)}";
+    // we could have a directory like /zeroclipboard or a full path like /zeroclipboard/ZeroClipboard.swf
+	if (dir.endsWith(".swf"))
+        lastJob.uri  = dir + exploit;
+    else
+        lastJob.uri  = dir + "/player.swf" + exploit;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(lastJob.uri.replace(exploit, ""), 'JWPlayer_SWF_XSS.xml', lastJob);
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.match(/player.*?.swf/))
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}
+    
+    var tested_common_dirs = getGlobalValue("jwplayer_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("jwplayer_swf_tested_common_dirs", 1, true);
+        dirs.push("/jwplayer");
+        dirs.push("/js/jwplayer");
+        dirs.push("/flash/jwplayer");
+        dirs.push("/scripts/jwplayer");
+        dirs.push("/media/jwplayer");
+		dirs.push("/swf/jwplayer");
+        dirs.push("/include/ckeditor/plugins/jwplayer/jwplayer");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFOnDir(dirs[i]);
+}

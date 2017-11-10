@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Solaris in.fingerd information disclosure vulnerability" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,missing_update,network_alert" CVE="CVE-2001-1503" CWE="CWE-16" CVSSVer="2.0" CVSSScore="2.2" CVSSDescr="AV:L/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="1.8" CVSSScoreEnv="1.7"/>
+		<Copyright/>
+		<Description>A vulnerability in the in.fingerd daemon in Sun Solaris versions 8 and earlier could allow a remote attacker to obtain sensitive account information. A remote attacker can send a specially-crafted finger request to a vulnerable system to cause a list of accounts to be returned to the attacker. This information can be used by the attacker to launch further attacks against the affected host.[break][break]
+
+The following request is sufficient to disclose a list of users:[break]
+[bold][dark]finger 'a b c d e f g h'@sunhost[/dark][/bold]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>It is recommended to disable this service.</Recommendation>
+		<Reference database="Vulnerability Summary CVE-2001-1503" URL="http://nvd.nist.gov/nvd.cfm?cvename=CVE-2001-1503"/>
+		<Reference database="Sun Solaris in.fingerd daemon can disclose account information" URL="http://xforce.iss.net/xforce/xfdb/7334"/>
+		<Reference database="Solaris in.fingerd Information Disclosure Vulnerability" URL="http://www.securityfocus.com/bid/3457"/>
+		<Reference database="Wikipedia Finger protocol" URL="http://en.wikipedia.org/wiki/Finger_protocol"/>
+	</TestDescription>
+</WebApplicationTest>

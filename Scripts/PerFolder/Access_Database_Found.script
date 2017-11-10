@@ -1,0 +1,83 @@
+#include dir_listing_helpers.inc;
+#include constants.inc;
+#include helpers.inc;
+#include perFolder_helpers.inc;
+#noretest;
+var variants = [
+                "users.mdb",
+                "clients.mdb",
+                "private.mdb",
+                "password.mdb",
+                "passwords.mdb",
+                "personal.mdb",
+                "customers.mdb",
+                "members.mdb",
+                "test.mdb",
+                "database.mdb",
+                "log.mdb",
+                "logs.mdb",
+                "data.mdb",
+                "db.mdb",
+                "db1.mdb",
+                "private.mdb"
+			   ];
+			   
+// **************************************************************************************							 
+function alert(uri, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Access_Database_Found.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Access Database Found";	
+	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 
+							 
+// **************************************************************************************
+function testFile(file, variant) {
+	var fname = variant.replace("${dirName}", dirName);
+	var dirName = file.path + file.name;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/'; 		
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = dirName + variant;
+	http.execute();	
+	
+	if (!http.wasError && !http.notFound && (http.responseStatus == 200))
+    {
+		// escape of some false positives
+        if (http.response.headerValue('content-type').indexOf('msaccess') != -1) 
+		{		
+			alert(dirName + fname, http);
+			addLinkToCrawler(dirName + fname, file);
+		}
+	}
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+if (file.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{ 
+	if (file.response.msg2 == 200 || file.response.msg2 == 403) 
+	{
+		// don't scan if acusensor is enabled
+		if (!file.hasAcuSensor)
+		{
+			// first let's test the precondition
+			if (canIScanThisFolder(file))
+			{
+				var total = variants.length;
+				// test it with all backup variants	
+				for (var i=0; i<variants.length; i++) 
+				{	
+					testFile(file, variants[i]);
+					ScriptProgress(ComputeProgress(i, total));
+				}
+			}
+		}
+	}
+}

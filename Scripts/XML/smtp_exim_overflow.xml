@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Exim Illegal IPv6 Address and SPA Authentication Buffer Overflow" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration,missing_update,network_alert" CVE="CVE-2005-0021" CWE="CWE-119" CVSSVer="2.0" CVSSScore="7.2" CVSSDescr="AV:L/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C" CVSSScoreTemp="6.0" CVSSScoreEnv="5.9"/>
+		<Copyright/>
+		<Description>The remote host is running Exim, a message transfer agent (SMTP).
+It is reported that Exim is prone to an IPv6 Address and a SPA
+authentication buffer Overflow . An attacker, exploiting those flaws,
+may be able to execute arbitrary code on the remote host.
+
+Exim must be configured with SPA Authentication or with IPv6 support
+to exploit those flaws.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The remote attacker can execute arbitrary code in the context of the affected server application.</Impact>
+		<Recommendation>Upgrade to Exim latest version.</Recommendation>
+		<Reference database="Exim Illegal IPv6 Address Buffer Overflow Vulnerability" URL="http://www.securityfocus.com/bid/12185"/>
+		<Reference database="Exim SPA Authentication Remote Buffer Overflow Vulnerability" URL="http://www.securityfocus.com/bid/12185"/>
+	</TestDescription>
+</WebApplicationTest>

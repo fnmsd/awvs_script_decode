@@ -1,0 +1,133 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+var debug = false;
+{
+    // *********************************************************************************************
+    // class for testing the signs of an injection using text patterns found in the response text
+    // *********************************************************************************************
+    function classInjectionPatterns(){
+        this.plainArray = [
+        ];
+        this.regexArray = [
+            /[\n|\r](headername\s*:\s*headervalue)/
+        ];
+    }
+    // *********************************************************************************************
+    // search text for all the patterns from the list (plain text and regexes)
+    // *********************************************************************************************
+    classInjectionPatterns.prototype.searchOnText = function(text) {
+        // search plain texts first
+        for (var i=0;i<this.plainArray.length;i++) {
+            if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+        }
+        // search regexes
+        for (var i=0;i<this.regexArray.length;i++) {
+            var m = this.regexArray[i].exec(text);
+            if (m) return m[0];
+        }
+        return false;
+    }
+}
+var injectionPatterns = new classInjectionPatterns();
+// **************************************************************************************							 
+function alert(dirName, testValue, matchedText, lastJob)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile("CRLF_Injection.xml");
+    ri.affects = dirName;
+    ri.alertPath = "Scripts/CRLF Injection";
+    ri.details = "[bold][dark]URI[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+    if (matchedText)
+        ri.Details =  ri.Details + "[break]Injected header found: [pre][blue]" + matchedText + "[/blue][/pre]";
+    ri.setHttpInfo(lastJob);
+    AddReportItem(ri);
+}
+// **************************************************************************************	
+function testInjection(dirName, value)
+{
+	var lastJob = new THTTPJob();
+	
+	var newUrl = scanURL;
+	newUrl.scheme = "http"; // force HTTP scheme to catch HTTP=>HTTPS redirection vulns
+    lastJob.url = newUrl;
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.uri  = dirName + plain2url(value);
+	lastJob.execute();
+	if (!lastJob.wasError)
+	{
+        var matchedText = injectionPatterns.searchOnText(lastJob.response.headersString);
+        if (matchedText) {
+            alert(dirName, value, matchedText, lastJob);
+            return true;
+        }
+	}
+	return false;
+}
+// **************************************************************************************	
+function testInjectionRoot(dirName, value)
+{
+	var lastJob = new THTTPJob();
+	
+	var newUrl = scanURL;
+	newUrl.scheme = "http"; // force HTTP scheme to catch HTTP=>HTTPS redirection vulns
+    lastJob.url = newUrl;
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.uri = plain2url(value);
+	lastJob.execute();
+	if (!lastJob.wasError)
+	{
+        var matchedText = injectionPatterns.searchOnText(lastJob.response.headersString);
+        if (matchedText) {
+            alert(dirName, value, matchedText, lastJob);
+            return true;
+        }
+	}
+	return false;
+}
+// **************************************************************************************
+function testReflection(dirName)
+{
+    var token = randStr(8);
+    var lastJob = new THTTPJob();
+    var newUrl = scanURL;
+    newUrl.scheme = "http"; // force HTTP scheme to catch HTTP=>HTTPS redirection vulns
+    lastJob.url = newUrl;
+    lastJob.verb = "GET";
+    lastJob.addCookies = false;
+    lastJob.uri  = dirName + token;
+    lastJob.timeout = 10000;
+    lastJob.retries = 0;
+    lastJob.execute();
+    if (!lastJob.wasError && lastJob.response.headersString.indexOf(token) !=-1)
+    {
+        return true;
+    }
+    return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var dirName = getPathDirectory(scanURL.path);
+if (!dirName.endsWith("/")) dirName = dirName + "/";
+if (testReflection(dirName)) {
+    if (debug) trace("[+] reflection");
+    // \r\n
+    if (testInjection(dirName, "\r\nheadername: headervalue")) terminate();
+    // \r\n\t
+    if (testInjection(dirName, "\r\n\theadername: headervalue")) terminate();
+    // \r\n\s
+    if (testInjection(dirName, "\r\n headername: headervalue")) terminate();
+    // \r\t
+    if (testInjection(dirName, "\r\theadername: headervalue")) terminate();
+    // \n
+    if (testInjection(dirName, "\nheadername: headervalue")) terminate();
+    // \r
+    if (testInjection(dirName, "\rheadername: headervalue")) terminate();
+    // LiteSpeed /~%0d%0aheadername:headervalue
+    if (testInjectionRoot(dirName, "/~\r\nheadername: headervalue")) terminate();
+    // twitter crlf
+    if (testInjection(dirName, "%E5%98%8A%E5%98%8Dheadername:%20headervalue", true)) terminate();
+}

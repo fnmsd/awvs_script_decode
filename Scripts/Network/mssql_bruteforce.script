@@ -1,0 +1,46 @@
+#include classMSSQL.inc;
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+function bruteforceMSSQL(host, port)
+{
+	var loginRetval, i, j;
+		for(i = 0; i < Usernames.length; i++)
+		{
+			for(j = 0; j < Passwords.length; j++)
+			{
+			
+				var msssql = new mySQLHandlerClass(host, port);
+								
+				var strUser = Usernames[i];
+				var strPass = Passwords[j];
+				
+				var loginRetval = msssql.login(strUser, strPass);
+				
+				ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+				
+				if(loginRetval == -2) // connection error
+					return(null);
+				if(loginRetval == 1)
+					return({"username" : strUser, "password": strPass});				
+			}
+		}
+	return(null);
+}
+var sql = new mySQLHandlerClass(ScanHost, 1434);
+var data = sql.ping(ScanHost, 1434);
+var port = 1433;
+if(data != null)
+	if(data.TCPPort != "") port = data.TCPPort;
+if(IsPortOpen(port))
+{
+	var obj =	bruteforceMSSQL(ScanHost, port);
+	if(obj != null)
+	{
+		trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+		ReportItem("Mssql_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.password + "[/dark]");
+	}
+	else 
+	{
+		trace ("Can not guess login credentials.");
+	}
+}

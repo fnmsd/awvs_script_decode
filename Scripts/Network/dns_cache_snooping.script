@@ -1,0 +1,99 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for DNS cache snooping
+function prepare_domain_name(domain)
+{
+	var res = "";
+	parts = domain.split(".");
+	for (i=0;i<parts.length;i++)
+	if (parts[i].length > 0)
+	{
+		res += String.fromCharCode(parts[i].length);
+		res += parts[i];
+	}
+	//trace(res);
+	return res;
+}
+function prepare_A_dns_request(domain, tid, flags)
+{
+	var res = "";	
+	res = strFromWord(tid) +  // transaction ID
+				strFromWord(flags); // flags 
+	res += String.fromCharCode(
+             0x00, 0x01,   // questions
+             0x00, 0x00,   // answers
+             0x00, 0x00,   // auth rrs
+             0x00, 0x00);  // additional rrs
+	res += prepare_domain_name(domain); 
+	res += String.fromCharCode(
+						 0x00,         // null
+             0x00, 0x01,   // A
+             0x00, 0x01)   // class IN
+	return res;
+}
+// start
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port = 53;
+socket.Timeout = 5;
+socket.Connect();
+if(socket.IsConnected){
+	
+	// insert our query into cache (request DNS recursion)
+	dns_req = prepare_A_dns_request("testasp.vulnweb.com", 0x3136, 0x0100);
+	//trace(dns_req.toHexString());	
+	socket.Send(dns_req);
+	dnsRespStr = socket.Receive(true);
+	// get response 	
+	if (dnsRespStr.length >= 8 ) {
+		// get tid (for comparison)
+		tid = dnsRespStr.getWordAt(0);
+		if (tid != 0x3136) {
+				// invalid response
+				// trace('invalid tid');	
+				terminate();
+		}
+		// valid response ?
+		flags1 = dnsRespStr.getByteAt(2, true);
+		flags2 = dnsRespStr.getByteAt(3, true);
+		respCount	= dnsRespStr.getWordAt(6);
+		//trace(respCount);
+			if ( ((flags1 & 0x80) == 0x80) 		 // is a response
+						&& ((flags2 & 0x80) == 0x80) // recursion is enabled
+						&& (respCount) // have responses
+				)	
+			{
+				// let's send our second request		
+				//trace('so far so good!');
+				// let's ask again the same question (this time without recursion)
+				dns_req = prepare_A_dns_request("testasp.vulnweb.com", 0x3137, 0x0000);
+				socket.Send(dns_req);
+				dnsRespStr = socket.Receive(true);
+				// get response 	
+				if (dnsRespStr.length >= 8 ) {
+					// get tid (for comparison)
+					tid = dnsRespStr.getWordAt(0);
+					if (tid != 0x3137) {
+							// invalid response
+							// trace('invalid tid');	
+							terminate();
+						}
+					// valid response
+					flags1 = dnsRespStr.getByteAt(2, true);
+					flags2 = dnsRespStr.getByteAt(3, true);
+					respCount	= dnsRespStr.getWordAt(6);
+					//trace(respCount);
+						if ( ((flags1 & 0x80) == 0x80) 		 // is a response
+									&& ((flags2 & 0x80) == 0x80) // recursion is enabled
+									&& (respCount) // have responses
+							)	
+						{
+							// report here
+							trace('dns cache snooping is possible! - alert here');
+							ReportItem("Dns_cache_snooping.xml", "The DNS server is running on UDP port 53.");
+						}
+				}
+			}
+		}
+	socket.Close();
+}

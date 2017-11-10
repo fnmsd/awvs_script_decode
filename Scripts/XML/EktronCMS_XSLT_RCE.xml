@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="EktronCMS Saxon XSLT parser remote code execution" version="0.1" released="20080307" updated="20150303" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2015-0931" CWE="CWE-78" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Ektron Content Management System version 8.5, 8.7, and 9.0 contain a resource injection vulnerability by using an improperly configured XML parser. By default, Ektron utilizes the Microsoft XML parser to parse XSLT documents, which is not vulnerable. If an attacker specifies use of the Saxon XSLT parser instead, and sends it a specially crafted XSLT document, the attacker may be able to run arbitrary code at the privilege level of the application.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can call static functions of .NET CRL classes from Saxon XSLT parser.</Impact>
+		<Recommendation>Upgrade to the latest version of EktronCMS. This problem was fixed with Security Update 3 (Releases 8.02 SP5 to 9.10 SP1).</Recommendation>
+		<Reference database="Exploiting the hidden Saxon XSLT Parser in Ektron CMS" URL="http://codewhitesec.blogspot.de/2015/03/exploiting-hidden-saxon-xslt-parser-in.html"></Reference>
+		<Reference database="Security Update 3 (Releases 8.02 SP5 to 9.10 SP1)" URL="http://documentation.ektron.com/current/ReleaseNotes/ReleaseNotes_WebHelp.htm#Security_Update.htm#top"></Reference>
+	</TestDescription>
+</WebApplicationTest>

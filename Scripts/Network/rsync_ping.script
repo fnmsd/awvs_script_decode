@@ -1,0 +1,44 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for rsync server
+if (IsPortOpen(873)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 873;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {		
+		// init client
+		client_init = strFromRawData(0x40,  0x52,  0x53,  0x59,  0x4e,  0x43,  0x44,  0x3a,  0x20,  0x32,  0x39,  0x0a);
+		socket.send(client_init);
+		// receive server init
+		data = socket.ReceiveUntil("\n");
+		//trace(data);
+		if (data.search("rsync") >= 0) {
+			//trace("good");
+			socket.send("\n");
+			finished = 0;
+			rsync_info = "";
+			do {
+			
+			data = socket.Receive(true);			
+			if (!data) {finished = 1; }
+			else {
+				if (!data.length) {finished = 1;}
+				else {
+					if (data.indexOf("@RSYNCD: EXIT") == 0) {finished = 1;}
+				}
+			}
+			if (!finished) {
+				rsync_info += data;
+			}
+			} while (!finished);
+			if (rsync_info.length > 0) {
+				trace("alert here: rsyncd available!");
+				KBase("Rsyncd server running", "A Rsyncd server is running on TCP port 873.[break]Information gathered from this service:[pre]" + rsync_info + "[/pre]");
+				trace(rsync_info);	
+			}
+		}
+		socket.Close();
+	}
+}

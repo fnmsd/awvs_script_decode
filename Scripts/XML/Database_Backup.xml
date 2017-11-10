@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Possible database backup" version="0.1" released="20080307" updated="20150223" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+It looks like this file contains a database backup/dump. Acunetix WVS inferred this filename from the domain name. A database backup contains a record of the table structure and/or the data from a database and is usually in the form of a list of SQL statements. A database backup is most often used for backing up a database so that its contents can be restored in the event of data loss. This information is highly sensitive and should never be found on a production system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>This file may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Sensitive files such as database backups should never be stored in a directory that is accessible to the web server. As a workaround, you could restrict access to this file.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

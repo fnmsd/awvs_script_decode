@@ -1,0 +1,84 @@
+#include reporting_helpers.inc;
+// get some information from the IRCd server
+function receiveall(socket){
+	var res  = "";
+	var data;
+	while( (data = socket.Receive(true)) != ""){
+			res += data;
+		}
+	return res;
+}
+//start
+function TestOnPort(port){
+if (IsPortOpen(port))
+{
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 6667;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {	
+		socket.Timeout = 2;
+		// receive banner	
+		var banner = receiveall(socket);
+		//trace(banner);
+		if (banner.length > 0){
+			KBase("IRC server running", "An IRC server is running on TCP port " + port + ".");	
+		}
+		
+		// prepare a nick for registration
+		var nick = "acunetix" + random(1000);		
+			
+		// register
+		socket.send("NICK " + nick + "\r\n" + 
+							"USER " + nick + " www.acunetix.com " + ScanHost + " : " + nick + "\r\n");
+		// get response
+		var resp = receiveall(socket);		
+		//trace(resp);
+		var info = "";
+		// issue a few commands
+		// version
+		socket.send("VERSION\r\n");
+		// get response
+		var resp = receiveall(socket);		
+		info+= resp;
+		//trace(resp);		
+		// stats
+		socket.send("STATS u\r\n");
+		// get response
+		var resp = receiveall(socket);		
+		info+= resp;
+		//trace(resp);		
+		// lusers
+		socket.send("LUSERS\r\n");
+		// get response
+		var resp = receiveall(socket);		
+		info+= resp;	
+		//trace(resp);	
+		KBase("IRC server details", "The IRC server is running on TCP port " + port + ". [break]Server responses:[pre]" + info + "[/pre]");
+		//trace(info);
+		
+		// check for unrealircd backdoor
+		if (info.search("Unreal3.2.8.1.") != -1) {
+		
+			// check for backdoor
+			var before = new Date();
+			socket.send("AB;sleep 10s;\r\n");
+			// get response
+			socket.Timeout = 15;			
+			var resp = socket.receiveLine();
+			var after = new Date();
+			
+			if ((Math.ceil((after.getTime()-before.getTime())/(1000))) >= 10) 		
+				ReportItem("UnrealIRCD3281.xml", "UnrealIRCd server is running on TCP port " + port + ".");
+		}
+		//quit
+		socket.send("QUIT\r\n");		
+		
+		socket.Close();
+	}
+}
+}
+TestOnPort(6666);
+TestOnPort(6667);
+TestOnPort(6697);

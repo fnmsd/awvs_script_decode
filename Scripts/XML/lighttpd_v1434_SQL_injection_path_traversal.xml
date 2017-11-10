@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="lighttpd v1.4.34 SQL injection and path traversal" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal,sql_injection" CVE="CVE-2014-2323,CVE-2014-2324" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Jann Horn reported a MySQL injection vulnerability in lighttpd (a
+lightweight webserver) version 1.4.34 (and earlier) through a
+combination of two bugs: [break]
+[ul]
+[li] request_check_hostname is too lax: it allows any host names starting
+  with [ipv6-address] followed by anything but a colon, for example: [/li]
+[pre]
+  GET /etc/passwd HTTP/1.1
+  Host: [::1]' UNION SELECT '/
+[pre][break]
+[li] mod_mysql_vhost doesn't perform any quoting; it just replaces ? in
+  the query string with the hostname.[/li]
+[/ul][break]
+mod_evhost and mod_simple_vhost are vulnerable in a limited way too; a 
+pattern: evhost.path-pattern = "/var/www/%0/" with a host
+"[]/../../../" leads to document root of "/var/www/[]/../../../", but
+as "/var/www/[]" usually doesn't exists this fails (this might depend
+on the operating system in use).
+If there exist directories like "/var/www/[...]" for IPv6 addresses as 
+host names (or a user can create them) mod_evhost and mod_simple_vhost 
+are vulnerable too. [break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read any file acessible to the lighttpd user.</Impact>
+		<Recommendation>Upgrade to the latest version of lighttpd or disable mod_mysql_vhost.</Recommendation>
+		<Reference database="lighttpd 1.4.34 SQL injection and path traversal CVE request" URL="http://www.openwall.com/lists/oss-security/2014/03/12/9"></Reference>
+		<Reference database="mod_mysql_vhost SQL injection" URL="http://download.lighttpd.net/lighttpd/security/lighttpd_sa_2014_01.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

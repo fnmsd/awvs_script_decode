@@ -1,0 +1,150 @@
+#include string_helpers.inc;
+#include smb_helpers.inc;
+#include reporting_helpers.inc;
+// audit smb (null session, administrator without password, list shares)
+// try to establish a null session, list shares
+function TestSMBOnPort(port){
+	var result = "";
+	var hostname = get_netbios_hostname(ScanHost);
+	if (hostname.length == 0)	 
+	{
+		return result;
+	}
+	else 
+	{
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		
+		socket.Connect();
+		
+		if (socket.IsConnected) {		
+			trace("connected");
+			
+			smp_proto_neg_req = smb_protocol_negotiation();
+			
+			// negotiate protocol
+			socket.send(smp_proto_neg_req);
+			
+			data = socket.receive(true);
+			//trace(data.toHexString());
+			
+			if (data.length<9) {var status = "-1";}
+			else {var status = data.getByteAt(9);}
+			
+			trace("status = " + status);
+			
+			if (status == 0) {
+				trace("protocol negotiated!")
+				
+				// get security mode
+				var securityMode = (data.getByteAt(39) && 1);
+				trace("securityMode = " + securityMode);
+				var securityModeStr = "";
+				
+				if (securityMode > 0) {
+					trace("security mode: user");
+					securityModeStr = "user";
+				}
+				else {
+					trace("security mode: share");
+					securityModeStr = "share";
+				}
+				
+				// try to establish a null session
+				smp_null_ses_req = smb_null_session();
+			
+				// null session
+				socket.send(smp_null_ses_req);
+				
+				data = socket.receive(true);
+				//trace(data.toHexString());
+	
+				if (data.length<9) {var status = "-1";}
+				else {var status = data.getByteAt(9);}				
+				
+				trace("status = " + status);
+				//trace(data);	
+	
+				if (status == 0) {
+					trace("null session established!")		
+					ReportItem("SMB_null_session.xml", "The SMB server is running on TCP port " + port +". Security mode: " + securityModeStr);	
+	
+					// get UID
+					uid = data.getWordAt(32, true);
+					trace("uid = " + uid);
+	
+					// connect to IPC$
+					smp_tconx_req = smb_tconx("\\\\" + hostname + "\\IPC$", uid);
+					socket.send(smp_tconx_req);
+					
+					data = socket.receive(true);
+					//trace(data.toHexString());
+	
+					if (data.length<9) {var status = "-1";}
+					else {var status = data.getByteAt(9);}	
+					
+					trace("status = " + status);
+					//trace(data);	
+					
+					if (status == 0) {
+						trace("connected to IPC$!")	
+						
+						// get UID
+						tid = data.getWordAt(28, true);
+						trace("tid = " + uid);
+	
+						// request share list (old style - working on samba)
+						smp_share_enum_req = smb_share_enum(uid, tid);
+						socket.send(smp_share_enum_req);
+						
+						data = socket.receive(true);
+						//trace(data.toHexString());
+		
+						if (data.length<9) {var status = "-1";}
+						else {var status = data.getByteAt(9);}
+						
+						trace("status = " + status);						
+	
+						if (status == 0) {
+							shares = smb_extract_list_of_shares(data);
+							if (shares.length > 0) {
+								trace("share list gathered!");
+								ReportItem("SMB_list_shares.xml", "The SMB server is running on TCP port " + port +". Security mode: " + securityModeStr + ".[break]List of shares: [pre]" + shares + "[/pre]");	
+								trace(shares);	
+							}
+						} 
+					}
+				}
+	
+				//terminate();
+			
+				// try session with user administrator and no password				
+				smp_ses_adm_req = smb_session_admin_no_password();
+			
+				// session
+				socket.send(smp_ses_adm_req);
+				
+				data = socket.receive(true);
+				//trace(data.toHexString());
+	
+				if (data.length<9) {var status = "-1";}
+				else {var status = data.getByteAt(9);}				
+				
+				trace("status = " + status);
+				//trace(data);	
+	
+				if (status == 0) {
+					trace("session admin no password established!")			
+					ReportItem("SMB_admin_nopass.xml", "The SMB server is running on TCP port " + port +". Security mode: " + securityModeStr);	
+				}			
+			}
+		socket.Close();
+		}
+	}
+}
+// start
+if (IsPortOpen(445)) {
+	TestSMBOnPort(445);
+}

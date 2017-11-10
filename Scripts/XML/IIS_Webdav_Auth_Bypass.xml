@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft IIS WebDAV authentication bypass" version="0.1" released="20071212" updated="20140306" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" HasPrecondition="false" AlertTags="authentication_bypass,configuration" SendCookies="false" SendAuth="false" ValidateSession="false" CVE="CVE-2009-1535" CWE="CWE-287" CVSSVer="2.0" CVSSScore="7.6" CVSSDescr="AV:N/AC:H/Au:N/C:C/I:C/A:C/E:POC/RL:OF/RC:C" CVSSScoreTemp="6.0" CVSSScoreEnv="6.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>An elevation of privilege vulnerability exists in the way that the WebDAV extension for IIS handles HTTP requests. An attacker could exploit this vulnerability by creating a specially crafted anonymous HTTP request to gain access to a location that typically requires authentication.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker could exploit this vulnerability by creating a specially crafted anonymous HTTP request to gain access to a location that typically requires authentication.</Impact>
+		<Recommendation>[bold]Workaround #1: Turn off WebDAV[/bold][break][break]
+
+Turning off WebDAV might be a good option if you are not using it or can live without out until we have a security update available. You can find instructions at http://support.microsoft.com/kb/241520.
+
+[break][break][bold]Workaround #2: Change filesystem ACL's to deny access to IUSR_[MachineName][/bold][break][break]
+
+Remember that there are two levels of permissions for files served by IIS. First, the user must be granted access by the NTFS file system and only then are the permissions in the IIS metabase checked. If you deny access to the web-server anonymous account (IUSR_[MachineName]), the access check bypassed by this vulnerability will not be reached. You can find instructions for hardening file system permissions on a web-server at http://support.microsoft.com/kb/271071.
+
+[break][break][bold]Workaround #3: Use URLScan to block malicious requests.[/bold][break][break]
+
+URLScan helps protect affected systems from attempts to exploit this vulnerability. You can find instructions for deployment URLScan at http://technet.microsoft.com/en-us/security/cc242650.aspx.</Recommendation>
+		<Reference database="Microsoft Security Advisory (971492) - Vulnerability in Internet Information Services Could Allow Elevation of Privilege" URL="http://www.microsoft.com/technet/security/advisory/971492.mspx"></Reference>
+		<Reference database="More information about the IIS authentication bypass" URL="http://blogs.technet.com/srd/archive/2009/05/18/more-information-about-the-iis-authentication-bypass.aspx"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>PROPFIND</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.1</Version>
+					<Header>
+						<Name encoding="text">Depth</Name>
+						<Value encoding="text">1</Value>
+					</Header>
+					<Header>
+						<Name encoding="text">Content-type</Name>
+						<Value encoding="text">text/xml</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">&lt;?xml version="1.0"?&gt;&lt;a:propfind xmlns:a="DAV:"&gt;&lt;a:prop&gt;&lt;a:getcontenttype/&gt;&lt;/a:prop&gt;&lt;a:prop&gt;&lt;a:getcontentlength/&gt;&lt;/a:prop&gt;&lt;/a:propfind&gt;</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>Full response body</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>207</Value>
+					<Compare variable="${FullBody}" test="cont">
+						<Value>&lt;a:multistatus</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>&lt;a:response&gt;</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>207</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="path" type="string">
+		<Description>script path</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Username" type="string">
+		<Description>list of users</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Password" type="string">
+		<Description>list of passwords</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

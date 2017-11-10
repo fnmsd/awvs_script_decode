@@ -1,0 +1,21 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include joomla_helpers.inc;
+#include backup_file_variants.inc;
+#include webapp_config_backup.inc;
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+  	// various vulnerabilities
+	test_joomla_priv_escalation_and_sql_injection(dir, dir.fullPath);
+	test_joomla_1_6_0_sql_injection(dir, dir.fullPath);
+  	// test for vulnerable plugins
+	testForVulnPlugins(dir);    
+   
+  	// test for config file backup files
+    testConfigFileBackupFile(dir, dir.fullPath, "configuration", "php");
+}

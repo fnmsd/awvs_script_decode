@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Core dump file" version="0.1" released="20080307" updated="20150428" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A core dump consists of the recorded state of the working memory of a computer program at a specific time, generally when the program has terminated abnormally (crashed). Core dumps are often used to assist in diagnosing and debugging errors in computer programs. [break][break]
+A core dump file was found in this directory. The content of core dump files are highly sensitive as they contain the extact contents of the working memory including credentials, user data and so on.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The information contained in core dump files can help and attacker perform other attacks.</Impact>
+		<Recommendation>It's recommended to configure the server not to create core dumps or to create the files in a directory that is not publicly accessible.</Recommendation>
+		<Reference database="Core dump" URL="https://wiki.archlinux.org/index.php/Core_dump"></Reference>
+	</TestDescription>
+</WebApplicationTest>

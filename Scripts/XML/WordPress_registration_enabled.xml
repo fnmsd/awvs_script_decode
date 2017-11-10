@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress user registration enabled" version="0.1" released="20080307" updated="20150211" protocol="FTP" mayproxy="false" affects="server" severity="info" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Your WordPress site is currently configured so that anyone can register as a user. If you are not using this functionality, it's recommended to disable user registration as it caused some security issues in the past and is increasing the attack surface.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>No impact is associated with this vulnerability.</Impact>
+		<Recommendation>Disable user registration if not needed. To disable user registration, log in as an administrator and go to Settings -&gt; General and uncheck "Anyone can register".</Recommendation>
+		<Reference database="Disable user registration if not needed" URL="https://www.owasp.org/index.php/OWASP_Wordpress_Security_Implementation_Guideline#Disable_user_registration_if_not_needed"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MediaWiki chunked uploads security issue" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="CVE-2013-2114" CWE="CWE-434" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>MediaWiki user Marco discovered that security checks for file
+uploads were not being run when the file was uploaded in chunks
+through the API. This option has been available to users who can
+upload files since MediaWiki 1.19. [break][break]
+
+This issue was fixed in [dark][bold]MediaWiki v1.20.6[/dark][/bold] and [dark][bold]MediaWiki v1.19.7[/dark][/bold].</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can upload arbitrary files on the wiki.</Impact>
+		<Recommendation>Upgrade to the latest version of MediaWiki.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

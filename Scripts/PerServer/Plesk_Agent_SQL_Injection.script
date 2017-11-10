@@ -1,0 +1,69 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(job, fname, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	if (details) 
+	 ri.details = details;
+    		
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function TestForDirectoryTraversal(matches, job)
+{
+	var res = null;
+    
+	matches.plainArray = [
+						"Syntax error in string in query expression",
+                        "Unclosed quotation mark before the character string",		
+                        "You have an error in your SQL syntax"
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+    if (job.response.body.indexOf("<status>error</status>") != -1) {    
+	    var matchedText = matches.searchOnText(job.response.body);	
+	    if (matchedText) { 
+            details = 'Error message found [dark]"' + matchedText + '"[/dark]';
+            alert(job, "Plesk_Agent_SQL_Injection.xml", details); 
+            res = 1; 
+        }
+    }
+	
+	return res;
+}
+// **************************************************************************************							 
+function testForSQLInjection()
+{
+	var lastJob = new THTTPJob();
+		
+	newUrl = scanURL;
+	newUrl.port = 8443;
+    newUrl.scheme = 'https';
+	lastJob.addCookies = false;
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	lastJob.verb = "POST";
+	lastJob.url  = newUrl;			
+	lastJob.uri  = "/enterprise/control/agent.php";	
+	lastJob.request.addHeader('HTTP_AUTH_LOGIN', "'", true);	
+    lastJob.request.addHeader('HTTP_AUTH_PASSWD', "acunetix", true);	
+	lastJob.request.addHeader('Content-type', 'text/xml', true);	
+	lastJob.request.body = '<?xml version="1.0" encoding="UTF-8" ?><packet version="1.5.0.0"><ip><get/></ip></packet>';
+    lastJob.execute();
+	if (!lastJob.wasError)
+	{
+		return TestForDirectoryTraversal(matches, lastJob);
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+testForSQLInjection();

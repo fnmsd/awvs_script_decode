@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL server older than 3.23.36" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2001-0407" CWE="CWE-284" CVSSVer="2.0" CVSSScore="4.6" CVSSDescr="AV:L/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.6" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This version is vulnerable to various flaws which may allow someone with an access to this database to execute arbitrary commands as root or to obtain the password hashes of all the database users.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Abuse of functionality: an attacker uses server's features and functionality to consume, defraud, or circumvents access controls mechanisms.</Impact>
+		<Recommendation>Upgrade the MySQL server to the latest version.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

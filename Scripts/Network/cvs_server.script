@@ -1,0 +1,22 @@
+#include reporting_helpers.inc;
+// test for cvs server
+if (IsPortOpen(2401)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 2401;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		//trace("connected!");
+		cvs_req = "BEGIN AUTH REQUEST\n/\nACUNETIX\nACUNETIX\nEND AUTH REQUEST\n";
+		socket.send(cvs_req);
+		data = socket.Receive(true);
+		//trace(data);
+		if (data.search("repository") >= 0 || data.search("I HATE YOU") >= 0)
+		{
+			trace("CVS server detected!");
+			KBase("CVS server running", "A Concurrent Versions System (CVS) server is running on this host on TCP port 2401. Version control system software keeps track of all work and all changes in a set of files, and allows several developers (potentially widely separated in space and/or time) to collaborate.");
+		}
+		socket.Close();
+	}
+}

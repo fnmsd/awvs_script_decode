@@ -1,0 +1,168 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+#include constants.inc;
+var repfiles = new Array();
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, vxml, repFilesHTML)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;	
+	
+	ri.Details =  "Git files found at : [dark]" + newUri + "[/dark]";	
+    	
+	if (repFilesHTML)		
+		ri.Details =  ri.Details + "[break][break]Repository files/directories: [break]" + repFilesHTML;
+			
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+function alertEmail(matchedText, xml, affects)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(xml);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = lastJob.request.headersString;
+	ri.response = lastJob.response.headersString;
+	ri.fullResponse = lastJob.response.body;
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+function getIndex(version, body, position) {
+	//trace("getIndex from position " + position)
+	var prefixBytes = 62;
+	var v3check = body.getWordAt(prefixBytes-2);
+	if (version == 3 && (v3check&2==2)) prefixBytes = prefixBytes + 2;	
+	var startNameIndex = position + prefixBytes;
+	var indexName = body.getNullTerminatedStringAt(startNameIndex);
+    repfiles.push(indexName);
+	addLinkToCrawler(indexName, dir);
+	var newPos = startNameIndex + indexName.length;
+	var entryLength =prefixBytes + indexName.length;
+	for (var i=1; i<=8; i++) {
+		entryLength = entryLength + 1;
+		if (entryLength % 8 == 0) break;
+	}	
+	newPos = position + entryLength;
+	//trace(newPos);
+	return newPos;
+}
+//--------------------------------------------------------------------------------------------------------
+function extractEmailsFromGIT(dir, dirName)
+{
+	var testURI = dirName + ".git/logs/HEAD";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	
+	lastJob = http;
+	
+	http.execute();	
+	
+	if (!http.wasError && !http.notFound && http.response.body.length > 4)
+	{
+		var body = http.response.body;
+		matchedText = TestForEmailAddresses(matches, http.response.body);
+		if (matchedText) alertEmail(matchedText, "Email_address_found.xml", testURI);		
+	}
+}
+//--------------------------------------------------------------------------------------------------------
+function getFilesFromGIT(dir, dirName)
+{
+	var testURI = dirName + ".git/index";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+    // if the response status is 403 forbidden try again with INDEX_ALLOCATION
+    if (!http.wasError && http.responseStatus == 403)
+    {
+    	testURI = dirName + ".git::$INDEX_ALLOCATION/index";
+        
+    	http = new THTTPJob();
+    	http.url = dir.url;
+    	http.verb = 'GET';
+    	http.URI = testURI;
+    	http.execute();
+    }
+	if (!http.wasError && !http.notFound && http.response.body.length > 4)
+	{
+		var body = http.response.body;
+	
+		var signature = body.getStringAt(0, 4);
+		var version = body.getLongAt(4, 4);
+		
+		if (signature == 'DIRC' && (version == 2 || version == 3)) {
+			//trace("git version " + version);
+			// let's see how many files there are.
+			var indexCount = body.getLongAt(8);
+			if (indexCount > 0)
+			{
+				//trace(indexCount);
+				var pos = 12;
+				
+				for (var i=0; i<indexCount; i++){
+					pos = getIndex(version, body, pos);
+				}
+			}	
+		}
+	}
+}
+//--------------------------------------------------------------------------------------------------------
+var matches = new classMatches();
+var matchedText = "";
+var lastJob = null;
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200) {
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var testURI = dirName + ".git/config";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+	if (!http.wasError && !http.notFound){
+		var m = /repositoryformatversion[\s\S]*/.exec(http.response.body);
+		if (m) {            
+			getFilesFromGIT(dir, dirName);
+			extractEmailsFromGIT(dir, dirName);
+						
+			var maxFiles = 10;
+			if (repfiles.length<maxFiles) maxFiles=repfiles.length;
+			
+			var repfilesHTML = "";
+			
+			if (maxFiles > 0) {
+				repfilesHTML = "[ul]";
+				
+				for (var i=0;i<=maxFiles-1;i++) {
+					repfilesHTML += "[li]";
+					
+					repfilesHTML += repfiles[i];
+					
+					repfilesHTML += "[/li]";
+				}						
+				
+				if (repfiles.length > maxFiles)
+					repfilesHTML += "[li]...[/li]";
+				
+				repfilesHTML += "[/ul]";
+			}
+			
+			alert(dir.fullPath, testURI, http, "GIT_repository_found.xml", repfilesHTML);
+		}
+	}
+}

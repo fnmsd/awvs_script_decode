@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Umbraco CMS local file inclusion" version="0.1" released="20080307" updated="20150323" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="file_inclusion" CVE="" CWE="CWE-98" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Umbraco CMS includes a ClientDependency package that is vulnerable to a local file inclusion (LFI) in the default installation. The ClientDependency package, used by Umbraco, exposes the "DependencyHandler.axd" file in the root of the website. This file is used to combine and minify CSS and JavaScript files, which are supplied in a base64 encoded string.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read any file acessible to the web server user.</Impact>
+		<Recommendation>The Umbraco team have released a fixed version of the ClientDependency package. For more information consult the Umbraco security advisory listed in web references.</Recommendation>
+		<Reference database="Umbraco CMS Local File Inclusion" URL="https://www.dionach.com/blog/umbraco-cms-local-file-inclusion"></Reference>
+		<Reference database="Security alert - Update ClientDependency immediately" URL="http://umbraco.com/follow-us/blog-archive/2015/2/5/security-alert-update-clientdependency-immediately"></Reference>
+	</TestDescription>
+</WebApplicationTest>

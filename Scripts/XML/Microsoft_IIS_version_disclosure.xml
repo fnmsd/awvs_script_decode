@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft IIS version disclosure" version="0.1" released="20080307" updated="20141208" protocol="FTP" mayproxy="false" affects="server" severity="info" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The HTTP responses returned by this web application include a header named [bold]Server[/bold]. The value of this header includes the version of Microsoft IIS server.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The HTTP header may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Microsoft IIS should be configured to remove unwanted HTTP response headers from the response. Consult web references for more information.</Recommendation>
+		<Reference database="Remove Unwanted HTTP Response Headers" URL="http://blogs.msdn.com/b/varunm/archive/2013/04/23/remove-unwanted-http-response-headers.aspx"></Reference>
+	</TestDescription>
+</WebApplicationTest>

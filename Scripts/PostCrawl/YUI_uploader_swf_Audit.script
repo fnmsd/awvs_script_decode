@@ -1,0 +1,90 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("0e3f1d915e70fa72160b72d96d9ed6cc"); 
+hashes.push("85c7520f4580aaf5bdba1d428121099d"); 
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testYUIUploaderOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	
+	var canonUrl = scanURL.canonicalize(dir + "uploader.swf?allowedDomain=\%22}%29%29%29}catch%28e%29{alert%28document.domain%29;}//");
+	lastJob.uri = canonUrl.uri;
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound)
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            if (hashes.indexOf(hash) != -1) {
+                alert(canonUrl.path, 'YUI_uploader_swf_XSS.xml', lastJob);
+            }
+		}
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.indexOf("uploader.swf")!=-1) 
+			{
+			    if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+                if (dirs.indexOf(dirName) == -1)                	
+				    dirs.push(dirName);
+			}
+		}	
+	}	
+    
+    var tested_common_dirs = getGlobalValue("yui_uploader_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("yui_uploader_tested_common_dirs", 1, true);
+        
+        dirs.push("./clientscript/yui/uploader/assets/");
+        dirs.push("./core/clientscript/yui/uploader/assets/");
+        dirs.push("/yui/uploader/assets/");
+        dirs.push("/js/yui/uploader/assets/");
+        dirs.push("/lib/yui/uploader/assets/");
+        dirs.push("/html/yui/uploader/assets/");
+        dirs.push("/include/yui/uploader/assets/");
+        dirs.push("/scripts/yui/uploader/assets/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testYUIUploaderOnDir(dirs[i]);
+}

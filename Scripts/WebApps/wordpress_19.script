@@ -1,0 +1,36 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";	
+	
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function test_url(dir, path)
+{
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + "wp-includes/rss-functions.php";
+	
+	http.execute();
+	
+	var pattternStr = "Fatal error: Call to undefined function";
+	
+	if (!http.wasError && http.response.body && http.response.body.indexOf(pattternStr) != -1){	
+		alert("WordPress_path_disclosure.xml", http, http.uri, http.response.body.trunc(1024));
+	}
+}
+var dir = getCurrentDirectory();
+test_url(dir, dir.fullPath);

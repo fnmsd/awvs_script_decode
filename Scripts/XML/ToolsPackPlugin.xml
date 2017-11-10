@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="ToolsPack malware plugin" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="malware" CVE="" CWE="CWE-95" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:H/RL:W/RC:C" CVSSScoreTemp="7.2" CVSSScoreEnv="7.1" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Many WordPress blogs were infected by a malicious plugin named ToolsPack. This plugin is a backdoor that allows any attacker to execute arbitrary PHP code on the infected website. The plugin contains only one file named ToolsPack.php. This file contains the backdoor.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on your website.</Impact>
+		<Recommendation>Remove this plugin from your website. Delete the ToolsPack plugin directory from your WordPress /wp-content/plugins/ installation.</Recommendation>
+		<Reference database="What is the ToolsPack plugin?" URL="http://wewatchyourwebsite.com/wordpress/2012/02/what-is-the-toolspack-plugin/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

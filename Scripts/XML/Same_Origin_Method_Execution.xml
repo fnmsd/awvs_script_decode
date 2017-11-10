@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Same origin method execution (SOME)" version="0.1" released="20080307" updated="20160201" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+Same Origin Method Execution (SOME) is a web application attack which abuses callback endpoints by forcing a victim into executing arbitrary scripting methods of any page on the endpoint's domain.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact of a SOME attack is similar to the impact of Cross-Site Scripting, but there are some important and distinguishing exploitation restrictions.</Impact>
+		<Recommendation>Same Origin Method Execution (SOME) can be mitigated using static callbacks, a white-list approach or cross-domain messaging. Consult Web references for more information about Mitigation and Fix.</Recommendation>
+		<Reference database="Same origin method execution (SOME)" URL="http://www.benhayak.com/2015/06/same-origin-method-execution-some.html?m=1"/><Reference database="Same Origin Method Execution (BlackHat EU2014)" URL="https://www.slideshare.net/BenHayak/blackhat-eu-same-origin-method-execution"/></TestDescription>
+</WebApplicationTest>

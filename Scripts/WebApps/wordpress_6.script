@@ -1,0 +1,82 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include dir_listing_helpers.inc;
+var lastJob = null;
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.setHttpInfo(lastJob);
+	ri.details =  details;
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function testForW3TotalCache(dir) {
+    var root_path = dir.fullPath;
+    if (root_path.charAt(root_path.length-1) != '/') root_path = root_path + '/';
+		var objName = 'w3tc_' + scanHost.toLowerCase() + '_object_' + plain2md5('users1');
+		var objHash = plain2md5(objName);
+		var vuln = false;
+    var uri = root_path + "/wp-content/w3tc/objectcache/" + objHash.substr(0,1) + "/" + objHash.substr(1,1) + "/" + objHash.substr(2,1) + "/" + objHash;
+    if (request(dir, uri))
+    {
+		
+        if (lastJob.response.body.indexOf('"user_login"') != -1) {
+							vuln = true;
+            	alert(uri, "wordpress_w3totalcache_predictable_cache.xml", "Cached value: [break]" + lastJob.response.body);
+						}
+    }
+		
+		// look for directory listing as well
+		if (!vuln) {
+			var uri = root_path + "/wp-content/w3tc/objectcache/";
+			if (request(dir, uri))
+			{
+				var matches = new classDirListingMatches();
+				var matchedText = matches.searchOnText(lastJob.response.body);		
+			  if (matchedText) 
+					alert(uri, "wordpress_w3totalcache_predictable_cache.xml", "Directory listing: [break]" + lastJob.response.body);
+			}			
+		}
+}    
+// **************************************************************************************
+function testW3TotalCacheDebug(dir) {
+	siteFile = getSiteFileWithPath(dir.fullPath, loadHttp);
+	if (siteFile) {
+		var pattern1Str = "<!-- W3 Total Cache: Db cache debug info:";
+		var pattern2Str = "<!-- W3 Total Cache: Page cache debug info:"
+		//trace(siteFile.response.body);
+		
+		if (siteFile.response.body.indexOf(pattern1Str) != -1) {
+			var details = "Pattern found: [bold][dark]" + pattern1Str + "[/dark][/bold]";
+			alert(dir.fullPath, "W3_Total_Cache_Debug.xml", details);
+		} 
+		else 
+		if (siteFile.response.body.indexOf(pattern2Str) != -1) {
+			var details = "Pattern found: [bold][dark]" + pattern2Str + "[/dark][/bold]";
+			alert(dir.fullPath, "W3_Total_Cache_Debug.xml", details);
+		};			
+	}
+}
+// main()
+var dir = getCurrentDirectory();
+testForW3TotalCache(dir);
+// test for W3 Total Cache Debug 
+testW3TotalCacheDebug(dir);

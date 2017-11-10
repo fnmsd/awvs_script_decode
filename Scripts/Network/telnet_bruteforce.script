@@ -1,0 +1,24 @@
+#include reporting_helpers.inc;
+#include classTelnet.inc;
+#include credentials_small.inc;
+#include debug_helpers.inc;
+if (IsPortOpen(23)) {
+	var telnet = new classTelnet(ScanHost, 23);
+	var i, j, arrayOfCredentials = new Array();
+	for(i = 0; i < Usernames.length; i++)
+		for(j = 0; j < Passwords.length; j++)
+		{
+			arrayOfCredentials.push({"strUserName" : Usernames[i], "strPassword" : Passwords[j]});			
+		}
+		
+	var retval = telnet.tryToLogIn(arrayOfCredentials);
+	if (retval && retval.boolSuccess) 
+	{
+		trace("Login success, username: " + arrayOfCredentials[retval.intIndex].strUserName + " password: " + arrayOfCredentials[retval.intIndex].strPassword);
+		ReportItem("Telnet_bruteforce.xml", "Username: [dark]" + arrayOfCredentials[retval.intIndex].strUserName + "[/dark], Password: [dark]" + arrayOfCredentials[retval.intIndex].strPassword + "[/dark]");
+	}
+	else
+	{
+		trace("Can not guess password");
+	}
+}

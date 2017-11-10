@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Elasticsearch remote code execution" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2014-3120" CWE="CWE-78" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:W/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Elasticsearch is a highly scalable open-source full-text search and analytics engine. It allows you to store, search, and analyze big volumes of data quickly and in near real time. It is generally used as the underlying engine/technology that powers applications that have complex search features and requirements.[break][break]
+Elasticsearch has a flaw in its default configuration which makes it possible for any webpage to execute arbitrary code on visitors with Elasticsearch installed. Elasticsearch has no access roles or authentication mechanism. This means that you have full control over a cluster the moment you connect to it.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Add the following line to your elasticsearch.yml to disable dynamic scripting and prevent remote code execution: [break]
+[pre]
+script.disable_dynamic: true
+[/pre]
+You should also make sure that your local Elasticsearch instance is only binding on localhost.</Recommendation>
+		<Reference database="Insecure default in Elasticsearch enables remote code execution" URL="http://bouk.co/blog/elasticsearch-rce/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

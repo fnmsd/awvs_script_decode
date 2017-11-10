@@ -1,0 +1,205 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testFCKOnURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.request.addHeader("Content-Type", "multipart/form-data; boundary=---------------------------29565348729577", true);
+	
+	lastJob.request.body = '-----------------------------29565348729577' + CRLF() +
+											   'Content-Disposition: form-data; name="NewFile"; filename="Acunetix_WVS_File_Upload_test.txt"' + CRLF() +
+												 'Content-Type: text/plain' + CRLF() +
+												 '' + CRLF() +
+												 'Testing file upload (' + randStr(32) + ')' + CRLF() +
+												 '-----------------------------29565348729577--' + CRLF();
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('OnUploadCompleted') != -1 && lastJob.response.body.indexOf('Acunetix_WVS_File_Upload_test') != -1)
+		{
+				// upload was successful
+				alert(uri, 'FCKeditor_Arbitrary_File_Upload.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function testFCKXSSOnURI(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "/editor/dialog/fck_spellerpages/spellerpages/server-scripts/spellchecker.php";		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = "textinputs[]='\");alert(12345);</script><!--";
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('textinputs[0] = decodeURIComponent("\'");alert(12345);</script>') != -1)
+		{
+				// successful
+				alert(lastJob.uri, 'FCKeditor_Spellchecker_XSS.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function directoryExists(dir)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir;		
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && (lastJob.responseStatus == 301 || lastJob.responseStatus == 302))
+    {
+        var locationStr = lastJob.response.headerValue('location');
+				if (locationStr && locationStr.indexOf(dir + "/") != -1)  
+        {
+            // add directory to crawler
+            var root = getSiteRoot(0);
+    		addLinkToCrawler(dir, root);
+            
+            return true;				
+        }
+    }
+	else return false;
+}
+/***********************************************************************************/
+function testFCKOnDir(dir)
+{	
+    if (directoryExists(dir)) 
+    {
+    	//trace("testing FCK on dir: " + dir);
+    	
+    	// check for XSS
+    	testFCKXSSOnURI(dir);    	
+    	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/php/connector.php?Command=FileUpload&Type=File&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/asp/connector.asp?Command=FileUpload&Type=File&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/cfm/connector.cfm?Command=FileUpload&Type=File&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=File&Connector=connectors/php/connector.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=File&Connector=connectors/asp/connector.asp")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=File&Connector=connectors/cfm/connector.cfm")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/php/connector.php?Command=FileUpload&Type=Image&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/asp/connector.asp?Command=FileUpload&Type=Image&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/asp/connector.cfm?Command=FileUpload&Type=Image&CurrentFolder=/")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=Image&Connector=connectors/php/connector.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=Image&Connector=connectors/asp/connector.asp")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/browser.html?Type=Image&Connector=connectors/cfm/connector.cfm")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/connectors/php/connector.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/connectors/asp/connector.asp")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/browser/default/connectors/cfm/connector.cfm")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/asp/connector.asp")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/php/connector.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/cfm/connector.cfm")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/asp/upload.asp")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/php/upload.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/connectors/cfm/upload.cfm")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/upload/php/upload.php")) return;	
+    	if (testFCKOnURI(dir + "/editor/filemanager/upload/asp/upload.asp")) return;
+    	if (testFCKOnURI(dir + "/editor/filemanager/upload/cfm/upload.cfm")) return;	
+    }
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	var foundFCKEditorDir = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;
+			if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+			if (sf.Name.indexOf("fckeditor")!=-1 || sf.Name.indexOf("FCKeditor")!=-1 || sf.Name.indexOf("fck")!=-1 || sf.Name == "FCK" || sf.Name.indexOf("editor")!=-1) 
+			{
+				foundFCKEditorDir = true;				
+				dirs.push(dirName);
+			}				
+		}	
+	}	
+	
+	// if nothing is found, add by default these directories
+	if (!foundFCKEditorDir)
+	{
+        var fckeditor_tested_common_dirs = getGlobalValue("fckeditor_tested_common_dirs");
+        if (!fckeditor_tested_common_dirs)
+        {
+    	    setGlobalValue("fckeditor_tested_common_dirs", 1, true);
+            
+    		dirs.push("/FCKeditor"); 
+    		dirs.push("/fckeditor"); 
+    		dirs.push("/CFIDE/scripts/ajax/FCKeditor"); 
+    		dirs.push("/gs/plugins/editors/fckeditor"); 
+    		dirs.push("/editors/FCKeditor"); 
+    		dirs.push("/admin/FCKeditor"); 
+    		dirs.push("/admin/scripts/fckeditor"); 
+    		dirs.push("/manage/fckeditor"); 
+    		dirs.push("/editor/FCKeditor");         
+    		dirs.push("/mambots/editors/fckeditor"); 
+    		dirs.push("/js/FCKeditor");         
+    		dirs.push("/adm/fckeditor"); 
+    		dirs.push("/plugins/editors/fckeditor");         
+    		dirs.push("/plugins/fckeditor");         
+    		dirs.push("/jscripts");         
+    		dirs.push("/include/fckeditor"); 
+    		dirs.push("/thirdparty/fckeditor"); 
+    		dirs.push("/javascript/editors/fckeditor");
+    		dirs.push("/assets/fckeditor"); 
+    		dirs.push("/assets/js/fckeditor");         
+    		dirs.push("/topics"); 
+    		dirs.push("/blog/fckeditor");         
+    		dirs.push("/libs"); 
+    		dirs.push("/lib/fckeditor"); 
+    		dirs.push("/resources/fckeditor"); 
+    		dirs.push("/admin/release");         
+    		dirs.push("/inc/fckeditor"); 
+    		dirs.push("/sites/all/libraries/fckeditor");         
+    		dirs.push("/sites/all/modules/fckeditor");
+    		dirs.push("/html/js/editor/fckeditor");
+        }
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+if (!directoryExists("/" + randStr(8)))
+{
+	for (var i=0; i<dirs.length; i++)
+	{
+		testFCKOnDir(dirs[i]);
+	}
+}

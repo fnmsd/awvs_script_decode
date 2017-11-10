@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP 4.3.0 file disclosure and possible code execution" version="0.1" released="20040327" updated="20140304" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="code_execution,missing_update" SendCookies="true" CVE="CVE-2003-0097" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:H/RL:OF/RC:C" CVSSScoreTemp="6.6" CVSSScoreEnv="6.5"/>
+		<Reference database="CVE 2003-0097" URL="http://cgi.nessus.org/cve.php3?cve=CAN-2003-0097"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]Unknown vulnerability in CGI module for PHP 4.3.0 allows attackers to access arbitrary files as the PHP user, and possibly execute PHP code, by bypassing the CGI force redirect settings (cgi.force_redirect or --enable-force-cgi-redirect). [break][break][navy]Affected PHP version 4.3.0.[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>File disclosure and possible code execution.</Impact>
+		<Recommendation>Upgrade PHP to the latest version.</Recommendation>
+		<Reference database="PHP Homepage" URL="http://www.php.net"/>
+	</TestDescription>
+</WebApplicationTest>

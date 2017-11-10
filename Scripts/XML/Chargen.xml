@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Chargen service running" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,denial_of_service,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>A chargen service is running on this host. The chargen service was intended for testing and measurement purposes and may listen on both TCP and UDP protocols. Upon opening a TCP connection, the server starts sending arbitrary characters to the connecting host and continues until the hosts closes the connection. In the UDP version of the protocol, the server sends a UDP packet containing a random number (between 0 and 512) of characters every time it receives a UDP packet from the connecting host. Any data received by the server is thrown away.[break]
+The chargen service can be spoofed into sending data from one service on one computer to another service on another computer. This action causes an infinite loop and creates a denial of service attack.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>It is recommended to disable this service.</Recommendation>
+		<Reference database="Wikipedia chargen" URL="http://en.wikipedia.org/wiki/CHARGEN"/>
+		<Reference database="CA-1996-01 UDP Port Denial-of-Service Attack" URL="http://www.cert.org/advisories/CA-1996-01.html"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,84 @@
+#include string_helpers.inc;
+#include snmp_communities.inc;
+#include reporting_helpers.inc;
+// test for known snmp communities
+// send a SNMP request for sysDescr
+function snmp_request_sysDescr(community, reqId)
+{
+	var res = "";
+	
+	res = String.fromCharCode(0x02, 0x01, 0x00, 0x04);
+	res += String.fromCharCode(community.length);
+	res += community;
+	res += String.fromCharCode(0xa0, 0x1a, 0x02, 0x02);
+	
+	byte1 = reqId >> 8;
+	byte2 = reqId & 0xff;
+	
+	res += String.fromCharCode(byte1, byte2);
+	res += String.fromCharCode(0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x0e, 
+		0x30, 0x0c, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x02, 0x01, 0x01, 0x01, 0x00,
+		0x05, 0x00);
+	
+	res = String.fromCharCode(0x30, res.length) + res;
+	
+	return res;
+}
+// parse a SNMP response for sysDescr, extract the first string from it
+function snmp_response_sysDescr(response, community, reqId)
+{
+	var res = "";		
+	// safety checks
+	if (response.getByteAt(0) != 0x30){return res;}
+	if (response.length <= (35 + community.length)){return res;}
+	
+	// get community
+	recvCommunity = response.slice(7, 7 + community.length);
+	if (community == recvCommunity) 
+	{
+		//trace("good community");		
+		recvReqId = response.getWordAt(11 + community.length);
+		
+		if (recvReqId == reqId) {
+			//trace("good reqID");			
+			res = response.slice(35 + community.length);
+		}	
+	}
+		
+	return res;	
+}
+// test snmp communiy
+function TestSNMPCommunity(community, reqId)
+{
+	var res = "";
+	var s = new TSocket('udp');
+	s.host = ScanHost;
+	s.port = 161;
+	s.timeout = 1;
+	s.connect();
+	community = community;
+	data_to_send = snmp_request_sysDescr(community, reqId);
+	s.Send(data_to_send);
+	//trace(data_to_send.toHexString());
+	response = s.Receive(true);
+	if (response.length > 0) {
+		sysDescr = snmp_response_sysDescr(response, community, reqId);
+		if (sysDescr.length > 0){
+				res = sysDescr;
+			}	
+	}
+	s.Close();
+	return res;
+}
+// test for known SNMP communitites 
+for(i=0;i<Communitities.length;i++){
+	trace("testing " + Communitities[i] + " ...");
+	data = TestSNMPCommunity(Communitities[i], 317 + i);
+	//trace("testing " + Communitities[i] + " DONE");
+	if (data.length > 0) {
+		Trace("Guessed SNMP community " + Communitities[i] + ", sysDescr = " + data);
+	
+		ReportItem("SNMP_sysdescr.xml", "The SNMP server is listening on UDP 161. [break]SNMP community string: [dark]" + Communitities[i] + "[/dark][break]System description: [pre]" + data + "[/pre]");	
+		break;
+	}	
+}

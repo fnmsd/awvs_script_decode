@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Vulnerabilities in SharePoint could allow elevation of privilege" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2012-1859" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:H/RL:OF/RC:C" CVSSScoreTemp="3.9" CVSSScoreEnv="3.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A cross-site scripting and elevation of privilege vulnerability exists in SharePoint that allows attacker-controlled JavaScript to run in the context of the user clicking a link. This is an elevation of privilege vulnerability as it allows an anonymous attacker to potentially issue SharePoint commands in the context of an authenticated user on the site.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade SharePoint to the latest version.</Recommendation>
+		<Reference database="Microsoft Security Bulletin MS12-050" URL="http://technet.microsoft.com/en-us/security/bulletin/ms12-050"></Reference>
+	</TestDescription>
+</WebApplicationTest>

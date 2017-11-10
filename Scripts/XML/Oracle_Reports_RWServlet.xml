@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Oracle Reports rwservlet vulnerabilities" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2012-3152,CVE-2012-3153" CWE="CWE-20" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:F/RL:W/RC:C" CVSSScoreTemp="5.8" CVSSScoreEnv="5.9"/>
+		<Copyright></Copyright>
+		<Description>netinfiltration reported various high severity vulnerabilities (and exploits) affecting Oracle Reports. These vulnerabilities allow an attacker to dump the database passwords, view folder contents, download files,  load a phishing page in the browser and even gain a remote shell.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can gain a remote shell on the affected server.</Impact>
+		<Recommendation>Currently, Oracle didn't provided any fix for these vulnerabilities. </Recommendation>
+		<Reference database="Oracle Reports exploits release - full disclosure" URL="http://netinfiltration.com/"/></TestDescription>
+</WebApplicationTest>

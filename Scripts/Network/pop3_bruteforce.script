@@ -1,0 +1,41 @@
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+// pop3 bruteforce
+function TestCredentials(socket, uname, pass){
+	socket.Connect();
+	if (socket.IsConnected) {
+		//trace("uname = " + uname + ", " + "pass = " + pass);
+		// receive banner
+		data = socket.ReceiveLine();
+		//trace(data);
+		socket.send("USER " + uname + "\r\n");
+		data = socket.ReceiveLine();
+		//trace(data);
+		if (data.indexOf("+OK ") == 0)
+		{
+			socket.send("PASS " + pass + "\r\n");
+			data = socket.ReceiveLine();
+			//trace(data);
+			if (data.indexOf("+OK ") == 0)
+			{
+				trace("alert here ! LOGIN OK: username " + uname + ", password " + pass);
+				ReportItem("Pop3_bruteforce.xml", "Username: [dark]" + uname + "[/dark], Password: [dark]" + pass + "[/dark]");					
+			}
+		}
+		socket.Close();
+	}
+}
+// start
+if (IsPortOpen(110)){
+	var socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 110;
+	socket.Timeout = 5;
+	for(i=0;i<Usernames.length;i++){
+    for(j=0;j<Passwords.length;j++){
+      if( TestCredentials(socket, Usernames[i], Passwords[j]) )
+        Trace(Usernames[i] + ',' + Passwords[j]);
+      	ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+    }
+  }
+}

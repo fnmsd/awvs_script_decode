@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Blind XSS" version="0.1" released="20080307" updated="20140520" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="[p]The following report provides information on the page where the JavaScript code was executed and information on the user that visited the webpage causing the code to be executed.[/p][ul][li]Date: {date}[/li][li]IP address: {ip}[/li][li]User agent: {userAgent}[/li][li]Page Url: {url}[/li][li]Page Title: {title}[/li][li]Referrer: {referrer}[/li][li]Cookies: {cookies}[/li][li]Screen: {resolution}[/li][/ul]" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-80" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.4" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[p]One of the scans performed by Acunetix WVS has generated a Blind XSS Alert. The JavaScript code that had been injected into the scanned website has been executed a few minutes ago, and this has been detected by the Acunetix AcuMonitor Service.[/p]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input.</Recommendation>
+		<Reference database="Acunetix Blind XSS" URL="http://www.acunetix.com/blog/web-security-zone/articles/blind-xss/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

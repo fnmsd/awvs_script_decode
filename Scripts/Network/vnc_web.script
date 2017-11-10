@@ -1,0 +1,45 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// check for vncviewer (web version - java)
+function TestVncWebOnPort(port){
+	var res = 0;
+	
+	//trace(port);
+	
+	var req = new THTTPJob();	
+	var up = new TURL("http://" + ScanHost + ":" + port + "/");
+	
+	req.url = up;
+	req.verb 	= "GET";
+	req.execute();
+	if (!req.wasError){
+			//trace(req.ResponseBody);
+			if (req.response.body.match(/applet\s+.*vncviewer.(class|jar)/i)) {
+				// found it!
+				KBase("VNC web interface running", "The VNC HTTP server is running on TCP port " + port + ".");	
+				res = 1;	
+			}
+		}
+	return res;
+}
+// start
+if (IsPortOpen(5800)){
+	if (TestVncWebOnPort(5800)) {
+		Trace("KBASE - vnc web on port 5800");
+	}
+}
+if (IsPortOpen(5801)){
+	if (TestVncWebOnPort(5801)) {
+		Trace("KBASE - vnc web on port 5801");
+	}
+}
+if (IsPortOpen(5802)){
+	if (TestVncWebOnPort(5802)) {
+		Trace("KBASE - vnc web on port 5802");
+	}
+}
+if (IsPortOpen(5803)){
+	if (TestVncWebOnPort(5803)) {
+		Trace("KBASE - vnc web on port 5803");
+	}
+}

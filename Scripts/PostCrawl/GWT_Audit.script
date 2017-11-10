@@ -1,0 +1,71 @@
+#include constants.inc;
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+var gwt_cache_file = "";
+var gwt_version_str = "";
+var gwt_version_int = -1;
+// **************************************************************************************							 
+function alert(uri, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function lookForCacheFile(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.Name.length == 41 && sf.Name.endsWith(".cache.js")) 
+			{
+				var match = sf.response.body.match(/\$gwt_version[\s\S]=[\s\S]\\"([\d\.]+)\\"/);
+				if (match && match[1]) {
+					gwt_cache_file = sf.fullPath;
+					gwt_version_str = match[1];
+					gwt_version_int = parseInt(gwt_version_str.replace(".", "").replace(".", "").replace(".", ""));
+					break;
+				}
+			}							
+		}	
+		
+		if (gwt_version_str != "") break;
+	}	    
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+var reportedGWTvuls = getGlobalValue("reportedGWTvuls");
+if (!reportedGWTvuls)
+{
+	lookForCacheFile(list);
+	
+	if (gwt_version_str != "" && gwt_version_int > 0) {
+		
+		SetGlobalValue("reportedGWTvuls", 1, true);
+		KBase("GWT detected", "Google Web Toolkit version: [dark][bold]" + gwt_version_str + "[/bold][/dark].");
+		
+		//trace(gwt_version_str);
+		//trace(gwt_version_int);
+		
+		if (gwt_version_int <= 250) {
+			alert(gwt_cache_file, "GWT_CVE-2013-4204.xml");
+		}
+		
+		if (gwt_version_int >= 240  && gwt_version_int <= 250) {
+			alert(gwt_cache_file, "GWT_CVE-2012-5920.xml");
+		}
+		
+		if (gwt_version_int < 240) {
+			alert(gwt_cache_file, "GWT_CVE-2012-4563.xml");
+		}		
+	}
+}

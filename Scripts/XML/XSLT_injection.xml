@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="XSLT injection" version="0.1" released="20080307" updated="20150629" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-91" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N" CVSSScoreTemp="6.5" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>XSLT (Extensible Stylesheet Language Transformations) is a language for transforming XML documents into other XML documents, or other formats such as HTML for web pages, plain text. When the XSLT content is controlled by the user, various attacks are possible as described in the Impact section.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Misconfigured XSLT processors could allow an attacker to perform various attacks such as: [break][break]
+
+[ul]
+[li]Information Disclosure[/li]
+[li]Read Files[/li]
+[li]Write Files[/li]
+[li]Database Access[/li]
+[li]Include External Stylesheet[/li]
+[li]Code Execution[/li]
+[/ul]</Impact>
+		<Recommendation>Reconfigure your XSLT processor to protect against these attacks.</Recommendation>
+		<Reference database="XSLT Security and Server Side Request Forgery" URL="http://blog.csnc.ch/2015/06/xslt-security-and-server-side-request-forgery/"></Reference>
+		<Reference database="XSLT" URL="https://en.wikipedia.org/wiki/XSLT"></Reference>
+		<Reference database="XSLT (Nicolas Gregoire)" URL="http://xhe.myxwiki.org/xwiki/bin/view/XSLT/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,15 @@
+#include classOracle.inc;
+#include reporting_helpers.inc;
+if (IsPortOpen(1521)) {
+	var db = new classOracle(ScanHost , 1521);
+	var version = db.getVersion();
+	if(version.length > 0)
+	{
+		trace(version);
+		KBase("Oracle server running", "An Oracle server is running on TCP port 1521.[break]Oracle version: [pre]" + version + "[/pre]");
+	}
+	else
+	{
+		trace("There is no TNS server");
+	}
+}

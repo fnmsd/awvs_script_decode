@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SQL injection in the authentication header" version="0.1" released="20040327" updated="20140228" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="true" AlertTags="sql_injection" DetaliedInformation="[italic]Quote from  SQL Injection Attacks by Example - http://www.unixwiz.net/techtips/sql-injection.html[/italic] [subtitle]SQL injection mitigations[/subtitle]  [p]We believe that web application developers often simply do not think about &quot;surprise inputs&quot;, but security people do (including the bad guys), so there are three broad approaches that can be applied here.[/p]  [subtitle]Sanitize the input[/subtitle] [p]It's absolutely vital to sanitize user inputs to insure that they do not contain dangerous codes, whether to the SQL server or to HTML itself. One's first idea is to strip out &quot;bad stuff&quot;, such as quotes or semicolons or escapes, but this is a misguided attempt. Though it's easy to point out some dangerous characters, it's harder to point to all of them.[/p] [p]The language of the web is full of special characters and strange markup (including alternate ways of representing the same characters), and efforts to authoritatively identify all &quot;bad stuff&quot; are unlikely to be successful.[/p] [p]Instead, rather than &quot;remove known bad data&quot;, it's better to &quot;remove everything but known good data&quot;: this distinction is crucial. Since - in our example - an email address can contain only these characters: [/p] [code][pre]     abcdefghijklmnopqrstuvwxyz     ABCDEFGHIJKLMNOPQRSTUVWXYZ     0123456789     @.-_+ [/pre][/code]  [p]There is really no benefit in allowing characters that could not be valid, and rejecting them early - presumably with an error message - not only helps forestall SQL Injection, but also catches mere typos early rather than stores them into the database. [/p]  [p]Be aware that &quot;sanitizing the input&quot; doesn't mean merely &quot;remove the quotes&quot;, because even &quot;regular&quot; characters can be troublesome. In an example where an integer ID value is being compared against the user input (say, a numeric PIN): [/p] [code][pre]     SELECT fieldlist       FROM table      WHERE id = 23 OR 1=1;  -- Boom! Always matches! [/pre][/code] [p]In practice, however, this approach is highly limited because there are so few fields for which it's possible to outright exclude many of the dangerous characters. For &quot;dates&quot; or &quot;email addresses&quot; or &quot;integers&quot; it may have merit, but for any kind of real application, one simply cannot avoid the other mitigations. [/p]  [subtitle]Escape/Quotesafe the input[/subtitle] [p]Even if one might be able to sanitize a phone number or email address, one cannot take this approach with a &quot;name&quot; field lest one wishes to exclude the likes of Bill O'Reilly from one's application: a quote is simply a valid character for this field.[/p] [p]One includes an actual single quote in an SQL string by putting two of them together, so this suggests the obvious - but wrong! - technique of preprocessing every string to replicate the single quotes:[/p] [code][pre]     SELECT fieldlist       FROM customers      WHERE name = 'Bill O''Reilly';  -- works OK [/pre][/code]     [p]However, this naive approach can be beaten because most databases support other string escape mechanisms. MySQL, for instance, also permits \' to escape a quote, so after input of \'; DROP TABLE users; -- is &quot;protected&quot; by doubling the quotes, we get: [/p] [code][pre]     SELECT fieldlist       FROM customers      WHERE name = '\''; DROP TABLE users; --';  -- Boom! [/pre][/code]     [p]The expression '\'' is a complete string (containing just one single quote), and the usual SQL shenanigans follow. It doesn't stop with backslashes either: there is Unicode, other encodings, and parsing oddities all hiding in the weeds to trip up the application designer.[/p] [p]Getting quotes right is notoriously difficult, which is why many database interface languages provide a function that does it for you. When the same internal code is used for &quot;string quoting&quot; and &quot;string parsing&quot;, it's much more likely that the process will be done properly and safely.[/p] [p]Some examples are the MySQL function [bold]mysql_real_escape_string()[/bold] and perl DBD method [bold]$dbh-&gt;quote($value)[/bold]. These methods must be used. [/p]  [subtitle]Use bound parameters (the PREPARE statement)[/subtitle] [p]Though quotesafing is a good mechanism, we're still in the area of &quot;considering user input as SQL&quot;, and a much better approach exists: bound parameters, which are supported by essentially all database programming interfaces. In this technique, an SQL statement string is created with placeholders - a question mark for each parameter - and it's compiled (&quot;prepared&quot;, in SQL parlance) into an internal form. Later, this prepared query is &quot;executed&quot; with a list of parameters: [/p]  [bold]Example in perl[/bold] [code][pre]    $sth = $dbh-&gt;prepare(&quot;SELECT email, userid FROM members WHERE email = ?;&quot;);     $sth-&gt;execute($email); [/pre][/code]  [p]Thanks to Stefan Wagner, this demonstrates bound parameters in Java: [/p]  [bold]Insecure version[/bold] [code][pre]    Statement s = connection.createStatement();     ResultSet rs = s.executeQuery(&quot;SELECT email FROM member WHERE name = &quot;                                  + formField); // *boom* [/pre][/code]   [p][bold]Secure version[/bold][/p] [code][pre]    PreparedStatement ps = connection.prepareStatement(         &quot;SELECT email FROM member WHERE name = ?&quot;);     ps.setString(1, formField);     ResultSet rs = ps.executeQuery(); [/pre][/code]   [p]Here, $email is the data obtained from the user's form, and it is passed as positional parameter #1 (the first question mark), and at no point do the contents of this variable have anything to do with SQL statement parsing. Quotes, semicolons, backslashes, SQL comment notation - none of this has any impact, because it's &quot;just data&quot;. There simply is nothing to subvert, so the application is be largely immune to SQL injection attacks.[/p]   [p]There also may be some performance benefits if this prepared query is reused multiple times (it only has to be parsed once), but this is minor compared to the enormous security benefits. This is probably the single most important step one can take to secure a web application. [/p]  [subtitle]Limit database permissions and segregate users[/subtitle] [p]In the case at hand, we observed just two interactions that are made not in the context of a logged-in user: &quot;log in&quot; and &quot;send me password&quot;. The web application ought to use a database connection with the most limited rights possible: query-only access to the members table, and no access to any other table.[/p] [p]The effect here is that even a &quot;successful&quot; SQL injection attack is going to have much more limited success. Here, we'd not have been able to do the UPDATE request that ultimately granted us access, so we'd have had to resort to other avenues.[/p] [p]Once the web application determined that a set of valid credentials had been passed via the login form, it would then switch that session to a database connection with more rights.[/p] [p]It should go almost without saying that sa rights should never be used for any web-based application.[/p]  [subtitle]Use stored procedures for database access[/subtitle] [p]When the database server supports them, use stored procedures for performing access on the application's behalf, which can eliminate SQL entirely (assuming the stored procedures themselves are written properly). [/p] [p]By encapsulating the rules for a certain action - query, update, delete, etc. - into a single procedure, it can be tested and documented on a standalone basis and business rules enforced (for instance, the &quot;add new order&quot; procedure might reject that order if the customer were over his credit limit). [/p] [p]For simple queries this might be only a minor benefit, but as the operations become more complicated (or are used in more than one place), having a single definition for the operation means it's going to be more robust and easier to maintain. [/p] [p][italic]Note: [/italic]it's always possible to write a stored procedure that itself constructs a query dynamically: this provides no protection against SQL Injection - it's only proper binding with prepare/execute or direct SQL statements with bound variables that provide this protection. [/p]  [subtitle]Isolate the webserver[/subtitle] [p]Even having taken all these mitigation steps, it's nevertheless still possible to miss something and leave the server open to compromise. One ought to design the network infrastructure to assume that the bad guy will have full administrator access to the machine, and then attempt to limit how that can be leveraged to compromise other things. [/p] [p]For instance, putting the machine in a DMZ with extremely limited pinholes &quot;inside&quot; the network means that even getting complete control of the webserver doesn't automatically grant full access to everything else. This won't stop everything, of course, but it makes it a lot harder. [/p]  [subtitle]Configure error reporting[/subtitle] [p]The default error reporting for some frameworks includes developer debugging information, and this cannot be shown to outside users. Imagine how much easier a time it makes for an attacker if the full query is shown, pointing to the syntax error involved. [/p] [p]This information is useful to developers, but it should be restricted - if possible - to just internal users. [/p]" SendCookies="true" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-89" CVSSVer="2.0" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScore="6.8" CVSSScoreTemp="10.0" CVSSScoreEnv="10.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to SQL Injection attacks.[break][break]
+SQL injection is a vulnerability that allows an attacker to alter back-end SQL statements by manipulating the user input. An SQL injection occurs when web applications accept user input that is directly placed into a SQL statement and doesn't properly filter out dangerous characters. [break] [break] This is one of the most common application layer attacks currently being used on the Internet.  Despite the fact that it is relatively easy to protect against, there is a large number of web applications vulnerable.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. [break][break]Depending on the back-end database in use, SQL injection vulnerabilities lead to varying levels of data/system access for the attacker. It may be possible to not only manipulate existing queries, but to UNION in arbitrary data, use sub selects, or append additional queries. In some cases, it may be possible to read in or write out to files, or to execute shell commands on the underlying operating system.[break][break]Certain SQL Servers such as Microsoft SQL Server contain stored and extended procedures (database server functions). If an attacker can obtain access to these procedures it may be possible to compromise the entire machine.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input. [break]Check detailed information for more information about fixing this vulnerability.</Recommendation>
+		<Reference database="Acunetix SQL Injection Attack" URL="http://www.acunetix.com/websitesecurity/sql-injection.htm"></Reference>
+		<Reference database="How to check for SQL injection vulnerabilities" URL="http://www.acunetix.com/websitesecurity/sql-injection2/"></Reference>
+		<Reference database="VIDEO: SQL Injection tutorial" URL="http://www.acunetix.com/blog/web-security-zone/video-sql-injection-tutorial/"></Reference>
+		<Reference database="OWASP Injection Flaws" URL="http://www.owasp.org/index.php/Injection_Flaws"></Reference>
+		<Reference database="SQL Injection Walkthrough" URL="http://www.securiteam.com/securityreviews/5DP0N1P76E.html"></Reference>
+		<Reference database="OWASP PHP Top 5" URL="http://www.owasp.org/index.php/PHP_Top_5"></Reference>
+	</TestDescription>
+	<Variable name="path" type="string">
+		<Description>script path</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Username" type="string">
+		<Description>list of users</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Password" type="string">
+		<Description>list of passwords</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="IncorrectSyntaxTest" type="string">
+					<Description>Test for incorrect syntax</Description>
+					<Source source="body">(?i)(Incorrect\ssyntax\snear\s'[^']*')</Source>
+				</SetVariable>
+				<SetVariable name="PGQueryTest" type="string">
+					<Description>test for pg_query error</Description>
+					<Source source="body">(?i)(pg_query\(\)[:]*\squery\sfailed:\serror:\s)</Source>
+				</SetVariable>
+				<SetVariable name="MSIsNullOrNotAnObjectTest" type="string">
+					<Description>test for is null or not an object</Description>
+					<Source source="body">(?i)('[^']*'\sis\snull\sor\snot\san\sobject)</Source>
+				</SetVariable>
+				<SetVariable name="ORAErrorsTest" type="string">
+					<Description>Check for ORA-* error (oracle)</Description>
+					<Source source="body">(ORA-\d{4,5}:\s)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression" type="string">
+					<Description>Check for syntax error on JET</Description>
+					<Source source="body">(?i)(Microsoft\sJET\sDatabase\sEngine\s\([^\)]*\)&lt;br&gt;Syntax\serror(.*)\sin\squery\sexpression\s'.*\.&lt;br&gt;&lt;b&gt;.*,\sline\s\d+&lt;/b&gt;&lt;br&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorMessageASPNETJet" type="string">
+					<Description>Check for syntax error messages on ASP.NET, JET</Description>
+					<Source source="body">(?i)(&lt;h2&gt;\s&lt;i&gt;Syntax\serror\s(\([^\)]*\))?(in\sstring)?\sin\squery\sexpression\s'[^\.]*\.&lt;/i&gt;\s&lt;/h2&gt;&lt;/span&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression2" type="string">
+					<Description>Check for syntax error on JET2</Description>
+					<Source source="body">(?i)(&lt;font\sface=\"Arial\"\ssize=2&gt;Syntax\serror\s(.*)?in\squery\sexpression\s'(.*)\.&lt;/font&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="PGSQLExecTest" type="string">
+					<Description>Check for PGSQL pg_exec</Description>
+					<Source source="body">(?i)(&lt;b&gt;Warning&lt;/b&gt;:\s\spg_exec\(\)\s\[\&lt;a\shref='function.pg\-exec\'\&gt;function\.pg-exec\&lt;/a&gt;\]\:\sQuery failed:\sERROR:\s\ssyntax error at or near \&amp;quot\;\\\&amp;quot; at character \d+ in\s&lt;b&gt;.*&lt;/b&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression3" type="string">
+					<Description>Check for syntax error</Description>
+					<Source source="body">(?)(System\.Data\.OleDb\.OleDbException\:\sSyntax\serror\s\([^)]*?\)\sin\squery\sexpression\s.*)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression4" type="string">
+					<Description>Check for syntax error</Description>
+					<Source source="body">(?i)(System\.Data\.OleDb\.OleDbException\:\sSyntax\serror\sin\sstring\sin\squery\sexpression\s)</Source>
+				</SetVariable>
+				<SetVariable name="BadAccessErrors" type="string">
+					<Description>check for access error that are not interesting</Description>
+					<Source source="body">(?i)(Data type mismatch in criteria expression|Could not update; currently locked by user '.*?' on machine '.*?')</Source>
+				</SetVariable>
+				<SetVariable name="ColdFusionCheck1" type="string">
+					<Description>ColdFusion</Description>
+					<Source source="body">(&lt;font style="COLOR: black; FONT: 8pt/11pt verdana"&gt;\s+(\[Macromedia\]\[SQLServer\sJDBC\sDriver\]\[SQLServer\]|Syntax\serror\sin\sstring\sin\squery\sexpression\s))</Source>
+				</SetVariable>
+				<SetVariable name="UnclosedQuotationMark" type="string">
+					<Description>UnclosedQuotationMark</Description>
+					<Source source="body">(?i)(Unclosed\squotation\smark\safter\sthe\scharacter\sstring\s'[^']*')</Source>
+				</SetVariable>
+				<SetVariable name="MySQL_fetch" type="string">
+					<Description>MySQL fetch variants</Description>
+					<Source source="body">(&lt;b&gt;Warning&lt;/b&gt;:\s+(?:mysql_fetch_array|mysql_fetch_row|mysql_fetch_object|mysql_fetch_field|mysql_fetch_lengths|mysql_num_rows)\(\): supplied argument is not a valid MySQL result resource in &lt;b&gt;.*?&lt;/b&gt; on line &lt;b&gt;.*?&lt;/b&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="MySQLLimit" type="string">
+					<Description>MySQL LIMIT</Description>
+					<Source source="status">(You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[^']*' at line \d)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>404</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Microsoft OLE DB Provider for ODBC Drivers</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Microsoft OLE DB Provider for SQL Server</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ODBC Microsoft Access Driver</Value>
+							<Compare variable="${BadAccessErrors}" test="eq">
+								<Value></Value>
+							</Compare>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ODBC SQL Server Driver</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>supplied argument is not a valid MySQL result</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>You have an error in your SQL syntax</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incorrect column name</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Can't find record in</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unknown table</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incorrect column specifier for column</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Column count doesn't match value count at row</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unclosed quotation mark before the character string</Value>
+						</Compare>
+						<Compare variable="${IncorrectSyntaxTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PGQueryTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MSIsNullOrNotAnObjectTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Invalid SQL:</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ERROR: parser: parse error at or near</Value>
+						</Compare>
+						<Compare variable="${ORAErrorsTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>java.lang.NumberFormatException: For input string:</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>): encountered SQLException [</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unexpected end of command in statement [</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[ODBC Informix driver][Informix]</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[Microsoft][ODBC Microsoft Access 97 Driver]</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[SQL Server Driver][SQL Server]Line 1: Incorrect syntax near</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>SQL command not properly ended</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>unexpected end of SQL command</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Supplied argument is not a valid PostgreSQL result</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>internal error [IBM][CLI Driver][DB2/6000]</Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorMessageASPNETJet}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression2}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PGSQLExecTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression3}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression4}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${ColdFusionCheck1}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${UnclosedQuotationMark}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MySQL_fetch}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MySQLLimit}" test="neq">
+							<Value></Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+</WebApplicationTest>

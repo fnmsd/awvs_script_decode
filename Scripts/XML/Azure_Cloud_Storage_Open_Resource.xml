@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Full public read access Azure blob storage" version="0.1" released="20080307" updated="20150511" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-264" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>Azure blob storage is Microsoft's persistent Cloud data storage. A blob can be any type of text or binary data, such as a document, media file, or application installer. By default, a container and any blobs within it may be accessed only by the owner of the storage account. If you want to give anonymous users read permissions to a container and its blobs, you can set the container permissions to allow public access. Anonymous users can read blobs within a publicly accessible container without authenticating the request.
+[break][break]
+This web application is using a [dark]Full public read access[/dark] Azure blob storage resource. This is not recommended, as a public blob storage resource will list all of its files and directories to an any user that asks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A full public read access Azure blob storage resource will list all of its files and directories to an any user that asks.</Impact>
+		<Recommendation>Make sure all the Azure blob storage resources you are using are marked as "Public read access for blobs only" or  "No public read access". </Recommendation>
+		<Reference database="Manage Access to Azure Storage Resources" URL="http://azure.microsoft.com/en-us/documentation/articles/storage-manage-access-to-resources/"/><Reference database="Mistakes in the IaaS cloud could put your data at risk" URL="http://www.symantec.com/content/en/us/enterprise/media/security_response/whitepapers/mistakes-in-the-iaas-cloud-could-put-your-data-at-risk.pdf"/></TestDescription>
+</WebApplicationTest>

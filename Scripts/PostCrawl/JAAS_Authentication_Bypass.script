@@ -1,0 +1,82 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+// latest HTTP job
+var confirmJob = null;
+// files array 
+var files = new Array();
+var filePaths = new Array();
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+    
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+    if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************	
+function testDir(siteFile)
+{
+	// prepare HTTP request 
+	lastJob = new THTTPJob();
+	lastJob.verb = 'HEAD';
+	lastJob.url = scanUrl;        
+	if (siteFile.isDir) lastJob.uri = siteFile.fullPath + '/';
+	else lastJob.uri = siteFile.fullPath;
+	lastJob.execute();
+	if (!lastJob.wasError && (lastJob.responseStatus == 200 || lastJob.responseStatus == 301 || lastJob.responseStatus == 302 || lastJob.responseStatus == 500 )) 
+	{
+	    // let's confirm just in case
+		confirmJob = new THTTPJob();
+		confirmJob.verb = 'GET';
+	    confirmJob.url = scanUrl;
+	    
+	    if (siteFile.isDir) confirmJob.uri = siteFile.fullPath + '/';
+	    else confirmJob.uri = siteFile.fullPath;
+	    
+		confirmJob.execute();
+		
+		if (!confirmJob.wasError && (confirmJob.responseStatus != lastJob.responseStatus)) {
+	        details = "By default, the HTTP status code [bold][dark]403[/dark][/bold] is returned.[break]Using the HEAD method, a different HTTP status code was returned: [bold][dark]" + encodeURIComponent(lastJob.responseStatus) + "[/dark][/bold].";
+	        alert(siteFile.fullPath, 'JAAS_Authentication_Bypass.xml', lastJob, details);
+	    }                     
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){        
+        // don't test more than 3 files	
+        if (files.length >= 3) break;
+        
+		var sf = list.getFile(i);
+        
+		// only test files that return 403
+		if (!sf.notFound && !sf.ignored && sf.scanSiteFile && !sf.isDir && sf.response.msg2 == 403)
+		{
+            if (filePaths.indexOf(sf.fullPath) == -1) {
+            	files.push(sf);
+            	filePaths.push(sf.fullPath);
+            }
+		}
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+// don't run for non Java servers
+if (isJava) {
+	var list = getNewFiles(loadHttp);
+	prepareFilesToBeTested(list);
+	if (files.length > 0) 
+	{
+		for (var i=0; i<files.length; i++)
+	        testDir(files[i]);
+	}
+}

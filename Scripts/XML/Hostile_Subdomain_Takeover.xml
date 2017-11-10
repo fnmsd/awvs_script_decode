@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Hostile subdomain takeover" version="0.1" released="20080307" updated="20151005" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:N/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3"/>
+		<Copyright></Copyright>
+		<Description>One of the subdomains of the scanned domain is pointing to an external service but the external service account was cancelled or has expired. Because the account is not in use anymore, an attacker can claim this account and takeover your subdomain. The attacker can use this subdomain for phishing or to spread malware.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can takeover a subdomain of the scanned domain.</Impact>
+		<Recommendation>It's recommened to reconfigure the DNS settings for this subdomain or remove the DNS entry pointing to the external service.</Recommendation>
+		<Reference database="Hostile Subdomain Takeover using Heroku/Github/Desk + more" URL="http://labs.detectify.com/post/109964122636/hostile-subdomain-takeover-using"/></TestDescription>
+</WebApplicationTest>

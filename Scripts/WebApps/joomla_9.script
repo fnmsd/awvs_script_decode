@@ -1,0 +1,38 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = "Current version: [bold]" + details + "[/bold]";    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testVirtueMartAccessControlBypass(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.verb = 'GET';
+	lastJob.url = dir.url;
+	
+	lastJob.URI = uri + "/administrator/components/com_virtuemart/virtuemart.xml";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.body.indexOf("</version>") != -1){
+		var vulnRegex = /<version[^>]+>([\d\.\w]+)<\/version>/;
+		var m = vulnRegex.exec(lastJob.response.body);            
+		if (m && m.length>1) {
+			var versionText = m[1];
+			//trace(versionText);
+			if (version_compare(versionText, '2.6.8', '<')) {				
+				alert(lastJob, lastJob.URI, "VirtueMart_Access_Control_Bypass_268.xml", versionText);
+			}
+		}
+	}	
+}
+var dir = getCurrentDirectory();
+testVirtueMartAccessControlBypass(dir, dir.fullPath);

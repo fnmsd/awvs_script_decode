@@ -1,0 +1,245 @@
+#include constants.inc;
+#include helpers.inc;
+#include password_helpers.inc;
+#include string_helpers.inc;
+#include credentials_medium.inc;
+var authorRegex = /author\/([^\/]+)/i;
+var authorRegex2 = /\/\?author=\d+"\stitle="([^"]+)"\s/i;
+var titleRegex = /<title>([^<]+)<\/title>/i;
+var validUser1 = /Incorrect password/;
+var validUser2 = /document\.getElementById\(\'user_pass\'\)/;
+var validCreds = /wordpress_logged_in_(.*);/i;
+var lastJob = null;
+var enumerateJob = null;
+var authors = new Array();
+var users = new Array();
+// **************************************************************************************							 
+function alert(uri, username, password)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Weak_password.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";;
+	ri.name = "Wordpress weak password";
+	ri.setHttpInfo(lastJob);
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function alert2(uri, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("WordPress_Username_Enumeration.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.details = details;
+	ri.setHttpInfo(enumerateJob);
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function alert3(fname, job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";	
+	
+	AddReportItem(ri);
+}
+// **************************************************************************************							 
+function getAuthor(dir, path, index)
+{	
+	enumerateJob = new THTTPJob();
+	enumerateJob.verb = "GET";
+	enumerateJob.url  = dir.url;
+	enumerateJob.uri  = path + "?author=" + index;
+    
+	enumerateJob.execute();
+	
+	if (!enumerateJob.wasError && enumerateJob.response.msg2 == 301) {
+		var location = enumerateJob.response.headerValue('location');
+		var match = authorRegex.exec(location);
+		if (match && match[1]) 
+			return match[1];
+	}
+	
+	if (!enumerateJob.wasError && enumerateJob.response.msg2 == 200) {
+		var match = authorRegex2.exec(enumerateJob.response.body);
+		if (match && match[1]) 
+			return match[1];
+	}	
+	
+	return false; 
+}
+// **************************************************************************************							 
+function validateUser(dir, path, username)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = path + "/wp-login.php";
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);   
+	lastJob.request.body = "log=" + plain2url(username) + "&pwd=z&wp-submit=Login";
+    
+	lastJob.execute();
+	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200) {
+		var match1 = validUser1.exec(lastJob.response.body);
+		var match2 = validUser2.exec(lastJob.response.body);
+		if (match1 || match2) 
+			return true;
+	}
+	return false; 
+}
+// **************************************************************************************							 
+function validCredentials(dir, path, username, password)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = path + "/wp-login.php";
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);   
+	lastJob.request.body = "log=" + plain2url(username) + "&pwd=" + plain2url(password) + "&wp-submit=Login";
+    
+	lastJob.execute();
+	
+	if (!lastJob.wasError && lastJob.response.msg2 == 302) {
+		var match = validCreds.exec(lastJob.response.headersString);
+		if (match) 
+			return true;
+	}
+	return false; 
+}
+// **************************************************************************************							 
+function checkForAdminUser(dir, path)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = path + "/wp-login.php";
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);   
+	lastJob.request.body = "log=admin&pwd=acunetixtest&wp-submit=Login";
+    
+	lastJob.execute();
+	
+	var patternStr = "The password you entered for the username <strong>admin</strong> is incorrect.";
+	
+	if (!lastJob.wasError && lastJob.response.body.indexOf(patternStr) != -1) {
+		alert3("WordPress_admin_user.xml", lastJob, lastJob.uri, patternStr);	
+	}
+}
+// **************************************************************************************
+function enumerateAuthors(dir, wpURL) {
+	// enumerate first 50 authors
+	for (var i=1;i<=50;i++) {
+		var author = getAuthor(dir, wpURL, i);
+		if (author && authors.indexOf(author) == -1) {
+			//trace(author);
+			authors.push(author);
+		}
+	}
+}    
+// **************************************************************************************
+function validateUsers(dir, wpURL) {
+	// validate authors to users
+	for (var i=0;i<authors.length;i++) {
+		var author = authors[i];
+		if (validateUser(dir, wpURL, author)) {
+			//trace(author + " valid");
+			users.push(author);
+		}
+	}
+}
+// **************************************************************************************
+function checkForWeakPasswords(dir, wpURL) {
+	// check validated users
+	for (var i=0;i<users.length;i++) {
+		var user = users[i];
+		//trace(user);		
+		
+		// prepare some tentative passwords from username
+		var passes = new Array();
+		passes.push(user);
+		passes.push(user + '1');
+		passes.push(user + '!');
+		passes.push(user + 'wp');
+		passes.push(leetSpeak(user));
+		
+		for (var j=0;j<Passwords.length;j++)
+			if (passes.indexOf(Passwords[j]) == -1)
+				passes.push(Passwords[j]);		
+		
+		// test passwords
+		for (var j=0;j<passes.length;j++) {
+			var pass = passes[j];
+				
+			if (validCredentials(dir, wpURL, user, pass)) {
+				trace(user + ":" + pass);
+				alert(wpURL + "wp-login.php", user, pass);
+			}
+		}
+	}
+}
+// main()
+var dir = getCurrentDirectory();
+var titleWords = new Array();
+var match = titleRegex.exec(dir.response.body);
+if (match && match[1]) {
+	words=match[1].split(" ");
+	for (var i=0;i<words.length;i++) {
+		if (words[i].length >= 5)
+		{
+			word = words[i].trim();
+			
+			if (titleWords.indexOf(word) == -1) {
+				titleWords.push(word);
+				if (titleWords.length >= 5) break;
+			}
+		} 
+	}
+} 
+// add these title words to the Passwords
+for (var i=0;i<titleWords.length;i++){
+	word = titleWords[i].trim();
+	if (Passwords.indexOf(word) == -1)
+		Passwords.push(word);
+	word = titleWords[i].toLowerCase();
+	if (Passwords.indexOf(word) == -1)
+		Passwords.push(word);
+	word = leetSpeak(titleWords[i]);
+	if (Passwords.indexOf(word) == -1)
+		Passwords.push(word);
+}
+var wpURL = dir.fullPath;
+if (!wpURL.endsWith("/")) wpURL = wpURL + '/';
+checkForAdminUser(dir, wpURL);
+enumerateAuthors(dir, wpURL);
+// if no users were found, add some default ones and validate them
+if (authors.length == 0) {
+	for (var i=0; i<Usernames.length; i++)
+		authors.push(Usernames[i]);
+}
+if (authors.length) {
+	validateUsers(dir, wpURL);
+	if (users.length > 0)
+	{
+		
+		// prepare a KB item
+		var kbi = new TKBaseItem()
+		kbi.Name = 'WordPress users';
+		kbi.Text = 'List of WordPress users for [dark]' + wpURL + '[/dark]: [break][ul]';
+		
+		for (var i=0; i<users.length; i++)
+			kbi.Text = kbi.Text + "[li]" + users[i] + "[/li]";
+		kbi.Text = kbi.Text + "[/ul]";		
+		AddKBItem(kbi);
+		
+		alert2(wpURL, kbi.Text);
+		
+		// check for weak passwords		
+		checkForWeakPasswords(dir, wpURL);
+	}
+}

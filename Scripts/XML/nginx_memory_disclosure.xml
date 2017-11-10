@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Nginx memory disclosure with specially crafted HTTP backend responses" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2012-1180" CWE="CWE-399" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.7"/>
+		<Copyright></Copyright>
+		<Description>There is a use-after-free vulnerability in nginx before 1.0.14 and 1.1.x before 1.1.17 allows remote HTTP servers to obtain sensitive information from process memory via a crafted backend response, in conjunction with a client request.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker could obtain sensitive information for the process memory.</Impact>
+		<Recommendation>Upgrade to the latest version of nginx.</Recommendation>
+		<Reference database="CVE-2012-1180" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-1180"/></TestDescription>
+</WebApplicationTest>

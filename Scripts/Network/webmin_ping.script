@@ -1,0 +1,37 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test for webmin
+function test_webmin(location){
+	var res = false;
+	//trace(location);
+	// request the location URL
+	var req 	= new THTTPJob();
+	var up 		= new TURL(location);
+	req.url 	= up;
+	req.verb 	= "GET";
+	req.execute();	
+	if (!req.wasError){
+		var headers = req.response.headersString;
+		var body 		= req.response.body;
+		if(headers && body){
+				if (body.match(/Login to Webmin/) && headers.match(/server:\s+MiniServ\/.*/i)) {			
+					//trace(headers);
+					//trace(body);				
+					res = true;
+				}
+		}	
+	}
+	
+	return res;
+}
+// start
+if (IsPortOpen(10000)) {
+	
+  // test http and https
+	if (test_webmin("https://" + ScanHost + ":10000/") || test_webmin("http://" + ScanHost + ":10000/")) {
+		trace("webmin enabled on port 10000 - alert here");
+		KBase("Webmin running", "Webmin is a web-based interface for system administration for Unix. [break] Webmin is running on TCP port 10000.");
+	}
+	
+}

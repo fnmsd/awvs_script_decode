@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="FTP anonymous writable directories" version="0.1" released="20080307" updated="20150311" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="arbitrary_file_creation,configuration,directory_traversal,information_disclosure,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright/>
+		<Description>The remote FTP server permits anonymous users to create arbitrary files and/or folders. There is a risk to operating an anonymous FTP service that permits users to store files. We strongly recommend that sites do not automatically create a "drop off" directory unless thought has been given to the possible risks of having such a service. [break]
+World-writable directories in anonymous FTP services are often used to store and distribute warez (stolen copyrighted software) or other illicit data.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure and/or arbitrary file creation.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it. Otherwise deny FTP anonymous write access.[break]
+
+Consult references for detailed information about fixing this vulnerability.</Recommendation>
+		<Reference database="Anonymous FTP Abuses" URL="http://www.bristol.ac.uk/it-services/advice/networks/documentation/anonftp/anonftp2.html"/>
+		<Reference database="FTP Security Considerations" URL="http://www.faqs.org/rfcs/rfc2577.html"/>
+		<Reference database="New vulnerability in IIS5 and IIS6" URL="http://blogs.technet.com/srd/archive/2009/09/01/new-vulnerability-in-iis5-and-iis6.aspx"/></TestDescription>
+</WebApplicationTest>

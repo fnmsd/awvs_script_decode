@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SQL Injection in Symphony: CVE-2013-2559" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="CVE-2013-2559" CWE="CWE-89" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.6" CVSSScoreEnv="4.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>High-Tech Bridge Security Research Lab discovered SQL injection vulnerability in Symphony, which can be exploited to alter SQL requests to database of the vulnerable application. The vulnerability exists due to insufficient filtration of "sort" HTTP GET parameter passed via "/symphony/system/authors/" URL to "/index.php" script.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote authenticated administrator can execute arbitrary SQL commands in the application's database.</Impact>
+		<Recommendation>Upgrade to Symphony 2.3.2</Recommendation>
+		<Reference database="symphony-sql.txt" URL="http://dl.packetstormsecurity.net/1304-exploits/symphony-sql.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,101 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat &quot;allowLinking&quot; on Case Insensitive Filesystems" version="0.1" released="20080812" updated="20140313" protocol="HTTP" mayproxy="true" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="configuration,information_disclosure,source_code_disclosure" HasPrecondition="false" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The scanner can read the content (source code) of an Apache Tomcat JSP file, this may indicate the "allowLinking" flag is enabled on case insensitive filesystem (ex. Windows). According to the Apache Tomcat Configuration Reference this flag must not be set to true on the Windows platform (or any other OS which does not have a case sensitive filesystem), as it will disable case sensitivity checks, allowing JSP source code disclosure, among other security problems.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>The remote attacker can access the source code of the JSP  files on the server.</Impact>
+		<Recommendation>The "allowLinking" flag MUST NOT be set to true on the Windows platform (or any other OS which does not have a case sensitive filesystem), as it will disable case sensitivity checks, allowing JSP source code disclosure, among other security problems.</Recommendation>
+		<Reference database="Apache Tomcat Configuration Reference - The Context Container" URL="http://tomcat.apache.org/tomcat-5.5-doc/config/context.html"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${file}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="FullHeaders" type="string">
+					<Description>Get full HTTP headers</Description>
+					<Source source="header">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>The checked fruits (got using request) are</Value>
+							<Compare variable="${FullBody}" test="cont">
+								<Value>fruits = request.getParameterValues("fruit");</Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>JSP 2.0 Expression Language - Functions</Value>
+							<Compare variable="${FullBody}" test="cont">
+								<Value>&lt;%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %&gt;</Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

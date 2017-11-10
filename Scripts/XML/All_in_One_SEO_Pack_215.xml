@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress plugin All in One SEO Pack privilege escalation vulnerabilities" version="0.1" released="20080307" updated="20150311" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,privilege_escalation" CVE="" CWE="CWE-269" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Marc-Alexandre Montpas reported two privilege escalation vulnerabilities in the WordPress plugin All in One SEO Pack. If your site has subscribers, authors and non-admin users logging in to wp-admin, you are a risk. If you have open registration, you are at risk, so you have to update the plugin now.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A non-admin user can execute malicious Javascript code in the administrator's control panel.</Impact>
+		<Recommendation>Upgrade to the latest version of All in One SEO Pack (this problem was fixed in version 2.1.6).</Recommendation>
+		<Reference database="All In One SEO Pack Release History" URL="http://semperfiwebdesign.com/blog/all-in-one-seo-pack/all-in-one-seo-pack-release-history/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

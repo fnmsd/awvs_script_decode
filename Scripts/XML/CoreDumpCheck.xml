@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Core dump checker PHP script" version="0.1" released="20080307" updated="20150223" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>coredumpcheck.php is a script that will list all the core dumps in the current directory. It's also possible to view more details about each core dump. Core dumps are files the system creates when a process running in memory does not finish. The portion of memory that the process was using is then dumped to a file.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Core dumps contain a lot of sensitive information that could be very helpful for an attacker.</Impact>
+		<Recommendation>It's recommended to restrict access to this file.</Recommendation>
+		<Reference database="What are Core Dumps?" URL="http://www.inmotionhosting.com/support/website/what-is/what-are-core-dumps"></Reference>
+	</TestDescription>
+</WebApplicationTest>

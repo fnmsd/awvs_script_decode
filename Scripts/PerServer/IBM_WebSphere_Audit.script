@@ -1,0 +1,96 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include credentials_medium.inc;
+// **************************************************************************************							 
+function alert(fname, affects, lastJob, matchedText, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	else if (details) ri.Details =  details;	
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function IBMWebSphereAdminConsole(rootPath)
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.port = 9043;
+	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;		
+	lastJob.verb = "GET";
+	lastJob.url  = newUrl;		
+	lastJob.secure = true;
+	lastJob.addCookies = false;
+	lastJob.uri  = rootPath + "logon.jsp";	
+	
+	lastJob.execute();
+	
+	var pattern = "Log in to the console.";
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(pattern) !=-1)
+	{
+		// prepare a KB item
+		var kbi = new TKBaseItem()
+		kbi.Name = "IBM WebSphere administration console";
+		kbi.Text = "IBM WebSphere administration console was detected in directory [bold]" + rootPath + "[/bold]";
+		
+		AddKBItem(kbi);	 
+		
+		return true;
+	}
+	
+	return false;
+}
+// **************************************************************************************							 
+function lookForWeakCredentials(rootPath)
+{
+	// default creds
+	Usernames.unshift("wasadmin");	
+	
+	for (var i=0;i<Usernames.length;i++) {
+		for (var j=0;j<Passwords.length;j++) {
+			var username = Usernames[i];
+			var password = Passwords[j];
+			
+			newUrl = scanURL;
+			newUrl.port = 9043;			
+			
+			lastJob = new THTTPJob();
+				
+			lastJob.url  = newUrl;		
+			lastJob.verb = 'POST';
+			lastJob.URI = rootPath + "j_security_check";
+			lastJob.addCookies = false;
+			lastJob.secure = true;
+			
+			lastJob.request.body = "j_username=" + username + "&j_password=" + password + "&submit=Log+in";
+			lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+			lastJob.execute();	
+			if (!lastJob.wasError && lastJob.response.msg2 == 302 && lastJob.response.headerValue('Location') && lastJob.response.headerValue('Location').endsWith("/ibm/console/"))
+			{
+				var details = "Username: [bold][dark]" + username + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('IBM_WebSphere_Weak_password.xml', lastJob.URI, lastJob, false, details);
+				
+				return true;
+			}
+		}	
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var rootPath = "/ibm/console/";
+if (IBMWebSphereAdminConsole(rootPath)) {
+	lookForWeakCredentials(rootPath);
+}

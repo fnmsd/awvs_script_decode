@@ -1,0 +1,19 @@
+#include reporting_helpers.inc;
+// test for VMWare server
+if (IsPortOpen(902)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 902;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		data = socket.ReceiveLine();
+		//trace(data);
+		if (data.search("VMware Authentication Daemon Version") >= 0)
+		{
+			trace("VMware server detected!");
+			KBase("VMware server running", "A VMware server is running on TCP port 902.");
+		}
+		socket.Close();
+	}
+}

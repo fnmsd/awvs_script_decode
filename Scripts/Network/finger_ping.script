@@ -1,0 +1,22 @@
+#include reporting_helpers.inc;
+//finger test
+if(IsPortOpen(79)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 79;
+	socket.Timeout = 1;
+	socket.Connect();
+  if(socket.IsConnected){
+		socket.send("\r\n");
+		data = socket.Receive(true);
+		var re = new RegExp(".*User|[lL]ogin|logged.*");
+		var res = re.exec(data);
+		if(res != undefined && res.length >= 0)
+		{
+			Trace("finger is enabled!");
+			Trace(data);
+			ReportItem("Finger.xml", "The finger server is running on TCP port 79. [break]The remote service returned: [break][pre]" + data + "[/pre]");	
+		}
+		socket.Close();	
+	}
+}

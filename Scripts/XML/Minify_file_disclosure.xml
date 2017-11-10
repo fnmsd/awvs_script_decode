@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Minify arbitrary file disclosure" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2013-6619" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:H/RL:OF/RC:C" CVSSScoreTemp="4.4" CVSSScoreEnv="4.3"/>
+		<Copyright></Copyright>
+		<Description>On some systems running Minify, an attacker may be able to reveal the contents of 
+arbitrary files. You are strongly advised to follow the instructions below to manually 
+patch your system, and upgrade to Minify 2.1.7 when possible. [break][break]
+On some PHP systems, file system functions accept parameters containing null bytes 
+("\x00"), but do not handle them correctly. An attacker may be able to use Minify to reveal the contents of any file PHP has access to within the document root, including sensitive configuration files.  </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may be able to reveal the contents of arbitrary files.</Impact>
+		<Recommendation>Upgrade to the latest version of Minify.</Recommendation>
+		<Reference database="Serious vulnerability in Minify" URL="https://groups.google.com/forum/#!msg/minify/cpN-ncKPFZE/kwYVpLMkfDwJ"/></TestDescription>
+</WebApplicationTest>

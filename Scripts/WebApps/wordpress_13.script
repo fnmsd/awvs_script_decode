@@ -1,0 +1,48 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, path, version)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = path;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	if (version) 
+		ri.Details =  "Current version: [dark]" + version + "[/dark]";
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function audit_all_in_one_seo_pack_pre_2_1_5(dir, path){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path;	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200 && http.response.body.indexOf("<!-- All in One SEO Pack") != -1){	
+		var vulnRegex = /<!-- All in One SEO Pack ([\d\.]+) by Michael Torbert of Semper Fi Web Design/;
+		var m = vulnRegex.exec(http.response.body);            
+		if (m && m.length > 1) {
+			var versionText = m[1];
+			var versionTextFull = versionText.trim();
+			// add ".0" to make it a 3 digits version
+			if (versionTextFull.length == 1) versionTextFull = versionTextFull + ".0.0";
+			if (versionTextFull.length == 3) versionTextFull = versionTextFull + ".0";
+			// convert it to number
+			var versionNumber = versionTextFull.replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+			// check version number
+			if (versionNumber <= 215) {
+				alert("All_in_One_SEO_Pack_215.xml", http, path + "/wp-content/plugins/all-in-one-seo-pack/", versionText);
+			}
+		}	
+	}
+}
+var dir = getCurrentDirectory();
+audit_all_in_one_seo_pack_pre_2_1_5(dir, dir.fullPath);

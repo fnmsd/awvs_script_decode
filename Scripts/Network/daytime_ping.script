@@ -1,0 +1,48 @@
+#include reporting_helpers.inc;
+// test for daytime server
+function test_on_udp(){
+	var res = false;
+	socket = new TSocket("UDP");
+	socket.Host = ScanHost;
+	socket.Port	= 13;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send("\r\n");
+		data = socket.Receive(true);
+		//trace(data);
+		//trace(data.length);
+		if (data && data.length)
+		{
+			trace("daytime server detected - UDP!");			
+			ReportItem("Daytime.xml", "Daytime server is running on UDP port 13.");
+		}
+		socket.Close();
+	}
+	return res;	
+}
+function test_on_tcp(){
+	var res = false;
+	if (IsPortOpen(13)) {
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port	= 13;
+		socket.Timeout = 5;
+		socket.Connect();
+		if (socket.IsConnected) {
+			data = socket.Receive(true);
+			//trace(data);
+			//trace(data.length);
+			if (data && data.length)
+			{
+				trace("daytime server detected - TCP!");
+				ReportItem("Daytime.xml", "Daytime server is running on TPCP port 13.");
+			}
+			socket.Close();
+		}
+	}
+	return res;	
+}
+// start
+test_on_udp();
+test_on_tcp();

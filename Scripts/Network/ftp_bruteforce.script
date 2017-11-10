@@ -1,0 +1,48 @@
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+// FTP brute
+function TestCredentials(socket, uname, pass){
+	socket.Connect();
+  if(socket.IsConnected){
+		data = socket.ReceiveLine();
+		if(data.slice(0, 3) == "220"){
+			// consume all banner
+			socket.timeout = 1;
+			do {data = socket.ReceiveLine();} while (data.length > 0);
+			socket.timeout = 5;
+			socket.Send("USER " + uname + "\r\n");
+			data = socket.ReceiveLine();
+			if(data.slice(0, 3) == "331"){
+				socket.Send("PASS " + pass + "\r\n");
+				socket.timeout = 7;
+				data = socket.ReceiveLine();
+				
+				if(data.slice(0, 3) == "230"){
+					socket.Send("QUIT\r\n");
+					socket.Close();
+					
+					// uname, pass
+					ReportItem("FTP_bruteforce.xml", "Username: [dark]" + uname + "[/dark], Password: [dark]" + pass + "[/dark]");	
+					
+          			return true;
+				}
+			}
+		}
+		socket.Close();
+	}
+  return false;
+}
+if(IsPortOpen(21)){
+	var socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 21;
+	socket.Timeout = 1;	
+	
+	for(i=0;i<Usernames.length;i++){
+    for(j=0;j<Passwords.length;j++){
+      if( TestCredentials(socket, Usernames[i], Passwords[j]) )
+        //Trace(Usernames[i] + ',' + Passwords[j]);      
+      	ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+    }
+  }
+}

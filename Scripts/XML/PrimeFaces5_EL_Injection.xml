@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PrimeFaces 5.x Expression Language injection" version="0.1" released="20080307" updated="20160216" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="" CVE="" CWE="" CVSSVer="2.0" CVSSScore="" CVSSDescr="" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>PrimeFaces is a open source User Interface (UI) component library for JavaServer Faces (JSF) based applications. Giorgio Fedon of Minded Security has found two critical vulnerabilities in the PrimeFaces 5.x implementation. [break][break]
+
+By abusing one of these issues any user can execute arbitrary code on the application server without authentication.
+[ul]
+[li]PrimeSecret is the default hard-coded passphrase to encrypt several PrimeFaces parameters such as "pfdrid".[/li]
+[li]PrimeOracle is the abuse of a Padding Oracle attack against the internal crypto algorithm that decrypts several parameters such as "pfdrid".[/li]
+[/ul]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary code on the application server without authentication.</Impact>
+		<Recommendation>Please upgrade to the latest version of PrimeFaces or install the official fix. The official fix can be found in the Web references section.</Recommendation>
+		<Reference database="PrimeFaces EL Injection fix" URL="https://github.com/primefaces/primefaces/issues/1152"/><Reference database="RCE in Oracle NetBeans Opensource Plugins" URL="http://blog.mindedsecurity.com/2016/02/rce-in-oracle-netbeans-opensource.html"/><Reference database="Padding Oracle attack" URL="https://en.wikipedia.org/wiki/Padding_oracle_attack"/></TestDescription>
+</WebApplicationTest>

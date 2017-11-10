@@ -1,0 +1,259 @@
+#include constants.inc;
+#include helpers.inc;
+var debug = false;
+var reflArray = new Array();
+var worker = getHTTPWorker();
+var injectionList = new TList();
+var checkReflList = new TList();
+var ExcludedExtensions = new TStringList();
+ExcludedExtensions.add("txt");
+ExcludedExtensions.add("png");
+ExcludedExtensions.add("jpg");
+ExcludedExtensions.add("jpeg");
+ExcludedExtensions.add("gif");
+ExcludedExtensions.add("avi");
+ExcludedExtensions.add("mpg");
+ExcludedExtensions.add("js");
+ExcludedExtensions.add("css");
+// function to inject a random string into the first variation from scheme to test for reflection
+function injectReflectionTest(url, scheme){
+	if (debug) trace("injectReflectionTest " + url.url);
+	
+	if (debug) trace(scheme.inputCount + " inputs");
+	
+	for(var j=0; j<scheme.inputCount; j++)
+	{
+		if (debug) trace("test input #" + j);
+		
+		if (scheme.variationCount > 0) {		
+			var reflEntry = new Object();
+			reflEntry.reflectionStr = "1acu" + randStr(10);
+			reflEntry.schemeId = scheme.internalId;
+			reflEntry.inputIndex = j;
+			reflEntry.variationIndex = 0;
+			reflArray.push(reflEntry);
+			
+			scheme.loadVariation(0);
+			scheme.setInputValue(j, reflEntry.reflectionStr);
+		
+			var job = new THTTPJob();
+			job.url = url;
+			scheme.populateRequest(job);
+			injectionList.add(job);
+		}
+	}	
+}
+// inject a test string into all site files
+function InjectReflectionTestIntoSiteFiles(sf){
+	if(!sf.notFound && !sf.ignored && sf.scanSiteFile){
+		if(sf.schemeCount>0){
+			for(var i=0; i<sf.schemeCount; i++)
+				injectReflectionTest(sf.url, sf.getScheme(i));
+		}
+	}
+	
+	var child = sf.getFirstChild();
+	while(child != null){
+		InjectReflectionTestIntoSiteFiles(child);
+		child = child.getNextSibling();
+	}
+}
+// 
+function CheckReflectionOnSiteFile(sf){
+	if(!sf.notFound && !sf.ignored && sf.scanSiteFile){
+		if (debug) trace("CheckReflectionOnSiteFile " + sf.url.url);
+	
+		var job = new THTTPJob();
+		job.request.copyFrom(sf.request);
+		job.reflectionId = sf.internalId;
+		job.autoRedirect = false;
+		
+		checkReflList.add(job);		
+	}
+}
+// inject a test string into all site files
+function CheckReflectionOnSiteFiles(sf){	
+	var variation = sf.getFirstVariation();
+	while(variation != null) {
+		// only test GET variation (not to change data)
+		if (variation.request.msg1.toLowerCase() == 'get') 
+		{
+			CheckReflectionOnSiteFile(variation);
+		}
+		variation = variation.getNextSibling();
+	}
+	
+	var child = sf.getFirstChild();
+	while(child != null){
+		if (ExcludedExtensions.indexOf(getFileExt(child.name)) == -1) {	
+			CheckReflectionOnSiteFile(child);
+		}
+		
+		CheckReflectionOnSiteFiles(child);
+		child = child.getNextSibling();		
+	}	
+}
+// function to look for reflected strings in responses
+function LookForReflectedString(job, reflEntry){
+	// check the body (for xss)
+	if (debug) trace("LookForReflectedString " + job.url.url);
+	if (debug) trace(reflEntry.reflectionStr);
+	
+	if (job.response.body.indexOf(reflEntry.reflectionStr) != -1) {
+		if (debug) trace("found " + reflEntry.reflectionStr + " on " + job.url.url);	
+		addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_XSS);
+	}
+	
+	// check acusensor data
+	if (job.hasAspectData) {
+		var ad = job.getAspectData();
+		
+		// check for stored sql injection
+		var adItems = ad.getItemsWithKey("SQL_Query");
+		if (adItems && adItems.count) 		
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found SQL " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_SQL_INJ);
+				}
+			}
+			
+		}	
+		
+		// check for stored file inclusion vulnerabilities
+		var adItems = ad.getItemsWithKey("PHP_File_Include");		if (adItems && adItems.count) 		
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found FI " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_LFI);
+				}
+			}			
+		}		
+		
+		// check for stored directory traversal vulnerabilities
+		var adItems = ad.getItemsWithKey("File_Open");
+		if (adItems && adItems.count) 		
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found DT " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_DIRTRAV);
+				}
+			}			
+		}			
+		
+		// check for stored code execution vulnerabilities
+		var adItems = ad.getItemsWithKey("Sys_Command");
+		if (adItems && adItems.count) 				
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found EXEC " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_CODEEXEC);
+				}
+			}			
+		}				
+		
+		// check for stored file tampering vulnerabilities
+		var adItems = ad.getItemsWithKey("File_Write");
+		if (adItems && adItems.count)		
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found FILETAMP " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_CODEEXEC);
+				}
+			}					
+		}
+		
+		// check for php code execution vulnerabilities
+		var adItems = ad.getItemsWithKey("PHP_Code_Eval");
+		if (adItems && adItems.count)		
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);			
+			var stringList = aditem.getDataList();
+			
+			for (var k=0; k<stringList.count; k++) 
+			{
+				var item = stringList.item(k);
+				if (item.indexOf(reflEntry.reflectionStr) != -1) {
+					//trace("found PHP_CODE_EVAL " + reflEntry.reflectionStr + " in " + item + " on file " +  job.url.url);	
+					addStoredInjectionEntry(reflEntry.schemeId, reflEntry.inputIndex, 0, job.reflectionId, REFL_TEST_PHPCODEEV);
+				}
+			}					
+		}		
+	}
+}
+// main entry point
+var root = getSiteRoot(loadSchemes | loadHttp);
+if (debug) trace('InjectReflectionTestIntoSiteFiles');
+// prepare http requests to injection reflection string
+InjectReflectionTestIntoSiteFiles(root);
+if (debug) trace(' worker.executeRequests ' + injectionList.count);
+// execute all http jobs through worker
+worker.executeRequests(injectionList);
+if (debug) trace(' worker.executeRequests DONE');
+// mark errored http jobs (not to be tested later)
+for (var i=0; i<injectionList.count; i++) {
+	if (injectionList.item(i).wasError) {
+        if (reflArray[i])
+		    reflArray[i].error = true;
+	}
+}
+// clear the list of http jobs
+injectionList.clear();
+if (debug) trace('CheckReflectionOnSiteFiles');
+// prepare http requests to check the injected reflection string
+CheckReflectionOnSiteFiles(root);
+if (debug) trace(' worker.executeRequests ' + checkReflList.count);
+// execute all http jobs through worker
+worker.executeRequests(checkReflList);
+if (debug) trace(' worker.executeRequests DONE');
+if (debug) trace('LookForReflectedStrings');
+// check http jobs
+for (var i=0; i<checkReflList.count; i++) {
+	if (debug) trace(i + "/" + checkReflList.count);
+	ScriptProgress(ComputeProgress(i, checkReflList.count));
+	if (!checkReflList.item(i).wasError){
+		for (var j=0; j<reflArray.length; j++) 
+		if (reflArray[j] && !reflArray[j].error)
+		{
+			LookForReflectedString(checkReflList.item(i), reflArray[j]);			
+		}
+	}
+}
+// clear the list of http jobs
+checkReflList.clear();

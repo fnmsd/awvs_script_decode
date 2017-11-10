@@ -1,0 +1,75 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, affects, versionStr)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	ri.Details =  ri.Details + "Current version: [dark]" + versionStr + "[/dark]";	
+	
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function test_wptouch_upload(dir, path, zipFile){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'wp-content/plugins/wptouch/readme.txt';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.response.body.indexOf("Stable tag:") != -1){
+		var vulnRegex = /Stable tag:\s+([\d\.]+)/;
+		var m = vulnRegex.exec(http.response.body);            
+		if (m && m.length > 1) {
+			var versionText = m[1];
+			var versionTextFull = versionText.trim();
+			// add ".0" to make it a 3 digits version
+			if (versionTextFull.length == 3) versionTextFull = versionTextFull + ".0";
+			// convert it to number
+			var versionNumber = versionTextFull.replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+			// check version number
+			if (versionNumber<=342) {
+				alert("WPtouch_Insecure_Nonce_Generation.xml", http, path + "/wp-content/plugins/wptouch/", versionText);
+			}
+		}
+	}			
+}
+// **************************************************************************************
+function test_custom_contact_forms_db_download(dir, path, zipFile){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'wp-content/plugins/custom-contact-forms/readme.txt';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.response.body.indexOf("Stable tag:") != -1){
+		var vulnRegex = /Stable tag:\s+([\d\.]+)/;
+		var m = vulnRegex.exec(http.response.body);            
+		if (m && m.length > 1) {
+			var versionText = m[1];
+			var versionTextFull = versionText.trim();
+			// add ".0" to make it a 4 digits version
+			if (versionTextFull.length == 3) versionTextFull = versionTextFull + ".0.0";
+			// convert it to number
+			var versionNumber = versionTextFull.replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+			// check version number
+			if (versionNumber<=5103) {
+				alert("Custom_Contact_Forms_DB_Download.xml", http, path + "/wp-content/plugins/custom-contact-forms/", versionText);
+			}
+		}
+	}			
+}
+var dir = getCurrentDirectory();
+test_wptouch_upload(dir, dir.fullPath);
+test_custom_contact_forms_db_download(dir, dir.fullPath);

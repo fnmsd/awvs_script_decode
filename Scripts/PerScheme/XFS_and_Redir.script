@@ -1,0 +1,453 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var debug = false;
+var reflection = "/www.vulnweb.com";
+var marker = "http://www.vulnweb.com";
+var marker2 = "//www.vulnweb.com";
+var marker3 = "/\\www.vulnweb.com";
+{ 
+	// *********************************************************************************************
+	// class for testing XFS and Url redir
+	// *********************************************************************************************
+	function classXFS_Redir(scheme, inputIndex){
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+		this.confirmJob = null;
+		this.lastJobXSS = null;
+	}
+	// *********************************************************************************************
+	// function to make set a value for the current variation and issue an HTTP request 
+	// *********************************************************************************************
+	classXFS_Redir.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	// *********************************************************************************************
+	// function to make set a value for the current variation and issue an HTTP request 
+	// *********************************************************************************************
+	classXFS_Redir.prototype.requestXSS = function(paramName, paramValue)	{	
+		
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		
+		this.scheme.setTempInputName(this.inputIndex, paramName);
+		this.scheme.setEncodedInputValue(this.inputIndex, paramValue);
+		this.lastJobXSS = new THTTPJob();
+		this.lastJobXSS.url = targetUrl;
+		scheme.populateRequest(this.lastJobXSS);
+ 
+		this.lastJobXSS.execute();
+        
+		return ((!this.lastJobXSS.wasError || (this.lastJobXSS.wasError && this.lastJobXSS.errorCode == 0xF0003))); 
+	}
+    /**************************************************************************************************************/
+    classXFS_Redir.prototype.getOrigValue = function()
+    {   
+        var value = "";
+        
+        for (var i=0; i<this.variations.count; i++){
+            var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+            
+            // if the value is not yet set      
+            if(value == "" && varValue != "") {
+                value = varValue;                       
+                break;
+            }
+        }
+        return value;
+    }	
+	// *********************************************************************************************
+	// function to make set a value for the current variation and issue an HTTP request 
+	// *********************************************************************************************
+	classXFS_Redir.prototype.requestConfirm = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.confirmJob = new THTTPJob();
+		this.confirmJob.url = targetUrl;
+		scheme.populateRequest(this.confirmJob);
+ 
+		this.confirmJob.execute();
+        
+		return ((!this.confirmJob.wasError || (this.confirmJob.wasError && this.confirmJob.errorCode == 0xF0003))); 
+	}	
+	// *********************************************************************************************
+	// generates an report item for the scanner
+	// *********************************************************************************************
+	classXFS_Redir.prototype.alert = function(testValue, matchedText, vulnxml, alertPath )
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile(vulnxml);
+		ri.affects = this.scheme.path;
+		ri.alertPath = alertPath;
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold].";
+        if (matchedText) ri.details = ri.details + '[break]' + matchedText;
+		//trace(ri.Details);
+		
+		AddReportItem(ri);	
+	}		
+	
+	/**************************************************************************************************************/
+	classXFS_Redir.prototype.alertXSS = function(matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("XSS.xml");
+		
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XSS";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was manipulated.";
+		ri.details = ri.details + "[break]Pattern found: [bold][dark]" + matchedText + "[/dark][/bold]"; 
+		
+		ri.setHttpInfo(this.lastJobXSS);
+		AddReportItem(ri);	
+	}	
+	
+	// *********************************************************************************************
+	// check if the marker is reflected in the location header
+	// *********************************************************************************************	
+	classXFS_Redir.prototype.markerReflectedInLocationStr = function(locationStr, markerValue) {
+		
+		if (locationStr.startsWith(markerValue)) return true;
+		if (locationStr.startsWith("http://" + markerValue)) return true;
+		if (locationStr.startsWith("https://" + markerValue)) return true;
+		if (locationStr.startsWith("http:" + markerValue)) return true;
+		if (locationStr.startsWith("https:" + markerValue)) return true;
+		
+		return false;
+	}
+    // *********************************************************************************************
+    // check if the marker is reflected in the refresh header
+    // *********************************************************************************************
+    classXFS_Redir.prototype.markerReflectedInRefreshStr = function(refreshStr, markerValue) {
+        if (refreshStr.indexOf("url=" + markerValue) != -1) return true;
+        if (refreshStr.indexOf("url=http://" + markerValue) != -1) return true;
+        if (refreshStr.indexOf("url=https://" + markerValue) != -1) return true;
+        if (refreshStr.indexOf("url=http:" + markerValue) != -1) return true;
+        if (refreshStr.indexOf("url=https:" + markerValue) != -1) return true;
+        return false;
+    }
+	
+	// *********************************************************************************************
+	// parse HTML data and look for our injected string
+	// *********************************************************************************************	
+	classXFS_Redir.prototype.confirmInjection = function(markerValue)
+	{	
+		var locationStr = this.lastJob.response.headerValue('location');
+		if (locationStr && this.markerReflectedInLocationStr(locationStr.toLowerCase(), markerValue.toLowerCase()))
+		{
+			// found url redir
+			this.alert(markerValue, null, "URL_redirection.xml", "Scripts/URL redirection");
+			
+			// test for nginx memory disclosure bug (CVE-2012-1180)
+			// prepare a long string with a null bype inside			
+			var nullByte = String.fromCharCode(00);
+			var longBuffer = 'A'.repeat(2000);
+			var value = markerValue + nullByte + longBuffer;
+			var regexMemoryDisclosure = /(HTTP_ACCEPT|HTTP_HOST|SERVER_ADDR|SERVER_PORT|SERVER_NAME|SERVER_PORT|REDIRECT_STATUS|HTTP_CONNECTION)/;
+			
+			if (this.request(value)) {
+				headers = this.lastJob.response.headersString;
+				if (headers.search(regexMemoryDisclosure) != -1)	
+				{
+					// confirm it. make a request without the null byte					
+					value = markerValue + 'A' + longBuffer;
+					if (this.requestConfirm(value)) 
+					{			
+						headers = this.confirmJob.response.headersString;
+						if (headers.search(regexMemoryDisclosure) == -1)	
+						{
+							this.alert(markerValue + nullByte + longBuffer, null, "nginx_memory_disclosure.xml", "Scripts/URL redirection");							
+						}
+					}
+				}
+			}						
+			
+			return true;
+		}
+        // look in the refresh header
+        var refreshStr = this.lastJob.response.headerValue('refresh');
+        if (refreshStr && this.markerReflectedInRefreshStr(refreshStr.toLowerCase(), markerValue.toLowerCase()))
+        {
+            // found url redir
+            this.alert(markerValue, null, "URL_redirection.xml", "Scripts/URL redirection");
+            return true;
+        }
+        // look for reflection in the HTML body
+        if (this.lastJob.response.body.indexOf(markerValue) != -1)  {
+            // parse HTML
+            var tokens = htmlTokens(this.lastJob.response.body);
+            var token = null;
+            var insideScriptTag = false;
+            while (token = tokens.nextToken()) {
+                if (token.tagName == 'SCRIPT') insideScriptTag = true;
+                else if (token.tagName == '/SCRIPT') insideScriptTag = false;
+                // javascript location
+                if (insideScriptTag && token.isText && token.raw)
+                {
+                    var match = token.raw.match(/(window\.|document\.)?location(\.href|\.replace)?\s*[=|\(]\s*(["''])([\s\w_\/\.\-%;:&\?=\\$#@!\^*()\+|{}\[\],~`]*?)\3/);
+                    if (match && match[4]) {
+                        var scriptBody = match[4].trim();
+                        if (scriptBody && this.markerReflectedInLocationStr(scriptBody.toLowerCase(), markerValue.toLowerCase()))
+                        {
+                            // found url redir
+                            this.alert(markerValue, null, "URL_redirection.xml", "Scripts/URL redirection");
+                            return true;
+                        }
+                    }
+                }
+                // marker is present in token?
+                if (token.isTag && token.raw.indexOf(markerValue) != -1) {
+                    // look for form action
+                    if (token.tagName == 'FORM')
+                    {
+                        for(var i=0; i<token.paramCount; i++) {
+                            var paramName = token.getParamName(i).toLowerCase();
+                            var paramValue = token.getParamValue(i);
+                            var formName = "<unnamed>";
+                            if (paramName == "name")
+                            {
+                            }
+                            if (paramName == "action" && paramValue.indexOf(markerValue) == 0)
+                            {
+                                // found ucfa
+                                var formDetails = 'Form name: [bold][dark]' + formName + '[/dark][/bold], action: [bold][dark]' + paramValue + '[/dark][/bold]';
+                                this.alert(markerValue, formDetails, "User_controlled_form_action.xml", "Scripts/User_controlled_form_action");
+                                break;
+                            }
+                        }
+                    }
+                    // frames
+                    if (token.tagName == "FRAME" || token.tagName == "IFRAME" || token.tagName == "META") {
+                        var foundRefresh = false;
+                        var foundContent = false;
+                        for(var i=0; i<token.paramCount; i++) {
+                            paramName = token.getParamName(i).toLowerCase();
+                            paramValue = token.getParamValue(i);
+                            if (paramName == "src" && paramValue.indexOf(markerValue) == 0 && (token.tagName.toLowerCase() == "frame" || token.tagName.toLowerCase() == "iframe")) {
+                                // found xfs
+                                this.alert(markerValue, null, "Cross_Frame_Scripting.xml", "Scripts/Cross Frame Scripting");
+                                return true;
+                            }
+                            if (paramName == "http-equiv" && paramValue.toLowerCase().indexOf("refresh") != -1)
+                                foundRefresh = true;
+                            if (paramName == "content" && paramValue.toLowerCase().indexOf("url=" + markerValue) != -1)
+                                foundContent = true;
+                            if (!foundContent && paramName == "content" && paramValue.toLowerCase().indexOf(";" + markerValue) != -1)
+                                foundContent = true;
+                        }
+                        if (foundRefresh && foundContent && token.tagName.toLowerCase() == "meta") {
+                                // found url redir
+                                this.alert(markerValue, null, "URL_redirection.xml", "Scripts/URL redirection");
+                                return true;
+                        }
+                    }
+                }
+            }
+        }
+        // look for /{userInput}
+        if (locationStr && locationStr.startsWith("/" + markerValue)) {
+            value = "/vulnweb.com";
+            if (this.request(value)) {
+                var locationStr = this.lastJob.response.headerValue('location');
+                if (locationStr && locationStr.startsWith("/" + value)) {
+                    this.alert(value, null, "URL_redirection.xml", "Scripts/URL redirection");
+                    return true;
+                }
+            }
+        }
+        return false;
+	}
+	
+	// *********************************************************************************************
+	// test the injection
+	// *********************************************************************************************	
+	classXFS_Redir.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+				
+		if (this.confirmInjection(value))  {
+			//trace("test XSS");
+ 			var schemeInputType = this.scheme.getInputTypeStr(this.inputIndex);
+ 			var schemeInputName = this.scheme.getInputName(this.inputIndex); 		
+ 			
+ 			if (schemeInputType == 'URL encoded GET' ||  schemeInputType == 'URL encoded POST') {
+				// at this point I can test for homakov xss ?to[protocol]=javascript:payload()//&to[status]=200
+				var inputName = this.scheme.getInputName(this.inputIndex);
+				var funcName = randStr(5);
+				var paramName = inputName + "[protocol]=javascript:" + funcName + "()//&" + inputName + "[status]";
+				var paramValue = "200";
+				
+				if (this.requestXSS(paramName, paramValue) && this.lastJobXSS.responseStatus == 200) {
+					var confirmPattern = '<a href="javascript:' + funcName + '()//';
+					if (this.lastJobXSS.response.body.indexOf(confirmPattern) != -1) {
+						this.alertXSS(confirmPattern);
+					}
+				}				
+			}
+		
+			return false;		
+		}
+		
+		return true;
+	}
+	
+	
+	// *********************************************************************************************
+	// test the reflection
+	// *********************************************************************************************	
+	classXFS_Redir.prototype.testReflection = function(value)
+	{
+		if (!this.request(value)) return false;
+		
+		// return TRUE if reflected in the location header 
+		var locationStr = this.lastJob.response.headerValue('location');		
+		if (locationStr && locationStr.indexOf(value) != -1)  
+			return true;
+        // return TRUE if reflected in the refresh header
+        var refreshStr = this.lastJob.response.headerValue('refresh');
+        if (refreshStr && refreshStr.indexOf(value) != -1)
+            return true;
+		
+		// or in the body
+		if (this.lastJob.response.body && this.lastJob.response.body.indexOf(value) != -1)  
+			return true;		
+				
+		return false;
+	}		
+	
+		
+	// **************************************************************************************	
+	classXFS_Redir.prototype.hostReflectedInBody = function(url, host, pattern)
+	{
+		//trace("host=" + host + ", forwardedHost=" + forwardedHost + ", url=" + url);
+		var lastJob = new THTTPJob();
+		lastJob.setURL(scanURL);
+		lastJob.retries = 0;
+		lastJob.autoHostHeader = false;
+		lastJob.uri = url;
+		lastJob.Request.addHeader('Host', host, false);
+		lastJob.execute();
+		return (!lastJob.wasError && lastJob.response.body.indexOf(pattern) != -1); 
+	}		
+	
+	// *********************************************************************************************
+	// test for XSS in the host header  http://blog.bentkowski.info/2015/04/xss-via-host-header-cse.html
+	// *********************************************************************************************	
+	classXFS_Redir.prototype.testForXSSInHostHeader = function()
+	{
+		var rndStr = 900000 + random(99999);
+		
+		if (!this.request(rndStr)) return false;
+		
+		// return TRUE if reflected in the location header 
+		var locationStr = this.lastJob.response.headerValue('location');		
+		var index = locationStr.indexOf(rndStr);
+		
+		if (locationStr && index!= -1) {
+			if (debug) trace("[+] test payloads");
+			
+			var payloads = ["http://" + scanHost + "%2f<xss>", "http://" + scanHost + ":" + scanPort + "%2f<xss>", "%2f<xss>"];
+			
+			for (var i=0; i<payloads.length;i++) {
+				var value = payloads[i];
+				if (!this.request(value)) return false;
+				
+				var locationStr = this.lastJob.response.headerValue('location');
+				if (debug) trace(locationStr);
+				
+				if (   locationStr.startsWith("http://" + scanHost + "%2f<xss>") 
+					|| locationStr.startsWith("http://" + scanHost + ":" + scanPort + "%2f<xss>")
+					|| locationStr.startsWith("https://" + scanHost + "%2f<xss>") 
+					|| locationStr.startsWith("https://" + scanHost + "%2f<xss>")
+					|| locationStr.startsWith("https://" + scanHost + ":" + scanPort + "%2f<xss>")
+					) {
+						
+						if (debug) trace("[+] good location");
+						
+						// compute params for final test						
+						// host
+						var host = scanHost + "/<xss>";
+						if (locationStr.indexOf(scanHost + ":" + scanPort) != -1) 
+							host  = scanHost + ":" + scanPort + "/<xss>";
+						
+						// url (a random string to generate 404).
+						var url = "/" + randStr(16);
+						
+						// make the request						
+						var report = this.hostReflectedInBody(url, host, "<xss>");
+						
+						if (report) {
+							if (debug) trace("[+] should report");
+                            var details = "Another request confirmed that the value of the Host header is reflected in the response body without proper sanitization.";
+                            this.alert(value, details, "XSS_Host.xml", "Scripts/XSS");
+							break;
+						}
+				}
+			}			
+		}  
+		
+		return false;
+	}		
+	
+	// *********************************************************************************************
+	// main function to test all input variation
+	// *********************************************************************************************		
+	classXFS_Redir.prototype.startTesting = function()
+	{
+		if (this.variations && this.variations.count)
+		{
+			for (var i=0; i < this.variations.count; i++) 
+			{
+				// don't test further variations
+				if (this.foundVulnOnVariation) break;    	
+				this.currentVariation = i;
+				
+				// check if the input is reflected in the response
+				if (this.testReflection(reflection)) {					
+						// test for XSS in the host header via redirection
+						this.testForXSSInHostHeader();
+						// try to confirm the injection
+						if (this.testInjection(marker)) 
+							if (this.testInjection(marker2))
+									this.testInjection(marker3);
+				}
+			}
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+    if ( scheme.inputHasFlag(i, INPUT_GROUP_FLAG_REFLECTION_TESTS) ) {
+    	var tester = new classXFS_Redir(scheme, i);
+    	tester.startTesting();
+    }
+    
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+}

@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVuln()
+{
+    var fname = "/AcuNginxTest" + random(999999) + '.txt';
+    var phpfname =  fname + '/acunetix.php'
+    
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = fname;		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && lastJob.notFound) 
+	{
+		var powered_by = lastJob.response.headerValue('X-Powered-By');		
+		if((powered_by == '' || powered_by.match(/PHP\//) == null) && lastJob.response.bodyLength > 0) // no php
+        {
+        	lastJob = new THTTPJob();
+        	lastJob.verb = "GET";
+        	lastJob.url  = scanURL;	
+        	lastJob.uri  = phpfname;		
+        	lastJob.execute();
+	            
+        	if (!lastJob.wasError && lastJob.notFound) 
+        	{
+        		var powered_by = lastJob.response.headerValue('X-Powered-By'); // php
+        		if (powered_by != "" && powered_by.match(/PHP\//) != null && lastJob.response.bodyLength == 0)
+                {            
+					alert("Web Server", 'Nginx_PHP_Code_Execution_via_FastCGI.xml', lastJob);
+                    return true;
+                }
+            }        
+	    }
+    }
+    
+	return false;
+}
+// main entry point
+if (isNginx)
+{
+    testVuln();
+}

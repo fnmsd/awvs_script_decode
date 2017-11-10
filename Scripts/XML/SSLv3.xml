@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="The POODLE attack (SSLv3 supported)" version="0.1" released="20141015" updated="20150206" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="CVE-2014-3566" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Websites that support SSLv3 and CBC-mode ciphers are potentially vulnerable to an active MITM (Man-in-the-middle) attack. This attack, called POODLE, is similar to the BEAST attack and also allows a network attacker to extract the plaintext of targeted parts of an SSL connection, usually cookie data. Unlike the BEAST attack, it doesn't require such extensive control of the format of the plaintext and thus is more practical. [break][break]Any website that supports SSLv3 is vulnerable to POODLE, even if it also supports more recent versions of TLS. SSLv3 is disabled by default in Firefox 34, which was released on Nov 25 2014.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may be able to exploit this problem to conduct man-in-the-middle attacks and decrypt communications between the affected service and clients.</Impact>
+		<Recommendation>It's recommended to disable SSLv3 and replace it with TLSv1.0 as soon as compatibility with legacy clients is no longer required. 
+(The only browser that does not support TLSv1.0 is Internet Explorer 6).  [break][break]
+
+To disable SSLv2 and SSLv3: [break]
+For Apache:[break]
+SSLProtocol all -SSLv2 -SSLv3[break]
+For Nginx:[break]
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</Recommendation>
+		<Reference database="This POODLE bites: exploiting the SSL 3.0 fallback" URL="http://googleonlinesecurity.blogspot.ro/2014/10/this-poodle-bites-exploiting-ssl-30.html"></Reference>
+		<Reference database="The POODLE Attack and the End of SSL 3.0" URL="https://blog.mozilla.org/security/2014/10/14/the-poodle-attack-and-the-end-of-ssl-3-0/"></Reference>
+		<Reference database="Strong SSL/TLS Cryptography in Apache and Nginx" URL="http://blog.rlove.org/2013/12/strong-ssl-crypto.html"></Reference>
+		<Reference database="This POODLE bites: exploiting the SSL 3.0 fallback (technical paper)" URL="https://www.openssl.org/~bodo/ssl-poodle.pdf"></Reference>
+		<Reference database="How POODLE Happened" URL="https://www.dfranke.us/posts/2014-10-14-how-poodle-happened.html"></Reference>
+		<Reference database="How to disable SSLv3" URL="https://disablessl3.com/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

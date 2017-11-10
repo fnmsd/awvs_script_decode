@@ -1,0 +1,70 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.addCookies = false;
+	lastJob.request.addHeader('Cookie','acunetixCookie=' + 'A'.repeat(10000), true);
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 400)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestForExpectHeaderInjection()
+{
+	var urls = [
+					"/"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+                        /(<pre>\sCookie:\sacunetixCookie=A{50})/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Apache_httpOnly_Cookie_Disclosure.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestForExpectHeaderInjection();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

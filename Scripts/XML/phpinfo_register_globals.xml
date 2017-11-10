@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP register_globals enabled" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>When register_globals is enabled, PHP will automatically create variables in the global scope for any value passed in GET, POST or COOKIE. This, combined with the use of variables without initialization, has lead to numerous security vulnerabilities. Since application developers should be aware when accessing tainted user input, it is better practice to access the variables through their respective super globals.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Application dependant.</Impact>
+		<Recommendation>You can disable register_globals from php.ini or .htaccess.[break][break][bold]php.ini[/bold][break]register_globals = 'off'[break][break][bold].htaccess[/bold][break]php_flag  register_globals off[break]</Recommendation>
+		<Reference database="Using Register Globals" URL="http://www.php.net/manual/en/security.globals.php"/></TestDescription>
+</WebApplicationTest>

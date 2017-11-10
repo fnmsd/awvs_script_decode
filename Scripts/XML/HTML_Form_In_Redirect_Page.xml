@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="HTML Form found in redirect page" version="0.1" released="20091116" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="abuse_of_functionality,information_disclosure" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-287" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N/E:U/RL:W" CVSSScoreTemp="4.7" CVSSScoreEnv="4.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+An HTML form was found in the response body of this page. However, the current page redirects the visitor to another page by returning an HTTP status code of 301/302. Therefore, all browser users will not see the contents of this page and will not be able to interact with the HTML form. [break][break]
+
+Sometimes programmers don't properly terminate the script after redirecting the user to another page. For example:
+
+[code]
+[pre]
+&lt;?php
+    if (!isset($_SESSION["authenticated"])) {
+        header("Location: auth.php");
+    }
+?&gt;
+&lt;title&gt;Administration page&lt;/title&gt;
+&lt;form action="/admin/action" method="post"&gt;
+    &lt;!-- ...  form inputs ...  --&gt;
+&lt;/form&gt;
+  
+&lt;!-- ...  the rest of the administration page ...  --&gt;
+[/pre]
+[/code]
+
+This script is incorrect because the script is not terminated after the "header("Location: auth.php");" line. An attacker can access the content the administration page by using an HTTP client that doesn't follow redirection (like HTTP Editor). This creates an authentication bypass vulnerability. [break]
+
+The correct code would be 
+[code][pre]
+
+&lt;?php
+    if (!isset($_SESSION[auth])) {
+        header("Location: auth.php");
+        exit();
+    }
+?&gt;
+&lt;title&gt;Administration page&lt;/title&gt;
+&lt;form action="/admin/action" method="post"&gt;
+    &lt;!-- ...  form inputs ...  --&gt;
+&lt;/form&gt;
+    
+&lt;!-- ...  the rest of the administration page ...  --&gt;
+
+[/pre][/code]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>The impact of this vulnerability depends on the affected web application.</Impact>
+		<Recommendation>Make sure the script is terminated after redirecting the user to another page.</Recommendation>
+		<Reference database="HTML Form Found in Redirect Page Web Vulnerability" URL="http://www.acunetix.com/blog/web-security-zone/html-form-found-in-redirect-page/"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>POST</Method>
+					<URI>${scheme}://${host}:${port}${path}/${file}?__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Cookie</Name>
+						<Value encoding="text">__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">__ACUNETIX_TestForGlobalOverwrite = ACUNETIX_TestForGlobalOverwrite</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Global_Overwrite</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="path" type="string">
+		<Description>Site file path</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="file" type="string">
+		<Description>Site file filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of backup tests</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="check" type="string">
+		<Description>Full URL</Description>
+		<Item encoding="Text">${path}/${file}</Item>
+	</Variable>
+</WebApplicationTest>

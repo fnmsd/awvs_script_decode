@@ -1,0 +1,63 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var dirs = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVulnOnFile(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf('Seam.Remoting.type.java$lang$Object.__name = "java.lang.Object";') != -1)
+	{
+		alert(uri, 'JBoss_Seam_Remoting.xml', lastJob);
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			var idx = sf.fullPath.indexOf("/seam/resource/");
+			if (idx != -1) 
+			{
+				var uri = sf.fullPath.substr(0, idx) + "/seam/resource/remoting/interface.js?java.lang.Object";
+				//trace(uri);
+				files.push(uri);
+				break;
+			}					
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		testVulnOnFile(files[i]);
+	}
+}

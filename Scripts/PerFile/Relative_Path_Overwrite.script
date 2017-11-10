@@ -1,0 +1,146 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include os_detection.inc;
+#include backup_file_variants.inc;
+var origHref = "";
+var origToken = "";
+var acceptedExt		=	[
+	"php", "php3", "php4", "php5",
+	"aspx",
+	"jsp"
+	];
+							
+// **************************************************************************************							 
+function alert(uri, job, styleStr)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Relative_Path_Overwrite.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Relative path overwrite";	
+	ri.details = "A CSS import from a relative path was found on this page: [pre]" + styleStr + "[/pre]The same relative CSS import is present even when a random string was placed after the filename. Also, the response is frameable.";
+	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function lookForRelativePathCSS(body)
+{
+	var ret = [];
+	
+	//trace('extractTextFromBody');
+	var tokens = htmlTokens(body);
+	var str = "";
+	var includeText = true;
+	
+	while (token = tokens.nextToken()) 
+	{
+		if (token.isTag)
+		{
+			// look for link tags
+			if (token.tagName == 'LINK'){
+				
+				var linkType = "";
+				var linkHref = "";
+				
+				for(var j=0; j<token.paramCount; j++) {
+						var paramName = token.getParamName(j).toLowerCase();
+						var paramValue = token.getParamValue(j);
+						
+						if (paramName == "type") linkType = paramValue;
+						else if (paramName == "href") linkHref = paramValue;
+				}
+				
+				// found one?
+				if (linkType && linkHref && linkType == "text/css") {
+					var lcHref = linkHref.toLowerCase();
+					
+					if (!lcHref.startsWith("http://") && !lcHref.startsWith("https://") && !lcHref.startsWith("//")) {
+						// it's a relative path
+						ret.push([linkHref, token.raw]);
+						break;
+					}
+				}
+			}
+		}
+	}	
+	
+	return ret;
+}	 
+							 
+// **************************************************************************************
+function testFile(file, fileExt) {
+	// make a test to a fake path and look if the css style is still present
+	var uri = file.path + file.name;
+	var randomStr = randStr(5);
+	
+	var origUri = uri;
+	
+	if (fileExt == "jsp") uri = uri + ";a/" + randomStr + "/"
+		else uri = uri + "/" + randomStr + "/";
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	
+	if (!http.wasError) {
+		// css relative path still present
+		styles = lookForRelativePathCSS(http.response.body);
+		if (styles.length == 1){
+			newHref 	= styles[0][0];
+			newToken 	= styles[0][1];
+			
+			// yes and check if it's the same as before
+			if (newHref && newHref == origHref) {
+				alert(origUri, http, origToken);				
+			}			
+		}
+	}	
+}
+// **************************************************************************************
+function fileShouldBeTested(file, ext) {
+	var validEx = false;
+	
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+    {
+		if (ext.toLowerCase() == acceptedExt[i])  
+		{
+			validEx = true;
+			break;
+		}
+    }	
+	
+	// valid extension?
+	if (validEx) {
+		// first look for framing		
+		if (file.response.headerExists('X-Frame-Options') || file.response.headerExists('X-Content-Type-Options')) return false;
+		
+		// look if the response contains a relative CSS import
+		styles = lookForRelativePathCSS(file.response.body);
+		if (styles.length == 1){
+			// if yes, save it
+			origHref 	= styles[0][0];
+			origToken 	= styles[0][1];
+			return true;
+		}
+	}
+	
+	return false;
+}		
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+if (file.response.msg2 == 200) 
+{
+	var fileExt  = getFileExt(file.name);	
+	// verify if the file should be tested
+	if (file.isFile && fileShouldBeTested(file, fileExt)) 
+	{
+		testFile(file, fileExt);
+	}
+}

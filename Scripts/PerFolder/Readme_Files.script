@@ -1,0 +1,117 @@
+#include constants.inc;
+#include helpers.inc;
+#include perFolder_helpers.inc;
+	
+var variants = [
+					"read.me",					
+					"Read Me.txt",
+					"Read_Me.txt",
+					"readme",
+					"README",
+					"readme.txt",
+					"README.txt",						
+					"Readme.txt",
+					"README.TXT",
+					"readme.md",
+					"README.md",
+					"README.htm",
+					"readme.html",
+					"Install.txt",						
+					"INSTALL",
+					"INSTALL.txt",
+					"INSTALL.html",
+					"CHANGELOG",
+					"changelog.txt",
+					"Changelog.txt",
+					"ChangeLog.txt",
+					"CHANGELOG.txt",
+					"CHANGELOG.TXT",
+					"changes.txt",
+					"CHANGES.html",
+					"license.txt"
+				];
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+						  ];
+		this.regexArray = [
+							/(readme|version|license|install|changelog|update|changes|faq|requirements|instructions)/i
+						  ];											
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}						 
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("readme_file.xml");
+	ri.affects = newUri;
+	ri.alertPath = "Scripts/Readme";	
+	
+	if (matchedText) {
+		ri.details = "[navy]File contents (first 250 characters):[/navy][pre]" + matchedText + "[/pre]";
+	}
+	
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+	var RMFILESCount = getGlobalValue('DEVFILESCount');
+	if (!RMFILESCount) RMFILESCount = 1
+	else RMFILESCount = RMFILESCount + 1;
+	// don't run more than 10 times
+	if (RMFILESCount < 15) {
+		SetGlobalValue("DEVFILESCount", RMFILESCount, true);
+	    // test if the directory returns 200, 301, 302
+	    if (dir.response.msg2 == 200 || dir.response.msg2 == 301 || dir.response.msg2 == 302)
+		{
+	    	if (canIScanThisFolder(dir)) {
+		    	var injectionPatterns = new classInjectionPatterns();
+		    	for (var i=0; i<variants.length; i++) {
+		    		var dirName = dir.fullPath;
+		    		if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+		    		
+		    		var testURI = dirName + variants[i];
+		    		var http = new THTTPJob();
+		    		http.url = dir.url;
+		    		http.verb = 'GET';
+		    		http.URI = testURI;
+		    		http.execute();
+		    		if (!http.wasError && !http.notFound && http.response.msg2 == 200){
+		    			var matchedText = injectionPatterns.searchOnText(http.response.body);		
+		    			if (matchedText) {
+		    				alert(dir.fullPath, testURI, http, http.response.body.substr(0,250) + " ...");
+		    			}
+		    		}
+		    		
+		    		ScriptProgress(ComputeProgress(i, variants.length));
+		    	}	    	
+	    	}
+	    }
+	}	    
+}

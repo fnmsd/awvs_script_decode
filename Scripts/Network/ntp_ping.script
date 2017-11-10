@@ -1,0 +1,45 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for ntp server
+function prepare_initial_request(){
+	var res = strFromRawData(
+	0xdb, 0x00, 0x04, 0xfa, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	);
+	return res;
+}
+function prepare_second_request(){
+	var res = strFromRawData(
+	0x16, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	);
+	return res;
+}
+// start
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port	= 123;
+socket.Timeout = 5;
+socket.Connect();
+if (socket.IsConnected) {
+	req1 = prepare_initial_request();
+	socket.send(req1);
+	data = socket.Receive(true);
+	//trace(data);	
+	if (data.length >= 10) {
+		trace("ntp detected!");
+		req2 = prepare_second_request();
+		socket.send(req2);
+		
+		data = socket.Receive(true);
+		//trace(data);			
+		if (data.length > 12 && data.match(/system=/i)) {
+			// extract data from response
+			info = data.slice(12, data.length - 12);
+			trace(info);	
+			trace("ntp info!");
+			KBase("NTP server running", "A NTP (Network Time Protocol) server is running on UDP port 123.[break]Information gathered from this service:[pre]" + info + "[/pre]");
+		}
+	}
+	socket.Close();
+}

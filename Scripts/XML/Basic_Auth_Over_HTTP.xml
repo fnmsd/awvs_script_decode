@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Basic authentication over HTTP" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="weak_crypto" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>In the context of an HTTP transaction, basic access authentication is a method for an HTTP user agent to provide a user name and password when making a request. [break][break]
+
+This directory is protected using Basic Authentication over an HTTP connection. With Basic Authentication the user credentials are sent as cleartext and because HTTPS is not used, they are vulnerable to packet sniffing.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>User credentials are sent as cleartext and are vulnerable to packet sniffing.</Impact>
+		<Recommendation>Use Basic Authentication over an HTTPS connection.</Recommendation>
+		<Reference database="Basic access authentication" URL="http://en.wikipedia.org/wiki/Basic_access_authentication"/></TestDescription>
+</WebApplicationTest>

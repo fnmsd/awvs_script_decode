@@ -1,0 +1,127 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{
+	function InjectionPatterns(){
+		this.plainArray = [
+							'MS.Internal.Xml.',
+							'Unknown error in XPath',
+							'org.apache.xpath.XPath',
+							'A closing bracket expected in',
+							'An operand in Union Expression does not produce a node-set',
+							'Cannot convert expression to a number',
+							'Document Axis does not allow any context Location Steps',
+							'Empty Path Expression',
+							'Empty Relative Location Path',
+							'Empty Union Expression',
+							'Expected node test or name specification after axis operator',
+							'Incompatible XPath key',
+							'Incorrect Variable Binding',
+							'libxml2 library function failed',
+							'A document must contain exactly one root element.',
+							'<font face="Arial" size=2>Expression must evaluate to a node-set.',
+							'Expected token \'\]\''
+						];
+		this.regexArray = [
+                            /(Invalid (predicate|expression|type) in .*?\son line)/,
+							/(<b>\sException\sDetails:\s<\/b>System\.Xml\.XPath\.XPathException:\s'.*'\shas\san\sinvalid\stoken\.<br><br>)/,
+							/(<b>\sException\sDetails:\s<\/b>System\.Xml\.XPath\.XPathException:\sThis\sis\san\sunclosed\sstring\.<br><br>)/,
+							/(System.Xml.XPath.XPathException\:)/
+						  ];											
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();
+{ // class for testing for XPath Injection
+	function classXPathInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	classXPathInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classXPathInjection.prototype.alert = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("XPath_Injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XPath Injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classXPathInjection.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+		var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.body);		
+		if (matchedText) {
+			this.alert(value, matchedText);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	classXPathInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;				
+			this.currentVariation = i;
+			// single and double quote
+			if (!this.testInjection("'\"")) continue;
+			// variant
+			if (!this.testInjection("<!--")) continue;
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classXPathInjection(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

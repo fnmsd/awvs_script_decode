@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="AngularJS client-side template injection" version="0.1" released="20080307" updated="20160127" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This web application is vulnerable to AngularJS client-side template injection vulnerability. AngularJS client-side template injection vulnerabilities occur when user-input is dynamically embedded on a page where AngularJS client-side templating is used.  By using curly braces it's possible to inject AngularJS expressions in the AngularJS client-side template that is being used by the application.These expressions will be evaluated on the client-side by AngularJS and when combined with a sandbox escape they allow an attacker to execute arbitrary JavaScript code. [break][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can inject AngularJS expressions that will be evaluated on the client-side. Normally AngularJS expressions are not very dangerous, but when combined with a sandbox escape they allow an attacker to execute arbitrary JavaScript code.</Impact>
+		<Recommendation>It should not be possible for an attacker to inject AngularJS expressions by using curly braces. The application needs to either treat curly braces in user input as highly dangerous or avoid server-side reflection of user input entirely.</Recommendation>
+		<Reference database="AngularJS security features and best practices" URL="https://docs.angularjs.org/guide/security"></Reference>
+		<Reference database="XSS without HTML: Client-Side Template Injection with AngularJS" URL="http://blog.portswigger.net/2016/01/xss-without-html-client-side-template.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

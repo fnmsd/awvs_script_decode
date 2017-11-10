@@ -1,0 +1,252 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include crawler_responses.inc;
+#include os_detection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var debug = false;
+var VERYLONGSLEEP   = 10000;
+var LONGERSLEEP     = 9500;
+var LONGSLEEP       = 8000;
+var SHORTSLEEP      = 5000;
+if (debug) {
+    VERYLONGSLEEP   = 3000;
+    LONGERSLEEP     = 2500;
+    LONGSLEEP       = 2000;
+    SHORTSLEEP      = 1000;
+}
+// InjectionPatterns class
+{
+    function InjectionPatterns(){
+        this.plainArray = [
+            'SyntaxError: Unexpected token ',
+            'SyntaxError: Unexpected identifier',
+            'SyntaxError: Unexpected number',
+            'SyntaxError: Unexpected end of input'
+        ];
+        this.regexArray = [
+            /ReferenceError: .*? is not defined/
+        ];
+    }
+    InjectionPatterns.prototype.searchOnText = function(text) {
+        // search plain texts first
+        for (var i=0;i<this.plainArray.length;i++) {
+            if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+        }
+        // search regexes
+        for (var i=0;i<this.regexArray.length;i++) {
+            var m = this.regexArray[i].exec(text);
+            if (m) return m[0];
+        }
+        return false;
+    }
+}
+var InjectionPatterns = new InjectionPatterns();
+{ // class for testing for NodeJs Injection
+    /**************************************************************************************************************/
+    function classNodeJsInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+        this.searchForErrors = true;
+        this.confirmInjectionHistory = false;
+        this.reportedErrorsDict = {};
+	}
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.request = function(value, timeout)
+	{
+        var randVar = 'x' + randStr(5);
+        if (value)
+            value = value.replace("{randVar}", randVar).replace("{randVar}", randVar);
+        if (debug) trace("request " + value);
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+        if (typeof(timeout) != 'undefined') {
+            this.lastJob.timeout = timeout;
+            // no retries
+            this.lastJob.retries = 0;
+        }
+        this.lastJob.execute();
+        var requestWasSuccessful = ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003)));
+        if (requestWasSuccessful) {
+            // look for errors caused by the injections
+            var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.toString());
+            if (matchedText) {
+                if (!(this.inputName in this.reportedErrorsDict)) {
+                    this.alert(value, matchedText, false);
+                    this.reportedErrorsDict[this.inputName] = 1;
+                }
+            }
+        }
+		return requestWasSuccessful;
+	}
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.alert = function(testValue, matchedText, timingTest)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("NodeJs_injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/NodeJs injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+        if (timingTest) ri.name = ri.name + " (Timing)";
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Pattern found: [pre][dark]" + matchedText + "[/dark][/pre]";
+		}
+        if (timingTest && this.confirmInjectionHistory) {
+            ri.details = ri.details + "[break][break]Tests performed: " + this.confirmInjectionHistory + "[/ul]";
+        }
+        AddReportItem(ri);
+	}
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.addToConfirmInjectionHistoryTiming = function(paramValue, sleepStr)
+    {
+        if (this.confirmInjectionHistory == false) this.confirmInjectionHistory = "[ul]";
+        this.confirmInjectionHistory = this.confirmInjectionHistory + "[li]" + paramValue + " => [bold]" + sleepStr + " s[/bold][/li]";
+    }
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.testForError = function()
+    {
+        if (debug) trace("testForError");
+        this.scheme.loadVariation(this.variations.item(this.currentVariation));
+        var response = getCrawlerResponseForSchemeVariation(this.scheme);
+        if (response == null) {
+            if (!this.request(this.origValue)) return false;
+            response = this.lastJob.response;
+        }
+        if (response.body.length > 250*1024) return false;
+        if (InjectionPatterns.searchOnText(response.toString())) return false;
+        if (debug) trace("testForError SUCCESS");
+        return true;
+    }
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.testInjectionWithTiming = function(value)
+	{
+        var origValue = value;
+        var count = 2;
+        if (debug) count = 1;
+        while (count > 0) {
+            if (debug) trace("count=" + count);
+            count--;
+            if (debug) trace("testInjectionWithTiming " + value);
+            // [#1] VERY LONG sleep
+            var veryLongSleep = VERYLONGSLEEP;
+            var newValue = origValue.replace("{sleep}", veryLongSleep);
+            if (!this.request(newValue)) return false;
+            var veryLongDuration = this.lastJob.responseDuration;
+            if (debug) trace(veryLongDuration);
+            if (veryLongDuration < (veryLongSleep * 99/100)) return false;
+            this.addToConfirmInjectionHistoryTiming(newValue, veryLongDuration);
+            // [#2] no sleep
+            var noSleep = 0;
+            var newValue = origValue.replace("{sleep}", noSleep);
+            if (!this.request(newValue)) return false;
+            var noSleepDuration = this.lastJob.responseDuration;
+            if (debug) trace(noSleepDuration);
+            if (noSleepDuration < (noSleep * 99/100)) return false;
+            if (noSleepDuration >= SHORTSLEEP) return false;
+            if (noSleepDuration>veryLongDuration) return false;
+            this.addToConfirmInjectionHistoryTiming(newValue, noSleepDuration);
+            // [#3] LONG sleep
+            var longSleep = LONGSLEEP;
+            var newValue = origValue.replace("{sleep}", longSleep);
+            if (!this.request(newValue)) return false;
+            var longDuration = this.lastJob.responseDuration;
+            if (debug) trace(longDuration);
+            if (longDuration < (longSleep * 99/100)) return false;
+            if (noSleepDuration > longDuration) return false;
+            if (longDuration > veryLongDuration) return false;
+            this.addToConfirmInjectionHistoryTiming(newValue, longDuration);
+            // [#4] SHORT sleep
+            var shortSleep = SHORTSLEEP;
+            var newValue = origValue.replace("{sleep}", shortSleep);
+            if (!this.request(newValue)) return false;
+            var shortDuration = this.lastJob.responseDuration;
+            if (debug) trace(shortDuration);
+            if (shortDuration < (shortSleep * 99/100)) return false;
+            if (shortDuration >= (0.55 * longDuration)) return false;
+            if (shortDuration >longDuration) return false;
+            this.addToConfirmInjectionHistoryTiming(newValue, shortDuration);
+            // [#5] LONGER sleep
+            var longerSleep = LONGERSLEEP;
+            var newValue = origValue.replace("{sleep}", longerSleep);
+            if (!this.request(newValue)) return false;
+            var longerDuration = this.lastJob.responseDuration;
+            if (debug) trace(longerDuration);
+            if (longerDuration < (longerSleep * 99/100)) return false;
+            if (longerDuration<longDuration) return false;
+            if (shortDuration>longerDuration) return false;
+            this.addToConfirmInjectionHistoryTiming(newValue, longerDuration);
+            if (debug) trace("SUCCESS");
+        }
+        this.alert(newValue, false, true);
+        return true;
+	}
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.getOrigValue = function()
+	{   
+		var value = "";
+		
+		for (var i=0; i<this.variations.count; i++){
+			var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+			
+			// if the value is not yet set      
+			if(value == "" && varValue != "") {
+				value = varValue;                       
+			}
+		}
+        if (debug) trace("getOrigValue = " + value);
+		return value;
+	}
+    /**************************************************************************************************************/
+    classNodeJsInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;				
+			this.currentVariation = i;
+			this.scheme.loadVariation(this.variations.item(this.currentVariation));
+			var origValue = this.getOrigValue();
+            // first, let's look for error messages
+            if (!this.testForError()) { // check if errors are not already reflected in the page
+                this.searchForErrors = false;
+            }
+            // try to inject javascript code to cause a time delay
+            if (this.testInjectionWithTiming("(function(){if(typeof {randVar}===\"undefined\"){var a=new Date();do{var b=new Date();}while(b-a<{sleep});{randVar}=1;}}())")) continue;
+            if (this.testInjectionWithTiming("+(function(){if(typeof {randVar}===\"undefined\"){var a=new Date();do{var b=new Date();}while(b-a<{sleep});{randVar}=1;}}())+")) continue;
+            if (this.testInjectionWithTiming("'+(function(){if(typeof {randVar}===\"undefined\"){var a=new Date();do{var b=new Date();}while(b-a<{sleep});{randVar}=1;}}())+'")) continue;
+            if (this.testInjectionWithTiming('"+(function(){if(typeof {randVar}==="undefined"){var a=new Date();do{var b=new Date();}while(b-a<{sleep});{randVar}=1;}}())+"')) continue;
+        }
+	}
+}
+/**************************************************************************************************************/
+// main entry point
+/**************************************************************************************************************/
+if (isNode || debug) {
+    for (var i=0;i<scheme.inputCount; i++)
+    {
+        var tester = new classNodeJsInjection(scheme, i);
+        tester.inputName = scheme.getInputName(i);
+        tester.inputNameLC = tester.inputName.toLowerCase();
+        if (debug) trace(">>>>>>>>>> TESTING INPUT : " + tester.inputName);
+        //if (tester.inputName == 'preTax')
+        tester.startTesting();
+        ScriptProgress(ComputeProgress(i, scheme.inputCount));
+        tester = null;
+    }
+}

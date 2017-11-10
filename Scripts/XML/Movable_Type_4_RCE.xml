@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Moveable Type 4.x unauthenticated remote command execution" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2013-0209" CWE="CWE-287" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>By directly calling an update-related CGI script with crafted input, and without requiring authentication, it is possible to execute arbitrary system commands on the host server. MoveableType (MT) exposes a CGI script, mt-upgrade.cgi (usually at /cgi/mt/mt-upgrade.cgi), that is used during installation and updating of the platform.The vulnerability arises due to the following properties: [break]
+[ul]
+[li]This script may be invoked remotely without requiring authentication to any MT instance.[/li]
+[li]Through a crafted POST request, it is possible to invoke particular database migration functions (i.e functions that bring the existing database up-to-date with an updated codebase) by name and with particular parameters.[/li]
+[li]A particular migration function, core_drop_meta_for_table, allows a class parameter to be set which is used directly in a perl eval statement, allowing perl code injection.[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of Moveable Type or apply the patch listed in the web references section.</Recommendation>
+		<Reference database="Movable Type 4.38 patch to fix a known upgrading security issue" URL="http://www.movabletype.org/2013/01/movable_type_438_patch.html"></Reference>
+		<Reference database="Moveable Type 4.x Unauthenticated Remote Command Execution" URL="http://www.sec-1.com/blog/?p=402"></Reference>
+	</TestDescription>
+</WebApplicationTest>

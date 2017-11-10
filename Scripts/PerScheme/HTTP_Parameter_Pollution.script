@@ -1,0 +1,286 @@
+#include constants.inc;
+#include helpers.inc;
+{ // class for testing HPP
+	/**************************************************************************************************************/
+	function classHPP(targetUrl, scheme, inputIndex){
+		this.scheme = scheme;
+		this.targetUrl = targetUrl;
+		this.inputIndex = inputIndex;
+		this.lastJob = null;
+		
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+	}
+/**************************************************************************************************************/
+classHPP.prototype.extractTextFromBody = function(body)
+{
+	//trace('extractTextFromBody');
+	var tokens = htmlTokens(body);
+	var str = "";
+	var includeText = true;
+	
+	while (token = tokens.nextToken()) 
+	{
+		if (token.isTag)
+		{
+			if (token.tagName == 'STYLE') includeText = false;
+			else if (token.tagName == '/STYLE') includeText = true;
+			else if (token.tagName == 'SCRIPT') includeText = false;
+			else if (token.tagName == '/SCRIPT') includeText = true; 
+		}
+		
+		else
+		if (token.isText) 
+		{
+			if (includeText) str = str + token.raw + "\n";	
+		}
+	}	
+	
+	return str;
+}
+/**************************************************************************************************************/
+classHPP.prototype.filterBody = function(body)
+{	
+	var ct = this.lastJob.response.headerValue('content-type').toLowerCase();
+	//trace(ct);
+	
+	if (ct == "" || ct.indexOf('html') != -1) 
+		body = this.extractTextFromBody(body);
+	
+	// remove possible time string
+	body = body.replace(/([0-1]?[0-9]|[2][0-3]):([0-5][0-9])[.|:]([0-9][0-9])/g, "");
+	body = body.replace(/time\s*[:]\s*\d+\.?\d*/g, "");
+	//trace(body);
+	return body;	
+}	
+	
+	/**************************************************************************************************************/
+	classHPP.prototype.getFilteredResponse = function(url) {
+		var http = new THTTPJob();
+		this.lastJob = http;
+		http.setStrURL(url);
+		http.autoRedirect = true;
+		http.execute();
+		if(http.wasError)return false;
+		else return this.filterBody(http.response.body);
+	}
+	
+	/**************************************************************************************************************/
+	classHPP.prototype.alert = function(http, testPrecendence, link, vulnParam, testValue)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("HPP.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/HPP";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(http);		
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		
+		ri.Details = ri.Details + "[break]Parameter precedence: [bold][dark]" + testPrecendence + "[/dark][/bold]";
+		ri.Details = ri.Details + "[break]Affected link: [bold][dark]" + link + "[/dark][/bold]";
+		ri.Details = ri.Details + "[break]Affected parameter: [bold][dark]" + vulnParam + "[/dark][/bold]";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+		
+	
+	/**************************************************************************************************************/
+	classHPP.prototype.getParameterPrecedence = function(url, splitParams, testIndex) {
+		// caching
+		var siteFile = null;
+		if(sameHostAsBase(url)) {
+			siteFile = getSiteFileWithPath(url.path, 0);
+			if(siteFile && siteFile.parameterPrecedence != PP_UNKNOWN)
+				return siteFile.parameterPrecedence;
+		}
+		else {
+			var precedence = getGlobalValue("precedence" + plain2md5(url.url));
+			if(precedence)return precedence;
+		}
+		
+		var original = url.url + "?" + splitParams.join("&");
+		
+		var testParam = splitParams[testIndex].split("=");
+		var origValue = testParam[1];
+		if(!isNaN(origValue))
+			testParam[1] = (900000 + random(99999));
+		else
+			testParam[1] = "v" + (900000 + random(99999));
+		
+		splitParams[testIndex] = testParam.join("=");
+		var newvalue = url.url + "?" + splitParams.join("&");
+		
+		splitParams.push(testParam.join("="));
+		testParam[1] = origValue;
+		splitParams[testIndex] = testParam.join("=");
+		
+		var hpptest = url.url + "?" + splitParams.join("&");
+		
+		//trace("original=" + original);
+		//trace("newvalue=" + newvalue);
+		//trace("hpptest=" + hpptest);
+		
+		var originalResponse = this.getFilteredResponse(original);
+		if(originalResponse == false) return PP_UNKNOWN;
+		
+		var newvalueResponse = this.getFilteredResponse(newvalue);
+		if(newvalueResponse == false) return PP_UNKNOWN;
+		
+		if(originalResponse == newvalueResponse) return PP_UNKNOWN;
+		
+		var hpptestResponse = this.getFilteredResponse(hpptest);
+		if(hpptestResponse == false) return PP_UNKNOWN;
+		
+		if(hpptestResponse == newvalueResponse) {
+			if(siteFile)siteFile.parameterPrecedence = PP_LAST;
+			else setGlobalValue("precedence" + plain2md5(url.url), PP_LAST, true);
+			
+			return PP_LAST;
+		}
+		else
+		if(hpptestResponse == originalResponse) {
+			if(siteFile)siteFile.parameterPrecedence = PP_FIRST;
+			else setGlobalValue("precedence" + plain2md5(url.url), PP_FIRST, true);
+			
+			return PP_FIRST;
+		}
+		else
+		return PP_UNKNOWN;
+	}
+	
+	classHPP.prototype.testLink = function(origUrl, link, rndName, rndValue, http, testValue) {
+	
+		var canonUrl = origUrl.canonicalize(link);
+		if (canonUrl.isHTTP() && hostAllowed(canonUrl.host)) {
+			var queryParts = canonUrl.getVar.split("&");
+			if(queryParts.length > 1) {
+				var precedenceIndex = -1;
+				var injectedIndex = -1;
+				
+				// find the injected parameter and also get one to test the precedence on
+				for(var j=0; j<queryParts.length; j++){
+					if(precedenceIndex == -1 && queryParts[j] && queryParts[j].indexOf("=") != -1){
+						precedenceIndex = j;
+					}
+					
+					//trace(queryParts[j]);
+					var nameValue = queryParts[j].split("=");
+					
+					if( (nameValue.length == 2) && (nameValue[1] == rndValue) ) {
+						//trace(canonUrl.url);
+						injectedIndex = j;
+						if(precedenceIndex==j) {
+							precedenceIndex = -1;
+						}
+					}
+					
+					if(precedenceIndex >= 0 && injectedIndex >= 0)break;
+				}
+				
+				//		trace('precIndex => ' + precedenceIndex);
+				//		trace('injIndex => ' + injectedIndex);				
+				
+				if(precedenceIndex >= 0 && injectedIndex >= 0) {
+					// save precedence index and original length
+					var origPrecedenceIndex = precedenceIndex;				
+					var origLength = queryParts.length;
+					
+					queryParts.splice(injectedIndex, 1);
+					
+					if(precedenceIndex>injectedIndex)precedenceIndex--;
+					
+					canonUrl.getVar = "";
+					
+					// don't report HTTP if the path is the same
+					//trace(this.scheme.path);
+					//trace(canonUrl.path);
+					
+					if (this.scheme.path != canonUrl.path) {					
+						var precedence = this.getParameterPrecedence(canonUrl, queryParts, precedenceIndex);
+						
+						if( precedence == PP_LAST && injectedIndex > origPrecedenceIndex) {						
+							this.alert(http, 'last occurrence', link, queryParts[precedenceIndex], testValue);
+							//logError("ALERTAAAAA (PP_LAST)");
+							return false;
+						}
+						else
+						if( precedence == PP_FIRST && injectedIndex < origLength-1 ) {
+							this.alert(http, 'first occurrence', link, queryParts[precedenceIndex], testValue);
+							//logError("ALERTAAAAA (PP_FIRST)");
+							return false;
+						}
+						
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/**************************************************************************************************************/
+	classHPP.prototype.startTesting = function() {
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		
+		var rndName = "n" + (900000 + random(99999));
+		var rndValue = "v" + (900000 + random(99999));
+		var origValue = this.scheme.getInputValue(this.inputIndex);
+				
+		var testValue = origValue + "&" + rndName + "=" + rndValue;
+		this.scheme.setInputValue(this.inputIndex, testValue);
+		
+		var http = new THTTPJob();
+		http.url = this.targetUrl;
+		http.autoRedirect = true;
+		this.scheme.populateRequest(http);
+		
+		http.execute();
+		
+		if(http.wasError) return false;
+		
+		var contentType = http.response.headerValue('content-type');
+		if(contentType.indexOf("text/html") == -1) return false;
+		
+		// optimization, reduces some false positives
+		if (http.response.body.indexOf("&" + rndName + "=" + rndValue) == -1) return false;
+		
+		var pd = getParserData(http.response.body, contentType);
+		if (pd) {
+		
+			var links = pd.getLinks();
+			var origUrl = http.url;
+			if(links) {
+				for(var i=0; i<links.count; i++){
+					if (links.item(i).tag == "A") {
+						if(this.testLink(origUrl, links.item(i).url, rndName, rndValue, http, testValue) == false) return;
+					}
+				}
+			}
+			
+			var forms = pd.getForms();
+			
+			if(forms) {
+				for(var i=0; i<forms.count; i++){
+					if(this.testLink(origUrl, forms.item(i).action, rndName, rndValue, http, testValue) == false) return;
+				}
+			}
+		}
+	}
+}
+var scheme = getCurrentScheme();
+var targetUrl = new TURL(scanURL.url);
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++) {
+    if ( scheme.inputHasFlag(i, INPUT_GROUP_FLAG_REFLECTION_TESTS) ) {
+    	var tester = new classHPP(targetUrl, scheme, i);
+    	scheme.randomizeValues();
+    	tester.startTesting();
+    }
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+}

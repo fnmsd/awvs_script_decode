@@ -1,0 +1,32 @@
+#include helpers.inc;
+#include os_detection.inc;
+#include constants.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("ASP.NET_application_trace.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/ASP.NET application trace enabled";	
+	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+	if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200)  {
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var testURI = dirName + "Trace.axd" ;			
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+	
+	if (!http.wasError && !http.notFound)	
+	if (http.response.body.indexOf("<td><h1>Application Trace</h1></td>") != -1) {
+		alert(dir.fullPath, http);		
+	}
+}

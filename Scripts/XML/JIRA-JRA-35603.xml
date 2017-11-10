@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Atlassian Jira DOM-based cross-site scripting vulnerability" version="0.1" released="20080307" updated="20160128" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Jira is a proprietary issue tracking product, developed by Atlassian. It provides bug tracking, issue tracking, and project management functions. [break][break]
+
+Atlassian Jira versions Jira 6.0.* &lt;= 6.1.4 are vulnerable to a DOM-based cross-site scripting vulnerability. [break][break]
+
+DOM-based XSS is a type of cross site scripting attack which relies on inappropriate handling, in the HTML page, of the data from its associated DOM. Among the objects in the DOM, there are several which the attacker can manipulate in order to generate the XSS condition, and the most popular, from this perspective, are the document.url, document.location and document.referrer objects.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Customers who have downloaded and installed JIRA should upgrade their existing JIRA installations or apply the patches to fix these vulnerabilities.</Recommendation>
+		<Reference database="JRA-35603" URL="https://jira.atlassian.com/browse/JRA-35603"></Reference>
+		<Reference database="Atlassian Jira 6.0.* &lt;= 6.1.4 DOM XSS" URL="http://www.tinkode.com/2016/01/atlassian-jira-60-614-dom-xss.html"></Reference>
+		<Reference database="DOM-based Cross-Site Scripting (XSS) Explained" URL="http://www.acunetix.com/blog/articles/dom-xss-explained/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

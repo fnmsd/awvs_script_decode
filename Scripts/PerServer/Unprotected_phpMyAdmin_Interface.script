@@ -1,0 +1,78 @@
+#include helpers.inc;
+var variants = [
+				"/phpmyadmin/main.php",
+				"/phpMyAdmin/main.php",
+				"/pma/main.php",
+				"/mysql/main.php",
+				"/db/main.php",
+				"/dbadmin/main.php",
+				"/mysqladmin/main.php",
+				"/PMA/main.php",
+				"/myadmin/main.php",
+				"/phpmyadmin2/main.php",
+				"/phpMyAdmin2/main.php",
+				"/admin/pma/main.php",
+				"/admin/phpmyadmin/main.php",
+				"/admin/mysql/main.php",
+				"/phpmyadmin/main.php",
+				"/phpMyAdmin/",
+				"/pma/",
+				"/mysql/",
+				"/db/",
+				"/dbadmin/",
+				"/mysqladmin/",
+				"/PMA/",
+				"/myadmin/",
+				"/phpmyadmin2/",
+				"/phpMyAdmin2/",
+				"/admin/pma/",
+				"/admin/phpmyadmin/",
+				"/admin/mysql/",
+				];
+// **************************************************************************************							 
+function alert(job, URL, vxml)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = URL;
+	ri.alertPath = "Scripts/" + vxml; 	
+		
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function testURL(URL)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = 'GET';
+	http.URI = URL;
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200 && !http.notFound)
+	{
+		if (
+				http.response.body.indexOf('<div class="warning">Your configuration file contains settings (root with no password) that correspond to the default MySQL privileged account.') != -1 ||
+				http.response.body.indexOf("which is used by the setup script, still exists in your phpMyAdmin directory. It is strongly recommended to remove it once phpMyAdmin has been configured.") != -1 ||
+				http.response.body.indexOf('<a href="querywindow.php?lang=en&') != -1 ||
+				http.response.body.indexOf("<a href='db_operations.php?server=") != -1 ||
+				http.response.body.indexOf('<li id="li_server_version">Server version:') != -1
+			)
+		{
+			alert(http, URL, 'Unprotected_phpMyAdmin.xml');
+			return 1;
+		}	
+	}
+	return 0;	
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0; i<variants.length; i++) 
+{
+	if (testURL(variants[i])) break;	
+}

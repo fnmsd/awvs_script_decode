@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress W3 Total Cache plugin predictable cache filenames" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,known_vulnerabilities" CVE="CVE-2012-6077,CVE-2012-6078,CVE-2012-6079" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:F/RL:OF/RC:C" CVSSScoreTemp="4.2" CVSSScoreEnv="4.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress plugin W3 Total Cache has a security issue that can occur if using database caching to disk. When database caching to disk with a web server with directory listing or web accessible wp-content/w3tc/dbcache/* directories an attacker can predict the names of cache files and retrieve their contents.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Sensitive information disclosure.</Impact>
+		<Recommendation>Upgrade to W3 Total Cache version 0.9.2.5 or later.</Recommendation>
+		<Reference database="WordPress Remote Exploit - W3 Total Cache" URL="http://seclists.org/fulldisclosure/2012/Dec/242"></Reference>
+		<Reference database="W3 Total Cache changelog" URL="http://wordpress.org/extend/plugins/w3-total-cache/changelog/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

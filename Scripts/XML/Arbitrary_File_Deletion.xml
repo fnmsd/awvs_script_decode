@@ -1,0 +1,90 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Arbitrary file deletion" version="0.1" released="20080521" updated="20160107" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="arbitrary_file_creation" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Reference database="Acunetix Directory Traversal Attacks" URL="https://www.acunetix.com/websitesecurity/directory-traversal"/>
+		<Copyright/>
+		<Description>This script is possibly vulnerable to arbitrary file deletion.[break][break]This issue allows an attacker to influence calls to the 'unlink()' function and delete arbitrary files. Due to a lack of input validation, an attacker can supply directory traversal sequences followed by an arbitrary file name to delete specific files.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>This vulnerability allows attackers to delete arbitrary files.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Delete_File;param.*=ACUSTARTFILEDELETE/../../xxx\..\..\ACUENDFILEDELETE</Value>
+				</Compare>
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Delete_File;param.*=/ACUSTARTFILEDELETE/ACUENDFILEDELETE</Value>
+				</Compare>
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Delete_File;param.*=\ACUSTARTFILEDELETE\ACUENDFILEDELETE</Value>
+				</Compare>
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>isArbitraryFileDeletion=1</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>Cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>Headers combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

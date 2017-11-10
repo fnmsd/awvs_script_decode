@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Struts 2 DefaultActionMapper Prefixes OGNL Code Execution" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2013-2251" CWE="CWE-20" CVSSVer="2.0" CVSSScore="9.4" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:C/A:C/E:POC/RL:OF/RC:C" CVSSScoreTemp="7.4" CVSSScoreEnv="7.3"/>
+		<Copyright></Copyright>
+		<Description>The Struts 2 DefaultActionMapper supports a method for short-circuit navigation state changes by prefixing parameters with "action:" or "redirect:", followed by a desired navigational target expression. This mechanism was intended to help with attaching navigational information to buttons within forms.
+[break][break]
+In Struts 2 before 2.3.15.1 the information following "action:", "redirect:" or "redirectAction:" is not properly sanitized. Since said information will be evaluated as OGNL expression against the value stack, this introduces the possibility to inject server side code.
+
+[break][break]
+Affected Software:[break]
+Struts 2.0.0 - Struts 2.3.15</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Remote code execution</Impact>
+		<Recommendation>Developers should immediately upgrade to Struts 2.3.15.1</Recommendation>
+		<Reference database="Apache Struts 2 S2-016" URL="http://struts.apache.org/release/2.3.x/docs/s2-016.html"/></TestDescription>
+</WebApplicationTest>

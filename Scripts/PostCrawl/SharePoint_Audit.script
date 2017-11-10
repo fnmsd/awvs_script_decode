@@ -1,0 +1,121 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// dirs to be tested
+var dirsLayouts = new Array();
+var dirsVtiBin = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************
+function testSharePointInterface(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.match(/<title>\s+All Site Content\s+<\/title>/gi)) return true;
+	else return 0;
+}
+// **************************************************************************************
+function testSharePointUserEnumeration(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && (lastJob.response.body.indexOf('<!-- FieldName="Account"') != -1 )) return true;
+	else return 0;
+}
+// **************************************************************************************
+function testSharePointExposedWebServices(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf('<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/') != -1) return true;
+	else return 0;
+}
+/***********************************************************************************/
+function testLayoutsVulnsOnDir(dir)
+{	
+	if (testSharePointInterface(dir + "/viewlsts.aspx"))
+	{
+		alert(dir + "/viewlsts.aspx", 'SharePoint_Reachable_Interface.xml', lastJob);	
+	}
+    
+    // user enumeration (try first 5 users)
+    for (var i=1; i<=5; i++) {
+    	if (testSharePointUserEnumeration(dir + "/userdisp.aspx?ID=" + i))
+    	{
+    		alert(dir + "/userdisp.aspx?ID=" + i, 'SharePoint_User_Enumeration.xml', lastJob);
+            break;
+    	}    
+    }
+}
+/***********************************************************************************/
+function testVtiBinVulnsOnDir(dir)
+{	
+	if (testSharePointExposedWebServices(dir + "/lists.asmx?WSDL"))
+	{
+		alert(dir + "/lists.asmx?WSDL", 'SharePoint_Exposed_WebServices.xml', lastJob);
+	}
+}
+/***********************************************************************************/
+function prepareDirsToBeTestedLayouts(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			if (sf.Name == '_layouts') 
+			{
+				dirsLayouts.push(sf.fullPath);
+				// stop on first
+                break;
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+function prepareDirsToBeTestedVtiBin(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			if (sf.Name == '_vti_bin') 
+			{
+				dirsVtiBin.push(sf.fullPath);
+				// stop on first
+                break;
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirsToBeTestedLayouts(list);
+prepareDirsToBeTestedVtiBin(list);
+if (dirsLayouts.length > 0) 
+    testLayoutsVulnsOnDir(dirsLayouts[0]);
+if (dirsVtiBin.length > 0) 
+    testVtiBinVulnsOnDir(dirsVtiBin[0]);

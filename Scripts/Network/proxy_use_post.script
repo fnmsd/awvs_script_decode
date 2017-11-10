@@ -1,0 +1,41 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for proxy with post enabled and no content-length required
+// test if the proxy supports post without content-length
+function TextProxyPostOnPort(port){
+	var result = false;
+	//trace("testing port " + port);
+	if(IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if(socket.IsConnected){
+		socket.send("POST http://testphp.vulnweb.com:22/ HTTP/1.0\r\n\r\n");
+		
+		res = "";
+		while( (data = socket.Receive(true)) != ""){
+			res += data;
+		}
+		//trace(res);
+		var response = data.match(/HTTP\/1\.\d\s+(200)/i);
+		if (response && response.length > 0 && response[1] == "200")	
+		{
+			//trace('success');
+			ReportItem("Open_proxy_post.xml", "The proxy server is running on TCP port " + port + ".");			
+			result = true;
+		}
+		
+		socket.Close();
+		}
+	}
+	return result;
+}
+//start
+if (TextProxyPostOnPort(3128)){
+		trace('proxy on port 3128 - open port');
+}
+if (TextProxyPostOnPort(8080)){
+		trace('proxy on port 8080 - open port');
+}

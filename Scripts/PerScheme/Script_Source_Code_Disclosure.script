@@ -1,0 +1,164 @@
+#include constants.inc;
+#include helpers.inc;
+#include error_messages_helpers.inc;
+#include crawler_responses.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+if (scheme.path.length <= 1) terminate();
+var filename = scheme.path.substr(scheme.path.lastIndexOf("/")+1);
+if (filename == "") filename = "index.php";
+{
+	function InjectionPatterns(){
+		this.plainArray = 	[];
+		this.regexArray = 	[
+							/(\<%[\s\S]*Response\.Write[\s\S]*%\>)/i,
+							/(\<\?php[\x20-\x80\x0d\x0a\x09]+)/i,
+							/(^#\!\\\/[\s\S]*\\\/perl)/i,
+							/(^#\!\/[\s\S]*?\/python)/i,
+							/(^#\!\/usr\/bin\/env\spython)/i,
+							/(^#\!\/[\s\S]*?\/perl)/i,
+							/using\sSystem;\n[\s\S]*?class\s[\s\S]*?\s?{[\s\S]*}/i													
+							];	
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();
+{ // class for testing for Source Code Disclosure
+	function classSourceCodeDisclosure(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.origValue = this.getOrigValue();
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	/**************************************************************************************************************/
+	classSourceCodeDisclosure.prototype.getOrigValue = function()
+	{	
+		var value = "";
+		
+		for (var i=0; i<this.variations.count; i++){
+			var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+			
+			// if the value is not yet set		
+			if(value == "" && varValue != "") {
+				value = varValue;			
+			}
+			if (isNaN(varValue)) this.isNumeric = false;
+			// if is not numeric and the value is set then exit
+			if (!this.isNumeric && value != "") break;
+		}
+		return value;
+	}		
+	
+	classSourceCodeDisclosure.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classSourceCodeDisclosure.prototype.alert = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("Script_source_code_disclosure.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Script source code disclosure";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Source disclosure pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classSourceCodeDisclosure.prototype.testInjection = function(value)
+	{
+		var schemeInputType = this.scheme.getInputTypeStr(this.inputIndex);
+		var schemeInputName = this.scheme.getInputName(this.inputIndex); 		
+		
+		if (schemeInputType == 'URL encoded GET' ||  schemeInputType == 'URL encoded POST') {			
+			if (!this.request(value)) return false;
+			var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.body);		
+			if (matchedText) {
+				this.alert(value, matchedText);
+				return false;			
+			}
+		}
+		
+		return true;
+	}
+	
+	
+	/**************************************************************************************************************/
+	classSourceCodeDisclosure.prototype.testForError = function()
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		var response = getCrawlerResponseForSchemeVariation(this.scheme);
+		if (response == null) {
+				if (!this.request(this.origValue)) return false;
+				response = this.lastJob.response;			
+		}
+		if (InjectionPatterns.searchOnText(response.body)) return false;	
+		
+		return true;
+	}		
+	
+	classSourceCodeDisclosure.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;				
+			this.currentVariation = i;
+			
+			// precondition
+			if (!this.testForError()) continue;	
+						
+			// self
+			if (!this.testInjection(filename)) continue;
+			// null byte
+			if (!this.testInjection(filename + "\x00")) continue;
+			// ush.it
+			if (!this.testInjection(filename + "/.")) continue;
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classSourceCodeDisclosure(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

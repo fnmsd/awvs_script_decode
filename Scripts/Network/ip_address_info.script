@@ -1,0 +1,41 @@
+#include debug_helpers.inc;
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+// get ripe data for specified IP address
+ip = ScanIP;
+//ip = "87.230.63.11";
+function GetRipeData(ip){
+	var res = "";
+	socket = new TSocket("TCP");
+	socket.Host = "whois.ripe.net";
+	socket.Port = 43;
+	socket.Timeout = 5;
+	socket.Connect();
+  if(socket.IsConnected){
+		socket.send(ip + "\r\n");
+		
+		res = "";
+		do {
+			data = socket.ReceiveLine();
+			if (data == "") {data = "\n";}
+			res += data;
+		} while (socket.LastError == 0);
+	
+		socket.Close();
+		}
+	return res;
+}
+if(!IsPrivateIpAddress(ip)){
+	
+	var res = "";
+	
+	//trace("not private");
+	
+	ripeData = GetRipeData(ip);
+	if (ripeData.length > 0)  {
+		
+		res += "Whois result for IP address " + ip + ":[break][pre]" + ripeData + "[/pre]";	
+		KBase("Whois lookup", res);
+		trace(ripeData);
+	}
+}

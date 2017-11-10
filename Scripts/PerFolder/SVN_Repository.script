@@ -1,0 +1,182 @@
+#include helpers.inc;
+#include os_detection.inc;
+#include string_helpers.inc;
+#include email_storage.inc;
+#include debug_helpers.inc;
+#include constants.inc;
+var repfiles = new Array();
+var repusers = new Array();
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, repFilesHTML, repUsersHTML, repurl)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("SVN_repository_found.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/SVN repository found";	
+	
+	ri.Details =  "SVN files found at : [dark]" + newUri + "[/dark]";		
+	if (repurl)	ri.Details += "[break][break]Repository URL: [navy]" + repurl + "[/navy][break]";		
+	else ri.Details += "[break]"
+	
+	if (repFilesHTML)	ri.Details += "[break]Repository files/directories: [break]" + repFilesHTML;		
+	else ri.Details += "[break]"
+		
+	if (repUsersHTML) ri.Details += "[break]Repository users: [break]" + repUsersHTML;		
+			
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+function getFilesFromSVN(fullPath, testURI, dir)
+{
+		files = [];
+		lines = http.response.body.split('\r');
+		if (lines.length == 1)
+		lines = http.response.body.split('\n');
+		
+		for (i=0;i<lines.length-2;i++)
+		{
+				if (lines[i] == strFromRawData(0x0c) && ((lines[i+2] == 'dir') || (lines[i+2] == 'file'))) 
+				{
+					entry_type = lines[i+2];
+					fname = lines[i+1];
+					
+					if (entry_type == 'dir') fname = fname + '/';
+					
+					//trace(entry_type);
+					//trace(fname);
+					
+					addLinkToCrawler(fname, dir);
+					
+					repfiles.push([entry_type, fname]);
+					
+					if (entry_type == 'file') addLinkToCrawler(".svn/text-base/" + fname + ".svn-base", dir);                    
+				}
+		}
+		
+		// extract usernames from SVN for webmail bruteforce
+		var regexUsername = /\d{4}-\d{2}-\d\w+:\d{2}:\d{2}\.\d\w+\n\d+\n([^\n]*)?\n/g;
+		
+		var users = new Array();		
+		var baseDomain = getBaseDomain(scanURL);
+		
+		while (m = regexUsername.exec(http.response.body))
+		{
+			if (m && m.length > 1 && m[1]) {
+				repusers.push(m[1]);
+				users.push(m[1] + '@' + baseDomain);				
+			}
+		}
+		
+		var noDuplicates = eliminateDuplicates(users);
+		repusers = eliminateDuplicates(repusers);
+		
+		if (users.length > 0)	{
+			for (j=0;j<noDuplicates.length;j++)
+				//trace(noDuplicates[j]);
+				if (noDuplicates[j])
+					addEmailAddressesForLaterUsage(noDuplicates[j]);
+		}
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir))
+{
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var testURI = dirName + ".svn/entries";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+    // if the response status is 403 forbidden try again with INDEX_ALLOCATION
+    if (!http.wasError && http.responseStatus == 403) 
+    {
+    	testURI = dirName + ".svn::$INDEX_ALLOCATION/entries";
+        
+    	http = new THTTPJob();
+    	http.url = dir.url;
+    	http.verb = 'GET';
+    	http.URI = testURI;
+    	http.execute();            
+    }
+    // check response
+	if (!http.wasError && !http.notFound){
+		var m = /\d+\s+dir\s\d+\s/.exec(http.response.body);
+		if (m) 
+        {
+						var repurl = "";
+						var urim = /((svn\+ssh|svn|http|https):\/\/.*?)\n/.exec(http.response.body);
+						if (urim) repurl = urim[1]; 						
+				
+						getFilesFromSVN(dir.fullPath, testURI, dir);
+						
+						var maxFiles = 10;
+						if (repfiles.length<maxFiles) maxFiles=repfiles.length;
+						
+						var maxUsers = 10;
+						if (repusers.length<maxUsers) maxUsers=repusers.length;
+						
+						var repfilesHTML = "";
+						
+						if (maxFiles > 0) {
+							repfilesHTML = "[ul]";
+							
+							for (var i=0;i<=maxFiles-1;i++) {
+								repfilesHTML += "[li]";
+								
+								if (repfiles[i][0] == 'dir') repfilesHTML += "<dir> ";
+								
+								repfilesHTML += repfiles[i][1];
+								
+								repfilesHTML += "[/li]";
+							}						
+							
+							if (repfiles.length > maxFiles)
+								repfilesHTML += "[li]...[/li]";
+							
+							repfilesHTML += "[/ul]";
+						}
+						
+						var repusersHTML = "";
+						
+						if (maxUsers > 0) {
+							repusersHTML = "[ul]";
+							for (var i=0;i<=maxUsers-1;i++) {
+								repusersHTML += "[li]";
+								repusersHTML += repusers[i];
+								repusersHTML += "[/li]";
+								
+							}
+							if (repusers.length > maxUsers)
+								repfilesHTML += "[li]...[/li]";
+							repusersHTML += "[/ul]";
+						}
+						
+            alert(dir.fullPath, testURI, http, repfilesHTML, repusersHTML, repurl);            
+        }
+        
+        else {
+            // look for the new Subversion format
+            var m = /^12\s/.exec(http.response.body);
+		    if (m) {
+               	var testURI = dirName + ".svn/format";
+            	var http = new THTTPJob();
+            	http.url = dir.url;
+            	http.verb = 'GET';
+            	http.URI = testURI;
+            	http.execute();
+               
+                if (!http.wasError && !http.notFound){
+                    var m = /^12\s/.exec(http.response.body);
+                    if (m) {
+                        alert(dir.fullPath, testURI, http);            
+                    }
+                }
+            }
+        }
+	}
+}

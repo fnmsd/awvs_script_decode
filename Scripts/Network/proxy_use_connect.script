@@ -1,0 +1,45 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test for CONNECT method enabled on proxies
+// test if the proxy supporting CONNECT
+function TextConnectForProxyOnPort(port){
+	var result = false;
+	if(IsPortOpen(port)){
+		//trace(port);
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port = port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if(socket.IsConnected){
+		socket.send("CONNECT www.acunetix.com:80 HTTP/1.0\r\n\r\n");
+		
+		data = socket.ReceiveBytes(35);		
+		//trace(data);		
+		
+		var response = data.match(/HTTP\/1\.0 200 Connection established/i);
+				
+		//traceObject(response);
+		if (response && response.length > 0)	
+		{
+			//trace('success');
+			ReportItem("Open_proxy_connect.xml", "The proxy server is running on TCP port " + port + ".");			
+			result = true;
+		}
+		
+		socket.Close();
+		}
+	}
+	return result;
+}
+//start
+if (TextConnectForProxyOnPort(3128)){
+		//trace('proxy on port 3128 supports CONNECT');
+}
+if (TextConnectForProxyOnPort(8080)){
+		//trace('proxy on port 8080 supports CONNECT');
+}
+if (TextConnectForProxyOnPort(80)){
+		//trace('proxy on port 80 supports CONNECT');
+}

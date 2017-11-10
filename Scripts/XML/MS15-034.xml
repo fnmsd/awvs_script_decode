@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="HTTP.sys remote code execution vulnerability" version="0.1" released="20080307" updated="20150415" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2015-1635" CWE="CWE-119" CVSSVer="2.0" CVSSScore="7.6" CVSSDescr="AV:N/AC:H/Au:N/C:C/I:C/A:C" CVSSScoreTemp="7.7" CVSSScoreEnv="7.7"/>
+		<Copyright></Copyright>
+		<Description>A remote code execution vulnerability exists in the HTTP protocol stack (HTTP.sys) that is caused when HTTP.sys improperly parses specially crafted HTTP requests. An attacker who successfully exploited this vulnerability could execute arbitrary code in the context of the System account. [break][break]
+This security update is rated Critical for all supported editions of Windows 7, Windows Server 2008 R2, Windows 8, Windows Server 2012, Windows 8.1, and Windows Server 2012 R2. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary code in the context of the System account by sending a specially crafted HTTP request to the affected system. </Impact>
+		<Recommendation>Microsoft has provided a security update for this issue. It's recommended to apply this update as soon as possible. </Recommendation>
+		<Reference database="Vulnerability in HTTP.sys Could Allow Remote Code Execution" URL="https://technet.microsoft.com/library/security/ms15-034"/></TestDescription>
+</WebApplicationTest>

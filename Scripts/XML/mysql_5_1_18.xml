@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL 5.1 to  5.1.18 multiple vulnerabilities" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2007-2691,CVE-2007-2692,CVE-2007-2693" CWE="CWE-264" CVSSVer="2.0" CVSSScore="6.0" CVSSDescr="AV:N/AC:M/Au:S/C:P/I:P/A:P/E:U/RL:OF/RC:C" CVSSScoreTemp="4.5" CVSSScoreEnv="4.4"/>
+		<Copyright></Copyright>
+		<Description>The remote database server is affected by multiple vulnerabilities. 
+[break]
+1. Evaluation of an 'IN()' predicate with a decimal-valued    argument causes a service crash.
+[break]
+2. A user can rename a table even though he does not have  DROP privileges.
+[break]
+3. If a stored routine is declared as 'SQL SECURITY INVOKER',  a user may be able to gain privileges by invoking that routine.
+[break]
+4. A user with only ALTER privileges on a partitioned table can discover information about the table that should require SELECT privileges.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>1. Evaluation of an 'IN()' predicate with a decimal-valued    argument causes a service crash.
+[break]
+2. A user can rename a table even though he does not have  DROP privileges.
+[break]
+3. If a stored routine is declared as 'SQL SECURITY INVOKER',  a user may be able to gain privileges by invoking that routine.
+[break]
+4. A user with only ALTER privileges on a partitioned table can discover information about the table that should require SELECT privileges.
+[break]</Impact>
+		<Recommendation>Upgrade to MySQL version 5.1.18 or later.</Recommendation>
+		<Reference database="Changes in MySQL 5.1.18 (08 May 2007)" URL="http://dev.mysql.com/doc/relnotes/mysql/5.1/en/news-5-1-18.html"/></TestDescription>
+</WebApplicationTest>

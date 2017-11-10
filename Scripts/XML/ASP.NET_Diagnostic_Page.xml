@@ -1,0 +1,29 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="ASP.NET diagnostic page" version="0.1" released="20080307" updated="20160202" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>An ASP.NET diagnostic page was found in this directory. Usually, such files are installed by developers to help them in testing their code or debug various parts of the application. This page discloses a lot of potentially sensitive information, such as: the list of environment variables, trace information, request details, list of server variables.[break][break]It's recommended to restrict access to this file.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The diagnostic page may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Adjust web.config to deny access to this entity without proper authorization.[break]
+
+[pre]
+&lt;location path="dump.aspx"&gt;
+  &lt;system.web&gt;
+    &lt;authorization&gt;
+      &lt;allow roles="Admin" /&gt;
+      &lt;deny users="*" /&gt;
+    &lt;/authorization&gt;
+  &lt;/system.web&gt;
+&lt;/location&gt;
+[/pre]</Recommendation>
+		<Reference database="ASP.NET Diagnostic page to dump ASP.NET and Environment configuration" URL="https://code.msdn.microsoft.com/ASPNET-Diagnostic-page-to-9a029c20"/></TestDescription>
+</WebApplicationTest>

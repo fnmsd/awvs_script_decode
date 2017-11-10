@@ -1,0 +1,75 @@
+#include constants.inc;
+#include helpers.inc;
+#include email_storage.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var files = [];
+function alert(url, lastJob, randomString) {
+    setGlobalValue("reported_insecure_cors", 1, true);
+    var vxmlFname = "Insecure_CORS_configuration.xml";
+    var ri = new TReportItem();
+    ri.LoadFromFile(vxmlFname);
+    ri.affects = url;
+    ri.alertPath = "Scripts/" + vxmlFname;
+    ri.setHttpInfo(lastJob);
+    ri.details = "Access-Control-Allow-Origin: [bold][dark]" + randomString + "[/dark][/bold][break]Access-Control-Allow-Credentials: [bold][dark]true[/dark][/bold]";
+    AddReportItem(ri);
+}
+function testForInsecureCORS(siteFile)
+{
+    // prepare HTTP request
+    lastJob = new THTTPJob();
+    lastJob.request.copyFrom(siteFile.request);
+    // prepare a random string
+    var randomString = "http://" + randStr(8) + ".com";
+    lastJob.request.addHeader("Origin",randomString, true);
+    lastJob.execute();
+    if (!lastJob.wasError && !lastJob.notFound)
+    {
+        if (
+                (
+                    lastJob.response.headerValue("Access-Control-Allow-Origin") &&
+                    lastJob.response.headerValue("Access-Control-Allow-Origin").trim() == randomString)
+                &&
+                (   lastJob.response.headerValue("Access-Control-Allow-Credentials") &&
+                    lastJob.response.headerValue("Access-Control-Allow-Credentials").trim().toLowerCase() == "true"
+                )
+            )
+            {
+                //trace("match");
+                alert(siteFile.fullPath, lastJob, randomString);
+            }
+    }
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{
+    for (var i=0;i<list.count; i++){
+        // don't test more than 10 files
+        if (files.length >= 10) break;
+        var sf = list.getFile(i);
+        // only test files with variations
+        if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile && sf.hasVariations)
+        {
+            // find first variation that is not null
+            var variation = sf.getFirstVariation();
+            while (variation == null) {
+                variation = variation.getNextSibling();
+            }
+            if (variation != null)
+                files.push(variation);
+        }
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var reported_insecure_cors = getGlobalValue("reported_insecure_cors");
+if (!reported_insecure_cors) {
+    var list = getNewFiles(loadHttp);
+    prepareFilesToBeTested(list);
+    if (files.length > 0) {
+        for (var i = 0; i < files.length; i++)
+            testForInsecureCORS(files[i]);
+    }
+}

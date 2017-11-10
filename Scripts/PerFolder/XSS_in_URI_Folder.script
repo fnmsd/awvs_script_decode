@@ -1,0 +1,28 @@
+#include constants.inc;
+#include classXSSinURI.inc;
+function testForXSS() {
+    var dir = getCurrentDirectory(); // this is the sitefile
+    var dirName = dir.fullPath;
+    if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+    var targetUrl = dir.url;
+    targetUrl.getVar = "";
+    // test with various separators
+	var tester = new classXSSinURI(targetUrl, dir, '/');
+	tester.startTesting();
+    // don't continue if found one vuln
+    if (tester.foundXSS) {tester = null; return;}
+	var tester = new classXSSinURI(targetUrl, dir, '?');
+	tester.startTesting();
+    if (tester.foundXSS) {tester = null; return;}
+	var tester = new classXSSinURI(targetUrl, dir, '?=');
+	tester.startTesting();
+    if (tester.foundXSS) {tester = null; return;}
+	var tester = new classXSSinURI(targetUrl, dir, '"');
+	tester.startTesting();
+    if (tester.foundXSS) {tester = null; return;}
+    
+    tester = null;    
+}
+// main entry point
+// **************************************************************************************
+testForXSS();

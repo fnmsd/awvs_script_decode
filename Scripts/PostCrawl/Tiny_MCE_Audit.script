@@ -1,0 +1,163 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testTMCEOnURI(uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "ajax_create_folder.php";		
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);	
+	lastJob.request.body = 'acunetix=<?php echo(md5(acunetix_test)); ?>';
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('Please give it  a name.') != -1)
+		{
+			// confirm code execution
+			lastJob = new THTTPJob();
+			lastJob.verb = "GET";
+			lastJob.url  = scanURL;	
+			lastJob.uri  = uri + "inc/data.php";
+				
+			lastJob.execute();
+			
+			if (!lastJob.wasError && !lastJob.notFound) 
+			{
+				if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('466324f7eca37dff6d1aa99f80b62d4c') != -1)
+					{
+						// successful
+						alert(uri, 'Tiny_MCE_ajax_create_folder_remote_code_execution.xml', lastJob);
+						return true;				
+					}
+			}
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function directoryExists(dir)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir;		
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && (lastJob.responseStatus == 301 || lastJob.responseStatus == 302))
+    {
+        var locationStr = lastJob.response.headerValue('location');
+		if (locationStr && locationStr.indexOf(dir + "/") != -1)  
+        {
+            // add directory to crawler
+            var root = getSiteRoot(0);
+    		addLinkToCrawler(dir, root);
+            
+            return true;				
+        }
+    }
+	else return false;
+}
+/***********************************************************************************/
+function testTMCEOnDir(dir)
+{	
+    if (directoryExists(dir))
+        if (testTMCEOnURI(dir + "/plugins/ajaxfilemanager/")) return;	
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	var foundTMCEDir = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;			
+			if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+			if (sf.Name.indexOf("tiny_mce")!=-1 || sf.Name.indexOf("tinymce")!=-1 || sf.Name.indexOf("TinyMCE")!=-1  || sf.Name.indexOf("Tiny_mce")!=-1 || sf.Name.indexOf("tinyMCE")!=-1) 
+			{
+				foundTMCEDir = true;		
+				dirs.push(dirName);
+			}				
+		}	
+	}	
+	
+	// if nothing is found, add by default these directories
+	if (!foundTMCEDir)
+	{
+		var tested_common_dirs = getGlobalValue("tinymce_tested_common_dirs");
+		if (!tested_common_dirs)
+    	{
+	    	SetGlobalValue("tinymce_tested_common_dirs", 1, true);
+			
+			dirs.push("/tiny_mce"); 
+			dirs.push("/tinymce"); 
+			dirs.push("/js/tiny_mce");         
+			dirs.push("/js/tinymce");         
+			dirs.push("/www/js/tiny_mce");         
+			dirs.push("/www/js/tinymce");         
+			dirs.push("/plugins/tiny_mce");         
+			dirs.push("/plugins/tinymce");         
+			dirs.push("/lib/tiny_mce");         
+			dirs.push("/lib/tinymce");         
+			dirs.push("/jscripts/tiny_mce");         
+			dirs.push("/jscripts/tinymce");         
+			dirs.push("/scripts/tiny_mce");         
+			dirs.push("/scripts/tinymce");         
+			dirs.push("/wp-includes/js/tiny_mce");         
+			dirs.push("/includes/js/tiny_mce");         
+			dirs.push("/include/javascript/tiny_mce");         
+			dirs.push("/javascript/tiny_mce");         
+			dirs.push("/libraries/tiny_mce");         
+			dirs.push("/libraries/tinymce");         
+			dirs.push("/inc/tiny_mce"); 
+			dirs.push("/inc/tinymce"); 
+			dirs.push("/includes/tiny_mce"); 
+			dirs.push("/includes/tinymce"); 
+			dirs.push("/editor/tiny_mce"); 
+			dirs.push("/editor/tinymce"); 
+			dirs.push("/module/tiny_mce"); 
+			dirs.push("/module/tinymce"); 
+			dirs.push("/admin/tiny_mce"); 
+			dirs.push("/admin/tinymce"); 
+			dirs.push("/admin/js/tiny_mce"); 
+			dirs.push("/admin/js/tinymce"); 
+			dirs.push("/tinymce/jscripts/tiny_mce");         
+			dirs.push("/zp-core/zp-extensions/tiny_mce");
+		}
+ 	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+if (!directoryExists("/" + randStr(8)))     
+{
+	for (var i=0; i<dirs.length; i++)
+	{
+		testTMCEOnDir(dirs[i]);
+	}
+}	

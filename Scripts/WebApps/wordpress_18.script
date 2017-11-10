@@ -1,0 +1,35 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function test_url(dir, path)
+{
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'wp-admin/';
+	
+	http.execute();
+	
+	if (!http.wasError && http.responseStatus == 302){		
+	
+		var locationStr = http.response.headerValue('location');	
+	    if (locationStr && locationStr.indexOf("/wp-login.php") != -1) {
+	    	alert("WordPress_Admin_Accessible_Without_HTTP_Authentication.xml", http, http.uri);
+	    }
+	}
+}
+var dir = getCurrentDirectory();
+test_url(dir, dir.fullPath);

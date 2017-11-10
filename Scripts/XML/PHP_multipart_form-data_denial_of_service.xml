@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="PHP multipart/form-data denial of service" version="0.1" released="20091123" updated="20140304" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="denial_of_service,missing_update" SendCookies="true" HasPrecondition="false" SendAuth="true" ValidateSession="false" CVE="CVE-2009-4017" CWE="CWE-400" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="4.2" CVSSScoreEnv="4.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"></WASPDescription>
+		<Reference database="PHP multipart/form-data denial of service" URL="http://www.acunetix.com/blog/websecuritynews/php-multipartform-data-denial-of-service/"></Reference>
+		<Reference database="PHP 5.3.1 Release Announcement" URL="http://www.php.net/releases/5_3_1.php"></Reference>
+		<Reference database="PHP Homepage" URL="http://www.php.net"></Reference>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]When you send a POST request to a PHP script with the content-type of [bold]multipart/form-data[/bold] and include a list of files in that request, PHP will create a temporary file for each file from the request. PHP will create those files regardless if the script can handle file uploading or not. After the script was executed, the temporary files will be deleted.
+The problem is that you can include a very large number of files in the request. PHP will need to create those files before the script is executed and delete them afterwards. [break][break]
+The denial of service condition appears when you create a bunch of requests, each containing a large number (15000+) of files.
+When you send these requests to the web server, the web server collapses and stops responding because it has to process (create &amp; delete) an insane number of files in a very short period of time.
+Any website that runs PHP and where file uploading is enabled (which is the default configuration) is vulnerable. You don't need to have a file upload script.[break][break][navy]Affected PHP versions (up to 5.3.0).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>Workarounds: [break]
+
+[bold]1. Disable file uploads[/bold][break]
+If you don't need file uploading, you can disable this feature from php.ini[break]
+file_uploads = Off[break]
+
+[bold]2. Install PHP 5.3.1[/bold][break]
+
+If you cannot disable file uploading on your website, it's recommended to install the latest version of PHP. PHP 5.3.1 includes a patch for this problem:[break]
+- Added [bold]max_file_uploads[/bold] INI directive, which can be set to limit the number of file uploads per-request to 20 by default, to prevent possible DOS via temporary file exhaustion.[break]
+
+[bold]3. Install Suhosin PHP extension[/bold][break]
+
+The Suhosin PHP extension has an option named [bold]suhosin.upload.max_uploads[/bold]. This option defines the maximum number of files that may be uploaded with one request and by default is set to 25. Suhosin PHP extension should not be confused with the Suhosin Patch which does not protect against this attack.[break]</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

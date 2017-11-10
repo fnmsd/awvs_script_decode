@@ -1,0 +1,49 @@
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	if (matchedText) 
+		ri.Details =  "Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+		
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function ExploitDrupal7InstallerVuln(dir) {
+    var worker = getHTTPWorker();
+    var payloads = new TList();
+    for (var j=1;j<=10;j++)  {
+    	var http = new THTTPJob();	
+    	http.url = dir.url;
+    	http.verb = 'POST';
+        http.uri = dir.fullPath + '/install.php';
+		http.connectionKeepAlive = false;
+    	payloads.add(http);
+    }
+    worker.executeRequests(payloads);
+    for (var j=0; j<payloads.count; j++) {	
+    	if (!payloads.item(j).wasError) {   
+    			var job = payloads.item(j);
+    			if (job && job.response.body.indexOf(matchString) != -1) {
+						// got it
+						alert(http.uri, "drupal_7_installer_vuln.xml", job, matchString);
+    				return true;
+    			}
+					
+					if (job && job.response.body.indexOf("Drupal already installed") == -1) {
+						// invalid response - we should receive "Drupal already installed" in the response.
+						// don't continue (install.php was deleted or the application is not really Drupal).
+						return true;
+					}
+    	}
+    }
+    return false;
+}
+var matchString = "Select an installation profile";
+var dir = getCurrentDirectory();
+// try to exploit Drupal 7 installer vulnerability
+for (var i=1; i<=10; i++) 
+    if (ExploitDrupal7InstallerVuln(dir)) break;

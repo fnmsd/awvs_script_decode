@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft IIS 5.1 directory authentication bypass " version="0.1" released="20071212" updated="20140306" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" HasPrecondition="false" AlertTags="authentication_bypass,missing_update" SendCookies="false" SendAuth="false" ValidateSession="false" CVE="CVE-2010-2731" CWE="CWE-287" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>An elevation of privilege vulnerability exists in IIS version 5.1. By adding [bold]:$i30:$INDEX_ALLOCATION[/bold] to the directory name it's possible to bypass the directory authentication. An attacker could exploit this vulnerability by creating a specially crafted anonymous HTTP request to gain access to a location that typically requires authentication.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker could exploit this vulnerability by creating a specially crafted anonymous HTTP request to gain access to a location that typically requires authentication.</Impact>
+		<Recommendation>Upgrade to IIS 6 or IIS 7. These versions are not affected by this vulnerability. In these versions, IIS does not accept colon (:) character in the URL.</Recommendation>
+		<Reference database="IIS5.1 Directory Authentication Bypass" URL="http://0me.me/demo/IIS/IIS5.1_Authentication_Bypass.pdf"></Reference>
+		<Reference database="IIS5.1 Directory Authentication Bypass (2)" URL="http://soroush.secproject.com/blog/2010/07/iis5-1-directory-authentication-bypass-by-using-i30index_allocation/"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>PROPFIND</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.1</Version>
+					<Header>
+						<Name encoding="text">Depth</Name>
+						<Value encoding="text">1</Value>
+					</Header>
+					<Header>
+						<Name encoding="text">Content-type</Name>
+						<Value encoding="text">text/xml</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">&lt;?xml version="1.0"?&gt;&lt;a:propfind xmlns:a="DAV:"&gt;&lt;a:prop&gt;&lt;a:getcontenttype/&gt;&lt;/a:prop&gt;&lt;a:prop&gt;&lt;a:getcontentlength/&gt;&lt;/a:prop&gt;&lt;/a:propfind&gt;</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>Full response body</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>207</Value>
+					<Compare variable="${FullBody}" test="cont">
+						<Value>&lt;a:multistatus</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>&lt;a:response&gt;</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>207</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="path" type="string">
+		<Description>script path</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Username" type="string">
+		<Description>list of users</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="Password" type="string">
+		<Description>list of passwords</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

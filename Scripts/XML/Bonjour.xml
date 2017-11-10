@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Bonjour service running" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>A Bonjour service (also known as mDNS or ZeroConf) is running on this host. Bonjour is a general method to discover services on a local area network. It is widely used throughout Mac OS X and allows users to set up a network without any configuration.This protocol allows attackers to gather information from the remote host, such as its operating system type and version, the hostname, and the list of services it is running.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it.</Recommendation>
+		<Reference database="Wikipedia Bonjour" URL="http://en.wikipedia.org/wiki/Bonjour_(software)"/>
+		<Reference database="Multicast DNS" URL="http://www.multicastdns.org/"/>
+		<Reference database="Zero configuration networking" URL="http://en.wikipedia.org/wiki/Zeroconf"/>
+	</TestDescription>
+</WebApplicationTest>

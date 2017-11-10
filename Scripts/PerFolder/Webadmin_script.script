@@ -1,0 +1,32 @@
+#include helpers.inc;
+#include os_detection.inc;
+#include constants.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("webadmin_script.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/webadmin.php";	
+	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+	if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200)  {
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var testURI = dirName + "webadmin.php" ;			
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+	
+	if (!http.wasError && !http.notFound)	
+	if (http.response.body.indexOf("<title>webadmin.php</title>") != -1) {
+		alert(testURI, http);		
+	}
+}

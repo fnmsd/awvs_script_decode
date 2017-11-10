@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MongoDB HTTP status interface" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>The HTTP status interface provides a web-based interface that includes a variety of operational data, logs, and status reports regarding the mongod or mongos instance. The HTTP interface is always available on the port numbered 1000 greater than the primary mongod port. By default this is 28017, but is indirectly set using the port option which allows you to configure the primary mongod port.
+[break][break]
+Without the rest setting, this interface is entirely read-only, and limited in scope; nevertheless, this interface may represent an exposure. To disable the HTTP interface, set the nohttpinterface run time option or the --nohttpinterface command line option.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>To disable the HTTP interface, set the nohttpinterface run time option or the --nohttpinterface command line option.</Recommendation>
+		<Reference database="Security Practices and Management" URL="http://docs.mongodb.org/manual/administration/security/"/></TestDescription>
+</WebApplicationTest>

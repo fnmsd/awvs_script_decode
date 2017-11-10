@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Code execution" version="0.1" released="20040327" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="code_execution" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Reference database="Security Focus - Penetration Testing for Web Applications (Part Two)" URL="http://www.symantec.com/connect/articles/penetration-testing-web-applications-part-two"></Reference>
+		<Reference database="OWASP PHP Top 5" URL="http://www.owasp.org/index.php/PHP_Top_5"></Reference>
+		<Reference database="Code Execution Security Vulnerability" URL="http://www.acunetix.com/vulnerabilities/code-execution/"></Reference>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to code execution attacks.[break][break]Code injection vulnerabilities occur where the output or content served from a Web application can be manipulated in such a way that it triggers server-side code execution. In some poorly written Web applications that allow users to modify server-side files (such as by posting to a message board or guestbook) it is sometimes possible to inject code in the scripting language of the application itself.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>A malicious user may execute arbitrary system commands with the permissions of the web server.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input.</Recommendation>
+	</TestDescription>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all code execution tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>List of cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>List of header combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Sys_Command;param.*=ACUSTART'"^|\;&lt;&gt;ACUEND</Value>
+				</Compare>
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>isShellCodeInjection=1</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+</WebApplicationTest>

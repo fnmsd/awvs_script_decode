@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="PHP allow_url_fopen enabled" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The PHP configuration directive allow_url_fopen is enabled. When enabled, this directive allows data retrieval from remote locations (web site or FTP server). A large number of code injection vulnerabilities reported in PHP-based web applications are caused by the combination of enabling allow_url_fopen and bad input filtering. [break][break]allow_url_fopen is enabled by default.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Application dependant - possible remote file inclusion.</Impact>
+		<Recommendation>You can disable allow_url_fopen from php.ini or .htaccess.[break][break][bold]php.ini[/bold][break]allow_url_fopen = 'off'[break][break][bold].htaccess[/bold][break]php_flag  allow_url_fopen off[break]</Recommendation>
+		<Reference database="Runtime Configuration" URL="http://www.php.net/manual/en/filesystem.configuration.php"></Reference>
+	</TestDescription>
+</WebApplicationTest>

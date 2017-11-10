@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WebLogic Server Side Request Forgery" version="0.1" released="20080307" updated="20150401" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="ssrf,xss" CVE="CVE-2014-4241,CVE-2014-4210,CVE-2014-4242" CWE="CWE-918" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="4.0" CVSS3Descr="CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Universal Description Discovery and Integration (UDDI) application is publicly available on this WebLogic server.  The SearchPublicRegistries.jsp page can be abused by unauthenticated attackers to cause the WebLogic web server to connect to an arbitrary TCP port of an arbitrary host. Responses returned are fairly verbose and can be used to infer whether a service is listening on the port specified. This vulnerability affects Oracle Fusion Middleware 10.0.2, 10.3.6.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can force the WebLogic web server to connect to an arbitrary TCP port of an arbitrary host.</Impact>
+		<Recommendation>Apply the Oracle Critical Patch Update Advisory from July 2014 or restrict access to the UDDI application.</Recommendation>
+		<Reference database="WebLogic SSRF And XSS (CVE-2014-4241, CVE-2014-4210, CVE-2014-4242)" URL="http://blog.gdssecurity.com/labs/2015/3/30/weblogic-ssrf-and-xss-cve-2014-4241-cve-2014-4210-cve-2014-4.html"></Reference>
+		<Reference database="Oracle Critical Patch Update Advisory - July 2014" URL="http://www.oracle.com/technetwork/topics/security/cpujul2014-1972956.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

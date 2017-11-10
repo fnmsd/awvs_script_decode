@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="BREACH attack" version="0.1" released="20080307" updated="20140923" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="CVE-2013-3587" CWE="CWE-310" CVSSVer="2.0" CVSSScore="2.6" CVSSDescr="AV:N/AC:H/Au:N/C:P/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This web application is potentially vulnerable to the BREACH attack.[break][break]
+
+An attacker with the ability to: [break]
+[ul]
+ [li]Inject partial chosen plaintext into a victim's requests[/li]
+ [li]Measure the size of encrypted traffic[/li]
+[/ul]
+can leverage information leaked by compression to recover targeted parts of the plaintext. [break][break]
+
+BREACH (Browser Reconnaissance &amp; Exfiltration via Adaptive Compression of Hypertext) is a category of vulnerabilities and not a specific instance affecting a specific piece of software. To be vulnerable, a web application must: [break][break]
+[ul]
+  [li] Be served from a server that uses HTTP-level compression   [/li]
+  [li] Reflect user-input in HTTP response bodies[/li]
+  [li] Reflect a secret (such as a CSRF token) in HTTP response bodies[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can leverage information leaked by compression to recover targeted parts of the plaintext.</Impact>
+		<Recommendation>The mitigations are ordered by effectiveness (not by their practicality - as this may differ from one application to another). [break][break]
+[ul]
+  [li] Disabling HTTP compression[/li]
+  [li] Separating secrets from user input[/li]
+  [li] Randomizing secrets per request[/li]
+  [li] Masking secrets (effectively randomizing by XORing with a random secret per request)[/li]
+  [li] Protecting vulnerable pages with CSRF[/li]
+  [li] Length hiding (by adding random number of bytes to the responses)[/li]
+  [li] Rate-limiting the requests[/li]
+[/ul]</Recommendation>
+		<Reference database="BREACH attack" URL="http://breachattack.com/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

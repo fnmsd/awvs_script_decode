@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+  <TestDescription name="Name" version="0.1" released="20080307" updated="20080617" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+    <WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags=""/>
+    <Copyright></Copyright>
+    <Description>Description</Description>
+    <ApplicableTo>
+      <Platform>
+        <OS>*</OS>
+        <Arch>*</Arch>
+      </Platform>
+      <WebServer>*</WebServer>
+      <ApplicationServer>*</ApplicationServer>
+    </ApplicableTo>
+    <Impact>impact</Impact>
+    <Recommendation>recommendation</Recommendation>
+  </TestDescription>
+</WebApplicationTest>

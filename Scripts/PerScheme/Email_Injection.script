@@ -1,0 +1,159 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var marker = "ACUSTART\r\n\x08\nACUEND";
+{ // class for testing for Email Injection (AcuSensor)
+	function classEmailInjection(scheme, inputIndex){
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+		this.injectionValidator = new TInjectionValidator(ACUINJSTART, ACUINJEND);
+	}
+	
+	{
+		// *********************************************************************************************
+		// object used for injection test result
+		// *********************************************************************************************	
+		function InjectionResult(adItem, to, subject, addHeaders){
+			this.adItem = adItem;
+			this.to = to;
+			this.subject = subject;
+			this.addHeaders = addHeaders;			
+		}
+	}	
+	
+	// *********************************************************************************************
+	// function to detect if AcuSensor data indicates an Email Injection vulnerability
+	// params:  
+	//	ad => AspectData object
+	// returns: 
+	//	an AspectDataItem if true / False
+	// *********************************************************************************************
+	 classEmailInjection.prototype.isMailInjection = function(ad) {
+		var adItems = ad.getItemsWithKey("Send_Mail");
+		
+		if (adItems && adItems.count) 
+		for (var i=0; i<adItems.count; i++)
+		{		
+			var aditem = adItems.item(i);
+			// check aspect data for signs of vulnerability
+			if (aditem) {
+				var stringList = aditem.getDataList();
+				
+				var to = "";
+				var subject = "";
+				var addHeaders = "";
+								
+				if (stringList.count>0) to=stringList.item(0);
+				if (stringList.count>1) subject=stringList.item(1);
+				if (stringList.count>3) addHeaders=stringList.item(3);
+				
+				if (to.indexOf(marker)!=-1 || subject.indexOf(marker)!=-1 || addHeaders.indexOf(marker)!=-1) 
+				{				
+					return new InjectionResult(aditem, to, subject, addHeaders);						
+				}				
+			} 		
+		}
+		
+		return false;
+	}
+	// *********************************************************************************************
+	// set a certain value to the current variation and makes an HTTP request
+	// *********************************************************************************************	
+	classEmailInjection.prototype.request = function(value, testId)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		if (scheme.targetHasAcuSensor) this.lastJob.addAspectHeaders();
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	// *********************************************************************************************
+	// issue a report item for the scanner
+	// *********************************************************************************************	
+	classEmailInjection.prototype.alert = function(testValue, sourceFile, sourceLine, additionalInfo, acuSensor)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("Email_Injection.xml");
+		if (acuSensor) ri.name = ri.name + " (verified)";
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Email Injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.sensorSourceFile = sourceFile;
+		ri.sensorSourceLine = sourceLine;
+		ri.sensorAdditional = additionalInfo;		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		AddReportItem(ri);	
+	}		
+	
+	// *********************************************************************************************
+	// main function to test the vulnerability
+	// *********************************************************************************************		
+	classEmailInjection.prototype.testInjection = function(value, testId)
+	{
+		if (!this.request(value, testId)) return false;
+		// if AcuSensor is enabled
+		if (this.lastJob.hasAspectData) {
+			// get aspect data information
+			var ad = this.lastJob.getAspectData(); 
+			
+			var injRes = this.isMailInjection(ad, this.injectionValidator);
+			
+			if (injRes && injRes.adItem) {				
+				var additional = "To: " + injRes.to + "\r\n";
+				if (injRes.subject)
+					additional = additional + "Subject: " + injRes.subject + "\r\n";
+				if (injRes.addHeaders)
+					additional = additional + "Additional Headers: " + injRes.addHeaders + "\r\n";
+					
+				if (additional)	additional = additional + injRes.adItem.additional	
+				else additional = injRes.adItem.additional;
+					
+				this.alert(value, injRes.adItem.FileName, injRes.adItem.lineNumber, additional, 1);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	// *********************************************************************************************
+	// iterate and test all variations
+	// *********************************************************************************************	
+	classEmailInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;			
+			
+			this.currentVariation = i;
+			if (this.testInjection(marker)) continue;
+		}
+	}	
+}
+// main entry point 
+if (scheme.targetHasAcuSensor) 
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classEmailInjection(scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}

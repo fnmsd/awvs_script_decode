@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="HTTP verb tampering" version="0.1" released="20080612" updated="20140306" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="authentication_bypass,configuration" HasPrecondition="false" SendAuth="false" ValidateSession="false" CVE="" CWE="CWE-285" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>By manipulating the HTTP verb it was possible to bypass the authorization on this directory. The scanner sent a request with POST HTTP verb and managed to bypass the authorization. An application is vulnerable to HTTP Verb tampering if the following conditions hold: [break]
+[ul]
+[li]it uses a security control that lists HTTP verbs[/li]
+[li]the security control fails to block verbs that are not listed[/li]
+[li]it has GET functionality that is not idempotent or will execute with an arbitrary HTTP verb  [/li]
+[/ul]
+[break]
+For example, Apache with .htaccess is vulnerable if HTTP verbs are specified using the LIMIT keyword:[break]
+[pre]
+&lt;Limit GET&gt;
+require valid-user
+&lt;/Limit&gt;
+[/pre]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker can bypass web authentication and authorization.</Impact>
+		<Recommendation>In the case of Apache + .htaccess, don't use HTTP verb restrictions or use LimitExcept. [break]
+Check references for more information on how to fix this problem on other platforms.</Recommendation>
+		<Reference database="Your Website's .htaccess Is Vulnerable To HTTP Verb Tampering" URL="http://www.websitedefender.com/web-security/what-is-an-htaccess-file/"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>401</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>401</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>POST</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+				</Compare>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>301</Value>
+				</Compare>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests</Description>
+		<Item encoding="Text">${file}${test}</Item>
+	</Variable>
+</WebApplicationTest>

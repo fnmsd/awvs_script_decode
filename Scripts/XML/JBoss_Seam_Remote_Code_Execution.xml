@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="JBoss Seam framework remote code execution" version="0.1" released="20080307" updated="20150421" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2010-1871" CWE="CWE-94" CVSSVer="2.0" CVSSScore="9.4" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:C/A:C" CVSSScoreTemp="9.5" CVSSScoreEnv="9.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The JBoss Seam Framework is an application framework for building web
+applications in Java.
+
+An input sanitization flaw was found in the way JBoss Seam processed
+certain parametrized JBoss Expression Language (EL) expressions. A remote
+attacker could use this flaw to execute arbitrary code via a URL,
+containing appended, specially-crafted expression language parameters,
+provided to certain applications based on the JBoss Seam framework.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Apply the jboss-seam2 security update or upgrade to the latest version of JBoss Seam framework.</Recommendation>
+		<Reference database="JBoss Seam framework remote code execution" URL="http://blog.o0o.nu/2010/07/cve-2010-1871-jboss-seam-framework.html"></Reference>
+		<Reference database="jboss-seam2 security update" URL="https://rhn.redhat.com/errata/RHSA-2010-0564.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

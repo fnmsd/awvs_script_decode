@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="vBulletin 5 CONNECT remote code execution" version="0.1" released="20080307" updated="20151104" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="9.4" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C" CVSSScoreTemp="7.8" CVSSScoreEnv="7.8" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>vBulletin (vB) is a proprietary Internet forum software package developed by vBulletin Solutions, Inc. A vulnerability exists in vBulletin 5 CONNECT (versions 5.1.19 and bellow) that may allow an attacker to execute arbitrary PHP code via an unsafe unserialize() call.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious user may execute arbitrary PHP code.</Impact>
+		<Recommendation>Upgrade to the latest version of vBulletin.</Recommendation>
+		<Reference database="vBulletin 5 PreAuth RCE writeup" URL="http://pastie.org/pastes/10527766/text?key=wq1hgkcj4afb9ipqzllsq"></Reference>
+		<Reference database="Security Patch Release for vBulletin 5 Connect (Versions 5.1.4, through 5.1.9)" URL="http://www.vbulletin.com/forum/forum/vbulletin-announcements/vbulletin-announcements_aa/4332166-security-patch-release-for-vbulletin-5-connect-versions-5-1-4-through-5-1-9"></Reference>
+	</TestDescription>
+</WebApplicationTest>

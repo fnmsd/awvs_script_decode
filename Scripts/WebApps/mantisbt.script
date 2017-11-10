@@ -1,0 +1,59 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+var lastJob = false;
+// **************************************************************************************							 
+function alert(uri, vxml, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;
+    if (matchedText)
+        ri.Details =  "Database username: [dark][bold]" + matchedText + "[/bold][/dark]";
+    ri.setHttpInfo(lastJob);
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_Improper_Access_Control(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+    
+    if (uri == '/') lastJob.uri  = uri + 'admin/install.php?install=4';
+    else lastJob.uri  = uri + '/admin/install.php?install=4';
+    
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && lastJob.responseStatus == 200 && lastJob.response.body.indexOf('<input name="db_username" type="hidden" value=') != -1)
+	{
+        var regex = /<input name="db_username" type="hidden" value="(\w+)"><\/input>/;
+        var m = regex.exec(lastJob.response.body);
+        if (m && m[1]) {
+            var dbUsername = m[1];
+            // trace(dbUsername);
+            // successful
+            alert(lastJob.uri, 'MantisBT_CVE-2014-9572.xml', dbUsername);
+            return true;
+        }
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+	var alreadyReportedWebApplication = getGlobalValue("detectedAppMantisBT");
+	if (!alreadyReportedWebApplication)
+	{
+	    setGlobalValue("detectedAppMantisBT", 1, true);
+	    KBase("Mantis Bug Tracker web application", "Mantis Bug Tracker web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	}
+	test_Improper_Access_Control(dir, dir.fullPath);
+}

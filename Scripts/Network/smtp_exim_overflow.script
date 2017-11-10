@@ -1,0 +1,15 @@
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+#require smtp_commands.script;
+var objSmtpInfo = GetGlobalValue("smtp/info");
+if((objSmtpInfo != null) && (typeof objSmtpInfo == "object") && (objSmtpInfo.length > 0))
+{
+	for(var i = 0; i < objSmtpInfo.length; i++)
+	{
+		if(objSmtpInfo[0].banner.match(/220.*Exim ([0-3]\.|4\.([0-9][^0-9]|[0-3][0-9]|4[0-3][^0-9]))/))
+		{
+			trace("Vulnerable SMTP server running on port: " + objSmtpInfo[i].port);
+			ReportItem("smtp_exim_overflow.xml", "SMTP server running on port: " + objSmtpInfo[i].port);
+		}
+	}
+}

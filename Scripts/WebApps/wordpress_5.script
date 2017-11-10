@@ -1,0 +1,223 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#noretest;
+var lastJob = null;
+var worker = getHTTPWorker();
+var payloads = new TList();
+var hosts =  Array(
+		"192.168.0.1",
+		"192.168.1.1",
+    "192.168.2.1",
+    "172.16.0.1",
+    "10.0.0.1",        
+    "svn",
+    "subversion",
+    "wiki",
+    "dev",
+    "development",
+    "test",
+		"redmine",
+		"mysql",
+    "git",
+    "admin",
+    "home",
+    "ftp",
+    "internal",
+    "intranet",
+    "billing",
+    "stage",
+    "staging",
+    "bug",
+    "bugs",
+    "bugzilla",
+    "cvs",
+    "webmail",
+    "sharepoint",
+    "db",
+    "erp",
+    "customer",
+    "customers"
+);
+var ports = Array(
+	"80",
+	"443",
+    "22"
+);
+var pingback_ping = '<?xml version="1.0" encoding="iso-8859-1"?>' + CRLF() +
+    '<methodCall>' + CRLF() +
+    '<methodName>pingback.ping</methodName>'  + CRLF() +
+    '<params>'  + CRLF() +
+    '<param><value><string>{target}</string></value></param>'  + CRLF() +
+    '<param><value><string>{blogPost}</string></value>'  + CRLF() +
+    '</param>'  + CRLF() +
+    '</params>'  + CRLF() +
+    '</methodCall>';
+var xmlrpc_getusersblogs = '<?xml version="1.0" encoding="iso-8859-1"?>' + CRLF() +
+    '<methodCall>' + CRLF() +
+    '<methodName>wp.getUsersBlogs</methodName>'  + CRLF() +
+    '<params>'  + CRLF() +
+    '<param><value><string>admin</string></value></param>'  + CRLF() +
+    '<param><value><string>89475895437895437534987</string></value>'  + CRLF() +
+    '</param>'  + CRLF() +
+    '</params>'  + CRLF() +
+    '</methodCall>';
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+	lastJob.autoRedirect = true;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml, details, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.setHttpInfo(job);
+	if (details)
+			ri.details = details;
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function getBlogPostUrl(dir){
+    rssURI = dir.fullPath + '/?feed=rss2';
+    if (request(dir, rssURI)) {
+			var linkRegex = /<title>[^>]+?<\/title>\s+<link>([^>]+?)<\/link>/;				
+			
+			var m = linkRegex.exec(lastJob.response.body);
+			if (m && m.length >= 1) return m[1];		
+    }
+		
+    return false;
+}
+// **************************************************************************************							 
+function checkInternalHosts(dir, bpurl){
+    xmlrpcuri = dir.fullPath + '/xmlrpc.php';
+    
+    var targetUrls = new TList();
+    
+    for (var i=0; i < hosts.length; i++) {
+        for (var j=0; j < ports.length; j++) {        
+            host = hosts[i];
+            port = ports[j];
+            
+            if (port == '443') scheme = 'https'; 
+                else scheme = 'http';
+                
+            targetUrl = scheme + '://' + host + ':' + port + "/";
+            targetUrls.add(targetUrl);
+                        
+        	var http = new THTTPJob();
+        	http.url = dir.url;
+        	http.verb = 'POST';
+        	http.uri = xmlrpcuri;
+        	http.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+        	http.request.body =  pingback_ping.replace('{target}', targetUrl).replace('{blogPost}', bpurl); 
+            
+            payloads.add(http);
+        }
+    }
+    
+    //trace('execute requests');
+    worker.executeRequests(payloads);
+    
+	report = "The following hosts+ports were found in the internal network:[break][break][ul]";		
+		
+    var found = false;
+    for (var i=0; i<payloads.count; i++) {
+    	if (!payloads.item(i).wasError) {      
+            var respRegex = /<value><int>(\d+)<\/int><\/value>/;
+    		var m = respRegex.exec(payloads.item(i).response.body);            
+    		if (m && m.length >= 1) {
+                if (m[1] && m[1] != 16 && m[1] != 0){
+                    hostportstr = targetUrls.item(i).replace('http://', '').replace('https://', '').replace("/", "");
+                    hostportstr = "[bold]" + hostportstr.replace(':', '[/bold] port ');
+                    
+                    report = report + "[li]" + hostportstr + "[/li]";
+    			    //trace(targetUrls.item(i));
+                    lastJob = payloads.item(i);
+                    found = true;
+				}
+            }            
+        }
+    }
+    
+    if (found) {
+        report = report + "[/ul]";		
+        alert(xmlrpcuri, 'Wordpress_pingback_scanner.xml', report, lastJob);        
+    }
+}
+// **************************************************************************************							 
+function testForXMLRPCbruteforce(dir){
+    var xmlrpcuri = dir.fullPath + '/xmlrpc.php';
+    
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = xmlrpcuri;
+	http.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	http.request.body =  xmlrpc_getusersblogs; 
+	
+	http.execute();
+	var pattern = "<value><string>Incorrect username or password.</string></value>";
+	if (!http.wasError && http.response.body.indexOf(pattern) != -1){
+		details = "Pattern found: [dark]" + pattern + "[/dark]";
+		alert(xmlrpcuri, 'WordPress_XMLRPC_Bruteforce.xml', details, http);        
+	}
+}
+// **************************************************************************************							 
+function GHOSTRequest(dir, payload){
+    var xmlrpcuri = dir.fullPath + '/xmlrpc.php';
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.verb = 'POST';
+	lastJob.uri = xmlrpcuri;
+	
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	lastJob.request.body =  pingback_ping.replace('{target}', payload).replace('{blogPost}', payload); 
+    
+	lastJob.execute();	
+}
+// **************************************************************************************							 
+function testForGHOST(dir){
+	var vulnpayload = "http://" + "0".repeat(2500) + "/index.php";
+	var normalpayload = "http://" + "0".repeat(5) + "/index.php";;
+	var vulnerable = false;
+	// make a normal request first
+	GHOSTRequest(dir, normalpayload);
+	if (!lastJob.wasError && lastJob.responseStatus==200 && lastJob.response.body.indexOf("<methodResponse>") != -1) {
+		// got a normal response from a normal request
+		GHOSTRequest(dir, vulnpayload);
+		if (lastJob.wasError && lastJob.errorMessage.indexOf("000F000C") != -1) {
+			vulnerable = true;
+		}
+		else {
+			if (!lastJob.wasError && lastJob.responseStatus==500) {
+				vulnerable = true;
+			}			
+		}
+		
+		if (vulnerable){
+			// issue the alert
+			alert(dir.fullPath + '/xmlrpc.php', 'GHOST_vulnerability.xml', "", lastJob);
+		}
+	}
+}
+// main()
+var dir = getCurrentDirectory();
+testForGHOST(dir);
+testForXMLRPCbruteforce(dir);
+bpurl = getBlogPostUrl(dir);
+if (bpurl) {
+    checkInternalHosts(dir, bpurl);     
+}

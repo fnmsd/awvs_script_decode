@@ -1,0 +1,28 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="vBulletin customer number disclosure" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2013-6129" CWE="CWE-264" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Copyright></Copyright>
+		<Description>vBulletin versions 4.1+ and 5+ are leaking the customer number via the /install/upgrade.php (/core/install/upgrade.php) scripts. [break][break]
+
+Quote from the vBulletin website: "A potential exploit vector has been found in the vBulletin 4.1+ and 5+ installation directories. Our developers are investigating this issue at this time. If deemed necessary we will release the necessary patches. In order to prevent this issue on your vBulletin sites, it is recommended that you delete the install directory for your installation. "</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read the vBulletin customer number.</Impact>
+		<Recommendation>The directories that should be deleted are: 
+[ul]
+[li]4.X - /install/[/li]
+[li]5.X - /core/install[/li]
+[/ul][break]
+
+After deleting these directories your sites can not be affected by the issues that we're currently investigating.
+
+vBulletin 3.X and pre-4.1 would not be affected by these issues. However if you want the best security precautions, you can delete your install directory as well.</Recommendation>
+		<Reference database="Potential vBulletin Exploit (vBulletin 4.1+, vBulletin 5+)" URL="http://www.vbulletin.com/forum/forum/vbulletin-announcements/vbulletin-announcements_aa/3991423-potential-vbulletin-exploit-vbulletin-4-1-vbulletin-5"/><Reference database="Dangerous vBulletin exploit in the wild" URL="http://www.net-security.org/secworld.php?id=15743"/></TestDescription>
+</WebApplicationTest>

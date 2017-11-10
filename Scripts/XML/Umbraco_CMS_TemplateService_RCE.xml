@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Umbraco CMS TemplateService remote code execution" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2013-4793" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>MWR Labs have discovered a vulnerability in Umbraco CMS, which would allow an unauthenticated attacker to execute arbitrary ASP.Net code on the affected server. The vulnerability exists in the TemplateService component, which is exposed by default via a SOAP-based web service. [break][break]
+The vulnerability is caused due to the update() function not checking that the user has authenticated before processing the request. The functionality of the update() function allows a user to update the contents of templates for the CMS. This vulnerability can be exploited by sending a specially crafted SOAP request to the TemplateService component, updating the CMS template to contain malicious ASP.Net code.
+If should be noted that this vulnerability affects instances of Umbraco CMS, even when the web services interface is not explicitly enabled.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>The vendor has released a fix for this issue, which remotes the web services component completely. [break][break]
+
+If it is not possible to apply this fix, MWR propose adding a call to the Authenticate() function at the start of the TemplateService update() function. It should be noted that this is not an approved fix by the vendor, and care should be taken to ensure that this does not affect the operation of the application.</Recommendation>
+		<Reference database="Security update - two major vulnerabilities found" URL="http://umbraco.com/follow-us/blog-archive/2013/5/1/security-update-two-major-vulnerabilities-found.aspx/#comments"></Reference>
+		<Reference database="Umbraco CMS TemplateService Remote Code Execution" URL="https://labs.mwrinfosecurity.com/advisories/2013/11/29/umbraco-cms-templateservice-remote-code-execution/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

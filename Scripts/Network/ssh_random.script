@@ -1,0 +1,26 @@
+#include debug_helpers.inc;
+#include classSSH.inc;
+#include reporting_helpers.inc;
+/*	
+if (IsPortOpen(22)) {
+	ssh = new classSSH(ScanHost, 22, 6);
+	
+	var retval = ssh.checkForRandomBug();
+	if(retval != null) 
+	{
+		if(retval.length > 0)
+		{
+			trace("We have a vulnerable version");
+			//the vulnerable hash description
+			trace(retval);
+			ReportItem("SSH_random.xml", "The SSH server is running on TCP port 22. [break]Vulnerable hash: [pre]" + retval + "[/pre]");		
+		}
+		else
+		{
+			trace("Not vulnerable");
+		}
+	}
+	else
+		trace("Test failed");
+}
+*/

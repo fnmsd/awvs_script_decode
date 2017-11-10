@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Open SOCKS server" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>An open SOCKS server is a SOCKS server which is accessible by any Internet user. Generally, a proxy server allows users within a network group to store and forward internet services such as DNS or web pages so that the bandwidth used by the group is reduced and controlled. With an "open" proxy, however, any user on the Internet is able to use this forwarding service.[break]
+By using some open proxies (the so-called "anonymous" open proxies), users can conceal their true IP address from the accessed service, and this is sometimes used to abuse or interrupt that service, potentially violating its terms of service or some laws; open proxies are therefore often seen as a problem.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may be using your proxy to send bulk email or to access illicit material.</Impact>
+		<Recommendation>Restrict proxy access to valid users and/or hosts.</Recommendation>
+		<Reference database="Wikipedia SOCKS" URL="http://en.wikipedia.org/wiki/SOCKS"/>
+		<Reference database="Wikipedia Open proxy" URL="http://en.wikipedia.org/wiki/Open_proxy"/>
+	</TestDescription>
+</WebApplicationTest>

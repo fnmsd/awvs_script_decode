@@ -1,0 +1,29 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP version older than 5.2.3" version="0.1" released="20080612" updated="20140303" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="missing_update" HasPrecondition="false" CVE="CVE-2007-1900,CVE-2007-2756,CVE-2007-2872" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.7" CVSSScoreEnv="5.7"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]The PHP development team would like to announce the immediate availability of PHP 5.2.3. This release continues to improve the security and the stability of the 5.X branch as well as addressing two regressions introduced by the previous 5.2 releases. These regressions relate to the timeout handling over non-blocking SSL connections and the lack of HTTP_RAW_POST_DATA in certain conditions. All users are encouraged to upgrade to this release.[break][break][bold]Security Enhancements and Fixes in PHP 5.2.3:[/bold][break][break][ul] [li]Fixed an integer overflow inside chunk_split() (by Gerhard Wagner, CVE-2007-2872)[/li]
+[li]Fixed possible infinite loop in imagecreatefrompng. (by Xavier Roche, CVE-2007-2756)[/li]
+[li]Fixed ext/filter Email Validation Vulnerability (MOPB-45 by Stefan Esser, CVE-2007-1900)[/li]
+[li]Fixed bug #41492 (open_basedir/safe_mode bypass inside realpath()) (by bugs dot php dot net at chsc dot dk)[/li]
+[li]Improved fix for CVE-2007-1887 to work with non-bundled sqlite2 lib.[/li]
+[li]Added mysql_set_charset() to allow runtime altering of connection encoding.[/li]
+ [/ul][break][break][navy]Affected PHP versions (up to 5.2.2).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Denial of service or ultimately arbitrary code execution.</Impact>
+		<Recommendation>Upgrade PHP to the latest version.</Recommendation>
+		<Reference database="PHP 5.2.3 Release Announcement" URL="http://www.php.net/releases/5_2_3.php"/>
+		<Reference database="PHP Homepage" URL="http://www.php.net"/>
+	</TestDescription>
+</WebApplicationTest>

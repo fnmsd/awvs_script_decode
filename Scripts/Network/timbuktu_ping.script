@@ -1,0 +1,22 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for timbuktu server
+if (IsPortOpen(407)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 407;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send(strFromRawData(
+		0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x00, 0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00));
+		data = socket.ReceiveBytes(2);
+		//trace(data);
+		if (data = strFromRawData(0x01, 0x01)) {
+			trace("kbase - timbuktu detected");			
+			KBase("Timbuktu server running", "A Timbuktu server is running on TCP port 407.");			
+		}	
+		socket.Close();
+	}
+}

@@ -1,0 +1,20 @@
+#include constants.inc;
+#include classFileInclusion.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+// don't run this test on our test websites as it gives false postives.
+var scanningWindowsTestSites = false;
+if (targetUrl.host && (targetUrl.host.toLowerCase() == 'testasp.vulnweb.com' || targetUrl.host.toLowerCase() == 'testaspnet.vulnweb.com')) scanningWindowsTestSites = true;
+var injectionPatterns = new classInjectionPatterns();
+// main entry point 
+if (!scanningWindowsTestSites) {
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classFileInclusion(targetUrl, injectionPatterns, scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}
+}

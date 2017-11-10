@@ -1,0 +1,48 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+if(IsPortOpen(53))
+{
+	var socket = new TSocket('udp');
+	socket.host = ScanHost;
+	socket.port = 53;
+	socket.timeout = 4;
+	socket.connect();
+	
+//somethimes dns servers just do not respond first time
+	for(var i = 0; i < 2; i++)
+	{
+		//Standard query, 1 question
+		//porttest.dns-oarc.net: type TXT, class IN
+		//see https://www.dns-oarc.net/oarc/services/porttest
+		var dnsRequest = strFromRawData(
+			0x24, 0x1b, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 
+			0x00, 0x00, 0x00, 0x00, 0x08, 0x70, 0x6f, 0x72, 
+			0x74, 0x74, 0x65, 0x73, 0x74, 0x08, 0x64, 0x6e, 
+			0x73, 0x2d, 0x6f, 0x61, 0x72, 0x63, 0x03, 0x6e, 
+			0x65, 0x74, 0x00, 0x00, 0x10, 0x00, 0x01);
+		socket.Send(dnsRequest);
+		data = socket.Receive(true);
+		
+		if(data)
+		{
+			//trace(data);
+			var match = data.match(/[A-Z][0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\sis\s(POOR|FAIR|GOOD):.*std\sdev\s([0-9.]*)/);
+			if(match)
+			{
+				trace("DNS source ports randomness: " + match[1] + ", with standard deviation: " +  match[2]);
+				if(match[1] == "POOR")
+				{
+					ReportItem("DNS_cache_poisoning.xml", "The DNS server source port randomness is POOR (standard deviation : " + match[2] + ").");
+				}
+			}
+			else
+			{
+				trace("Received: " + data.toHexString());
+				trace(data);
+				trace("porttest.dns-oarc.net does not responded in the expected way");
+			}
+			break;
+		}
+	}
+	socket.close();
+}

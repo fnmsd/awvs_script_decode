@@ -1,0 +1,342 @@
+#include dir_listing_helpers.inc;
+#include constants.inc;
+#include helpers.inc;
+#include os_detection.inc;
+#include perFolder_helpers.inc;
+#include string_helpers.inc;
+#noretest;
+var falsePositive = false;
+var reportedFilesDirs = [];
+// these variants will be reported with an alert (tested on all dirs)
+var sensitive_dirs = [				
+				"admin-console", "adminconsole", "jmx-console", 
+                "_layouts", "crm", "nbproject",
+				"_private",	".ssh", "bin",
+				"phpsysinfo", "phpldapadmin", "uploadify", "phpThumb", "zeroclipboard",
+                "session", "sessions",
+				"jenkins", "axis2",
+				"_source", "_src", "_www", "spool",
+				"tar.gz", "tar.bz2", "tar", 				
+				"uploader", "uploads", "upload", "Upload", "incomming", "user_uploads",
+                "New Folder", "New folder (2)",    
+				"log", "logs", "_logs", "logfile", "logfiles", "~log", "~logs",
+				"settings", "global", "globals",     				
+				"admin", "Admin", "ADMIN", "adminpanel", "admin0", "admin1", "admin_", "_admin", "_adm", "administrator", ".adm", ".admin", "~admin", "admin_files", "Administrator", "site_admin", "fileadmin",  "adminfiles", "administration", "sysadmin", "administrative", "webadmin", "admins", "administrivia", "useradmin", "sysadmins", "admin_login", "admin_logon", "INSTALL_admin", "fpadmin", "siteadmin",	 
+                ".subversion", "services",
+                "_sqladm", "sqladm",
+				"client", "clients", "cmd",     
+				"restricted", "_pages",
+                "webmin",
+				"reseller", "personal",  "updates",
+				"err", "error", "_errors",  "errors", 
+				"secret", "secrets", "Secret",
+				"msql", "mysql", "mssql", "oracle", 	    
+				"db", "DB", "db2", 
+                "sql", "SQL", "__SQL", "_SQL",
+                "dbase", "database", 
+                "cvs", "CVS", "svn", "SVN", 
+				"member", "members", "orders", "billing", "memberlist", "membersonly",
+				"dump", "ftp", "accounts", "warez",
+				"conf", "config", "Config", 
+				"phpmyadmin", "phpmyadmin0", "phpmyadmin1", "phpMyAdmin", "phpMyAdmin0", "phpMyAdmin1", 
+                "phpPgAdmin", "phppgadmin", "pgadmin", "pgmyadmin",
+    			"sqlbuddy",
+				"customer", "customers",
+				"intranet",  "users",
+				"setup", "install", "Install", "INSTALL", "_install", "install_", "ainstall", "!install", "installer",				
+				"oldfiles", "old_files", "_files",     
+				"sysbackup", "export",    
+				"TEMP", "TMP", "TODO", "WS_FTP",
+				"temp", "tmp", "test", "_test", "test_", "!test", "tst", "tests", "tools", "save", "testing", "_tests",
+				"secure", "secured", "internal", 
+				"prv", "private", "csv", "CSV",
+				"staff", "src", "etc", 
+				"system", "dev", "devel", "devels", "developer", "developers",
+				"share", "beta", "bugs",
+				"auth", "import", "stats", "statistics",
+				"access-log", "error-log", "access_log", "error_log", "accesslog", "errorlog",
+				"backup", "backups", "bak", "bac", "old", "_old", "inc", "include", "ini", "_include",
+				"pass", "passwd", "password", "Password", "passwords",
+				"jdbc", "odbc", "xls",
+				"FCKeditor", "fckeditor", "ckeditor", "filemanager", 'UserFiles', 'UserFile', "userfiles",
+				"__MACOSX", "horde", "webgrind",
+				"management", "manager",
+				"user_guide"
+			   ];
+// these variants will only be added to the crawler (tested on all dirs)
+var interesting_dirs = [
+                "swfupload", "plupload", "js", "lib", "libs", "swf", "report", "soap", "docs", "assets",
+                "ad", "ads", "banner", "banners", "account", "api", "ws", "vendor",
+				"restservice", "service", "RestApi", "rest",
+                "blogs", "apps", "chat", "console", "addons", "attachments", "RestApi", 
+    			"openflashchart", "open-flash-chart", "php-ofc-library", "jwplayer", "player", "jPlayer", "flowplayer",
+                "invoker", "cp", "testweb", "pma", "dav",
+                "plugins", "themes", "upgrade", "text-base",
+                "wp-content", "wp-admin", "wp-includes",
+                "iishelp", "iisadmin", "tsweb", "xmlrpc", 
+                "cache", "cache_html", "genericons",
+                "common", "shell", "core", "menu", "v1", "types", "base", "group", "languages", "english", "smarty",
+                "example", "examples", "sample", "samples", "script", "scripts", "list", "mime", "threads", "fonts",
+				"class", "classes", "download", "downloads", "Downloads", "Download", "modules", "down", "oauth", "json",
+                "compat", "recaptcha", "html", "controller",
+				"signup", "login", 
+				"WebService", "aspnet", "Exchange", "webaccess", "web", "exchange",
+				"~root", "root", "htdocs", "www", "Root",
+				"~ftp", "~guest", "~nobody", "~www",
+                "CMS", "cms", 
+                "wizards", "editor", "fck", "edit",
+    			"info", "dat", "data", "file", "files", "zip", "zipfiles", "zips", "mp3",
+                "search", "rss", "feed", "atom",
+                "image", "images", "img", "Images", "pictures", "icons", "resources", "graphics", "pics", "icon", "thumb", "thumbnail", "photo",
+                "tag", "tags", "messages",
+                "audio", "dl", "package", "build", "snapshot",
+                "profile", "Profile",
+                "Default", "default", "archives", "documents",
+                "'", "!", "!!", "!!!", "@", "_", "$", "#", "-", "+", "?",
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "q", "v", "w", "z",
+                "0", "00", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+                "2011", "2012", "2013", "2014",
+                "security", "content", "main", "media", "templates", "forms", "flash", "portal",
+                "xml", "user", "view", "browse", "demo", "includes", "thread",
+                "php", "PHP", 
+                "index", "Index", "music", "contents",
+                "projects", "site", "version", "static", "space", "folder", "servlet", "storage",
+                "misc", "page", "doc", "access", "release", "latest", "manual", "manuals", "usercp",
+                "cerberusweb", "uri", "url", "utf8",
+                "lostpassword", "forgot", "help", 
+                "index_files", "reset", "wp",
+                "fileserver", "tcpdf",
+                "de", "fr", "en", "mt"
+			   ];
+           
+// these variants will only be tested in the start directory
+var testOnRootDir_dirs = [
+	            "_vti_bin",	"_vti_pvt", "_vti_aut", "_vti_adm", 
+                "cgi-bin", "cgi-sys", "manage_main", "workarea", "WorkArea",
+    			"adminzone", "na_admin", "simpleviewer",
+    
+                // web applications
+                "phpBB", "phpBB2", "phpbb", "phpnuke", "sqlnet", "vb", "vbulletin", "wwwboard", "zope", "viewcvs", 
+                "nagios", "cacti", "munin", "zenoss",
+                "cubecart", "cc", "cpg", "coppermine", "4images", "cart", "SugarCRM", "sugarcrm", "gallery", 
+                "joomla", "drupal",  "oscommerce", "zencart", "eticket", "moodle", "piwik", "zenphoto", "nusoap", "tinymce", "firephp", 
+                "wordpress", "bbpress", "zenpage", "openx", "mambo", "buddypress", "aMember", "ATutor", "b2evolution", "autocms",
+                "bbpress", "bitweaver", "bmforum", "cerberus", "cmsmadesimple", "cs-cart", "cs-whois", "cutenews",
+                "deluxebb", "dchat", "phpFreeChat", "phpfreechat", "livechat", "livezilla", "trac", "e107", "ezPublish",
+                "FusionBB", "geeklog", "ImageVue", "kayako", "mantis", "mint", "Mint", "multihost", "mybb", "opencart",
+                "osTicket", "photopost", "phpAddressBook", "phpfusion", "phpgedview", "PHPizabi", "phplinks", "phplist",
+                "phpmyfaq", "phponline", "phpshop", "pligg", "pmwiki", "postnuke", "punbb", "runcms", "serendipity", "smf", "ipb",
+                "sphider", "typolight", "ubb_threads", "ultrastats", "vanilla", "videodb", "xoops", "x-cart", "alegrocart",
+                "dotproject", "fluxbb", "interspire", "magento", "lifetype", "minibb", "modx", "prestashop", "silverstripe",
+                "tikiwiki", "mediawiki", "dokuwiki", "piwigo", "phpCollab", "phpads", "noah", "redmine", "flyspray", "dolphin",
+                "twiki", "vtiger", "adminui", "roller-ui",
+                    
+                "owa", "mrtg",                    
+                "squirrel", "squirrelmail", "roundcube", "atmail", "roundcubemail",
+                "whmcs",
+                "ibill", "ccbill",                        
+				"juddi", 
+                "anoncvs",
+                "tomcat",   
+                    
+                "bugzilla",       
+                "django",
+                "moinmoin",                              
+                    
+                "xampp",     
+                "cfdocs", "CFIDE", 
+                "jrun",         
+                 
+                "forum", "blog", "poll", "support",
+                "register", "tracker",    
+                "software", "category",
+     
+                "appengine", "symfony",
+                    
+                        
+                "webstats",                    
+                "webmail", "cpanel", "mail", "email", "mailman", 
+                   
+				"WebApplication1", "WebApplication2", "WebApplication3"
+               ];
+// **************************************************************************************							 
+function alreadyReportedThisFileName(fileName)
+{	
+	var fileNameLC = fileName.toLowerCase();
+	if (reportedFilesDirs.indexOf(fileNameLC) == -1) {
+		reportedFilesDirs.push(fileNameLC);
+		return false;
+	}
+	else return true;
+}
+// **************************************************************************************							 
+function alert(uri, job, variant, origName)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Possible_sensitive_directories.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Possible sensitive directories";	
+	//ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original directory: [dark][bold]" + origName + "[/bold][/dark]";
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 
+			
+// **************************************************************************************							 
+function alertPossibleSensitiveFile(uri, job, variant, origName)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Possible_sensitive_files.xml");
+	ri.name = "Possible sensitive files";
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Possible sensitive files";	
+	//ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original directory: [dark][bold]" + origName + "[/bold][/dark]";
+	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}			
+							 
+// **************************************************************************************
+function testFile(file, dirName, variant, shouldReport) {
+	var success = false;
+	var fname = variant.replace("${dirName}", dirName);
+	
+	var dirName = file.path + file.name;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = dirName + plain2url(fname);
+	http.request.addHeader('Accept', 'acunetix/wvs', true);
+	http.request.addHeader('Range', 'bytes=0-99999', true);
+	http.autoAuthenticate = false;
+	http.execute();	
+	
+	//trace(http.URI);
+	
+	if (!http.wasError && !http.notFound && (http.responseStatus == 301 || http.responseStatus == 302 || http.responseStatus == 303 || http.responseStatus == 406 || http.responseStatus == 401 || http.responseStatus == 200 || http.responseStatus == 206 || http.responseStatus == 500))
+	{
+		if (http.responseStatus == 406)
+		{ 	// this we need to threat differently
+			// extract alternates from header
+			var alternates = http.response.headerValue('Alternates');			
+			if (alternates) 
+			{
+				var re = /{"(.*?)"\s\d+\s{/g;	
+				var match;
+				while (match = re.exec(alternates)) 
+				{
+					var	path = plain2url(match[1]);
+					//logError('SD alternate:' + match[1]);					
+					if (!alreadyReportedThisFileName(path)) addLinkToCrawler(path, file);
+				}			
+			}
+		}
+		
+		else 
+		{		
+			// not 406
+			// look for location header to confirm it's a directory
+			var locationStr = http.response.headerValue('location');
+			// trace(locationStr + "," + fname + "/");
+			if (locationStr && (locationStr.endsWith(fname + "/")))
+			{
+				var path = dirName + plain2url(fname);
+				if (shouldReport==1) {
+                    alert(path, http, variant, dirName);                    
+                    success = true;
+                }
+				
+				// make sure it ends in / to be added as a directory (not as a file)
+				if (path.charAt(path.length-1) != '/') path = path + '/';		
+				if (!alreadyReportedThisFileName(path)) addLinkToCrawler(path, file);
+			}
+			
+			else {
+					// add location to crawler
+					if (locationStr) {						
+						if (!alreadyReportedThisFileName(locationStr)) addLinkToCrawler(locationStr, file);
+					}
+				}
+		}
+	}
+	
+	return success;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+if (file.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+	// don't test directories that have directory listing (waste of time)
+	var matches = new classDirListingMatches();	
+    
+    // check if we have directory listing
+    var isDirectoryListing = (matches.searchOnText(file.response.body) != "");
+	// don't scan if acusensor is enabled
+	if (!acuSensorWasEnabled(file))
+	{
+		// first let's test the precondition
+		if (canIScanThisFolder(file))
+		{
+			var abortScan = false;
+			
+			// for java applications only scan folders in the root of the application because there are the context roots defined
+			if (isJava && !thisFolderIsARootFolder(file)) {
+				abortScan = true;
+			}    
+			if (!abortScan) 
+			{
+    			if (getGlobalValue('caseInsensitiveScan') == 1) 
+                {
+                	// handle case insensitive scans (remove duplicates)
+    				sensitive_dirs = removeCaseInsensitiveDuplicatesFromStringArray(sensitive_dirs);
+    				interesting_dirs = removeCaseInsensitiveDuplicatesFromStringArray(interesting_dirs);
+    				testOnRootDir_dirs = removeCaseInsensitiveDuplicatesFromStringArray(testOnRootDir_dirs);
+    			}
+			
+                // total number of tests                
+                var totalDirs = sensitive_dirs.length + interesting_dirs.length + testOnRootDir_dirs.length;									
+                
+    			// sensitive
+    			for (var i=0; i<sensitive_dirs.length; i++) 
+    			{
+                    if (!isDirectoryListing || (isDirectoryListing && sensitive_dirs[i].indexOf('.') == 0))
+                    {
+    					var found = testFile(file, file.name, sensitive_dirs[i], 1);
+        				ScriptProgress(ComputeProgress(i, totalDirs));
+        				
+        				if (found) {
+        					var sensitiveDirName = sensitive_dirs[i];
+        					// for sensitive directories look also for directory copies	        					
+        					testFile(file, sensitiveDirName, "${dirName} (copy)", 1);	        					
+        					testFile(file, sensitiveDirName, "${dirName} - Copy", 1);
+        					testFile(file, sensitiveDirName, "Copy of ${dirName}", 1);
+        				}
+                    }
+    			}
+    			// interesting
+                if (!isDirectoryListing) 
+                {
+        			for (var i=0; i<interesting_dirs.length; i++) 
+        			{
+        				testFile(file, file.name, interesting_dirs[i], 0);
+        				ScriptProgress(ComputeProgress(sensitive_dirs.length + i, totalDirs));
+        			}
+        						
+        			var strDir = file.fullPath.replace(scanURL.path, "/");			
+        						
+                    // start dir
+        			if (strDir == '/') {
+        				for (var i=0; i<testOnRootDir_dirs.length; i++) 
+        				{
+        					testFile(file, file.name, testOnRootDir_dirs[i], 0);
+        					ScriptProgress(ComputeProgress(sensitive_dirs.length + interesting_dirs.length + i, totalDirs));
+        				}            
+        			}            
+                }
+            }
+		}
+	}	    	
+}

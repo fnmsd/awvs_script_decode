@@ -1,0 +1,42 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP-CGI remote code execution" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,information_disclosure" CVE="CVE-2012-1823" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Copyright></Copyright>
+		<Description>PHP is a widely-used general-purpose scripting language that is especially suited for Web development and can be embedded into HTML. When PHP is used in a CGI-based setup (such as Apache's mod_cgid), in some configurations it's possible to execute arbitrary code with the privileges of the web server.
+
+On Debian and Ubuntu the vulnerability is present in the default install
+of the php5-cgi package. When the php5-cgi package is installed on Debian and
+Ubuntu or php-cgi is installed manually the php-cgi binary is accessible under
+/cgi-bin/php5 and /cgi-bin/php. The vulnerability makes it possible to execute
+the binary because this binary has a security check enabled when installed with
+Apache http server and this security check is circumvented by the exploit.
+
+[break]
+[break]
+[bold]Affected versions:[/bold][break]
+[ul]
+[li]PHP prior to 5.3.12[/li]
+[li]PHP prior to 5.4.2[/li]
+[/ul]
+
+[break]
+[bold]Unaffected versions:[/bold][break]
+[ul]
+[li]PHP 4 - getopt parser unexploitable[/li]
+[li]PHP 5.3.12 and up[/li]
+[li]PHP 5.4.2 and up[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote unauthenticated attacker could obtain sensitive information, cause a denial of service condition or may be able to execute arbitrary code with the privileges of the web server.</Impact>
+		<Recommendation>Upgrade to the latest versions of PHP (unaffected versions are PHP 5.3.12 and newer, 
+PHP 5.4.2 and newer).</Recommendation>
+		<Reference database="Apache / PHP 5.x Remote Code Execution Exploit" URL="http://www.exploit-db.com/exploits/29290/"/></TestDescription>
+</WebApplicationTest>

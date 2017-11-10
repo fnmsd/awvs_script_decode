@@ -1,0 +1,199 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include versioning_helpers.inc;
+#include joomla_vulns_core.inc;
+var lastJob = null;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = "Current version: [bold][dark]" + details + "[/dark][/bold]";
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************
+function getJoomlaVersionFromLanguageEN(dir) {
+	//#1. detect Joomla! version from /language/en-GB/install.xml
+	var regex = /<version>([\d\.]+)<\/version>/;
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "language/en-GB/en-GB.xml")) {
+		if (lastJob.response.body.indexOf("<version>") != -1) {
+			m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function getJoomlaVersionFromAdminLanguageEN(dir) {
+	//#2. detect Joomla! version from administrator/language/en-GB/en-GB.xml
+	var regex = /<version>([\d\.]+)<\/version>/;
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "administrator/language/en-GB/en-GB.xml")) {
+		if (lastJob.response.body.indexOf("<version>") != -1) {
+			m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function getJoomlaVersionFromAdminManifests(dir) {
+	//#3. detect Joomla! version from /administrator/manifests/files/joomla.xml
+	var regex = /<version>([\d\.]+)<\/version>/;
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "administrator/manifests/files/joomla.xml")) {
+		if (lastJob.response.body.indexOf("<version>") != -1) {
+			m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function getJoomlaVersionFromLanguageInstall(dir) {
+	//#4. detect Joomla! version from language/en-GB/install.xml
+	var regex = /<version>([\d\.]+)<\/version>/;
+	var dirPath = dir.fullPath + "/";	
+	if (request(dir, dirPath + "language/en-GB/install.xml")) {
+		if (lastJob.response.body.indexOf("<version>") != -1) {
+			m = regex.exec(lastJob.response.body);
+			if (m && m[1]) {
+		    	return m[1];
+			}
+		}
+	}					
+	return false;
+}
+// **************************************************************************************
+function alert2(uri, version, minVer, maxVer, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, request, response)
+{
+    if (uri == '//') uri='/';
+    var ri = new TReportItem();
+    ri.severity = 'high';
+    ri.affects = uri;
+    ri.alertPath = "Scripts/Joomla vulns";
+    // alert info
+    ri.name = title;
+    ri.description = descr;
+    ri.recommendation = recomm;
+    ri.request = request;
+    ri.response = response;
+    ri.impact = "The impact of this vulnerability is not available.";
+    // alert details
+    ri.details = "Current Joomla! version: [dark]" + version + "[/dark].[break]";
+    if (minVer != maxVer) ri.details = ri.details + "Joomla! versions between [bold]" + minVer + "[/bold] and [bold]" + maxVer + "[/bold] are affected." ;
+    else ri.details = ri.details + "Joomla! version [bold]" + minVer + "[/bold] is affected.";
+    // references
+    if (ref1 != '')
+        ri.addReference(ref1, ref1);
+    if (ref2 != '')
+        ri.addReference(ref2, ref2);
+    if (ref3 != '')
+        ri.addReference(ref3, ref3);
+    if (ref4 != '')
+        ri.addReference(ref4, ref4);
+    if (ref5 != '')
+        ri.addReference(ref5, ref5);
+    // scores
+    ri.CVE = cve;
+    ri.CWE = cwe;
+    ri.CVSSscore = cvss;
+	ri.CVSS3 = cvss3;
+    AddReportItem(ri);
+}
+// **************************************************************************************
+function versionAudit(dir) {
+	var jomVersion = (
+		 	getJoomlaVersionFromAdminManifests(dir)
+		|| 	getJoomlaVersionFromLanguageInstall(dir)
+		);
+	var alreadyReportedWebApplication = getGlobalValue("detectedAppJoomla_" + dir);
+	if (!alreadyReportedWebApplication)
+	{
+	    setGlobalValue("detectedAppJoomla_" + dir, 1, true);           
+	    if (jomVersion) KBase("Joomla! web application", "Joomla! web application version [bold]" + jomVersion + "[/bold] was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	    else KBase("Joomla! web application", "Joomla! web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	}
+    
+    // we were able to detect Joomla! version?
+    if (jomVersion != "") {
+		//trace(jomVersion);
+        // 1.5.x (outdated)
+        if (jomVersion.startsWith("1.5.")) {
+            alert(lastJob, dir.fullPath + "/", "Joomla_1_5_outdated.xml", jomVersion);
+        }
+    	var vulnerable_CVE20147228 = false;
+    	
+    	// need to check versions based on branch
+    	// 2.x 
+    	if (jomVersion.startsWith("2.5.") && (version_compare(jomVersion, "2.5.4", '>=') && version_compare(jomVersion, "2.5.25", '<=')) ) {
+    		vulnerable_CVE20147228 = true;
+    	}
+    	// 3.2.x 
+    	if (jomVersion.startsWith("3.2.") && (version_compare(jomVersion, "3.2.5", '<=')) ) {
+    		vulnerable_CVE20147228 = true;
+    	}
+    	// 3.3.x 
+    	if (jomVersion.startsWith("3.3.") && (version_compare(jomVersion, "3.3.0", '>=') && version_compare(jomVersion, "3.3.4", '<=')) ) {
+    		vulnerable_CVE20147228 = true;
+    	}
+        // CVE-2014-7228
+		if (vulnerable_CVE20147228) {
+			alert(lastJob, dir.fullPath + "/", "Joomla_CVE-2014-7228.xml", jomVersion);
+		}
+        // Joomla! core vulnerabilities
+        if (jomVersion != "") {
+            for (var i=0; i<vulns.length; i++) {
+                var minVersion = vulns[i][1];
+                var maxVersion = vulns[i][2];
+                if (version_compare(jomVersion, minVersion, '>=') && version_compare(jomVersion, maxVersion, '<=')) {
+                    // prepare alert details
+                    var title = (vulns[i][0]);
+                    var descr = vulns[i][3];
+                    var ref1 = vulns[i][4];
+                    var ref2 = vulns[i][5];
+                    var ref3 = vulns[i][6];
+                    var ref4 = vulns[i][7];
+                    var ref5 = vulns[i][8];
+                    var cve = vulns[i][9];
+                    var cwe = vulns[i][10];
+                    if (cwe.indexOf(",") != -1) {
+                        cwe = cwe.split(",")[0].trim();
+                    }
+                    var cvss = vulns[i][11];
+					var cvss3 = vulns[i][12];
+                    var recomm = vulns[i][13];
+                    if (!recomm.trim().endsWith(".")) recomm = recomm + ".";
+                    alert2(dir.fullPath + "/", jomVersion, minVersion, maxVersion, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, dir.request.toString(), dir.response.headersString);
+                }
+            }
+        }
+    }
+}
+// main()
+var dir = getCurrentDirectory();
+versionAudit(dir);
+//trace(version_compare('3.8.2', '4.2', '<='));

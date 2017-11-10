@@ -1,0 +1,37 @@
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+// imap brute
+function TestCredentials(socket, uname, pass){
+	socket.Connect();
+	if (socket.IsConnected) {
+		// receive banner
+		data = socket.ReceiveLine();
+		//trace(data);
+		var id = "ACU" + random(100);
+		var data2send = id + " login \""+ uname + "\" \"" + pass + "\"\r\n";
+		//trace(data2send);
+		socket.send(data2send);
+		data = socket.ReceiveLine();
+		//trace(data);
+		if (data.indexOf(id + " OK") == 0)
+		{
+			trace("alert here ! LOGIN OK: username " + uname + ", password " + pass);
+			ReportItem("Imap_bruteforce.xml", "Username: [dark]" + uname + "[/dark], Password: [dark]" + pass + "[/dark]");
+		}
+		socket.Close();
+	}
+}
+// start
+if (IsPortOpen(143)){
+	var socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 143;
+	socket.Timeout = 5;
+	for(i=0;i<Usernames.length;i++){
+    for(j=0;j<Passwords.length;j++){
+      if( TestCredentials(socket, Usernames[i], Passwords[j]) )
+        Trace(Usernames[i] + ',' + Passwords[j]);
+		ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+    }
+  }
+}

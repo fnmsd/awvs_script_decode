@@ -1,0 +1,45 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	if (matchedText) 
+	    ri.Details =  "Current version: [dark][bold]" + matchedText + "[/bold][/dark]";
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function look_for_4_51_1891_XSS(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'build.json';
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 200)){
+		var m = /"product":"Fusion","version":"(\d\.\d+\.\d+)"/.exec(http.response.body);
+		if (m && m[1]) {
+			var versionStr = m[1]; 
+			var versionInt = parseInt(versionStr.replace(".", "").replace(".", ""));
+			if (versionInt >= 4511891) {				
+				alert(http.uri, "kayako_fusion_v4_51_1891.xml", http, versionStr);
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppKayakoFusion");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppKayakoFusion", 1, true);           
+    KBase("Kayako Fusion web application", "Kayako Fusion web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+look_for_4_51_1891_XSS(dir, dir.fullPath);

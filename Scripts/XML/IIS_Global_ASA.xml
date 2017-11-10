@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Global.asa backup file found" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>The [bold]Global.asa[/bold] file is an optional file in which you can specify event scripts and declare objects that have session or application scope. It is not for content that is displayed to clients; instead it stores event information and objects used globally by the application. This file must be named Global.asa (or [bold]Global.asax[/bold] for ASP.NET) and must be stored in the root directory of the application.
+[break][break]
+
+Global.asa file is not normally accessible (the web server restricts access to this file).
+Acunetix found a backup for this file that is directly accessible. Global.asa file may contain sensitive information (such as database credentials, sensitive source code snippets) and it's recommended to restrict access to this file.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>This file may expose sensitive information that could help a malicious user to prepare more advanced attacks.</Impact>
+		<Recommendation>Restrict access to this file or remove it from the website.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

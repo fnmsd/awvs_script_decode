@@ -1,0 +1,53 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, uri, match)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("IIS_Global_ASA.xml");
+	ri.name = "IIS_Global_ASA";
+	ri.affects = uri;
+	ri.alertPath = "Scripts/IIS_Global_ASA.xml";	
+	
+	ri.setHttpInfo(job);
+		
+	if (match)
+		ri.Details =  "Pattern found: [dark]" + match + "[/dark]";
+	
+	AddReportItem(ri);	
+}							 
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var http = new THTTPJob();
+var dirName = root.path + root.Name;
+	
+http.url = scanURL;
+http.addCookies = false;
+http.verb = 'GET';
+if (dirName != "/") http.URI = dirName + "/Global.asa.bak";
+else http.URI = dirName + "Global.asa.bak"; 
+http.execute();	
+if (!http.wasError && http.responseStatus == 200)
+{
+		var m = /(Application_OnStart|Application_OnEnd|Session_OnStart|Session_OnEnd)/.exec(http.response.body);
+		if (m) 
+		{
+			alert(http, http.URI, m[1]);
+		}
+}
+var http = new THTTPJob();
+var dirName = root.path + root.Name;
+	
+http.url = scanURL;
+http.verb = 'GET';
+if (dirName != "/") http.URI = dirName + "/Global.asax.bak";
+else http.URI = dirName + "Global.asax.bak"; 
+http.execute();	
+if (!http.wasError && http.responseStatus == 200)
+{
+		var m = /(Application_OnStart|Application_OnEnd|Session_OnStart|Session_OnEnd|Codebehind=)/.exec(http.response.body);
+		if (m) 
+		{
+			alert(http, http.URI, m[1]);
+		}
+}

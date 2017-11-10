@@ -1,0 +1,255 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include os_detection.inc;
+#include backup_file_variants.inc;
+var custom404body 	= "";
+var acceptedExt		=	[
+	"php", "php3", "php4", "php5", "phtml", // php
+	"asp", "aspx", "ascx", "asmx",	// asp
+	"chm", "cfc", "cfmx", "cfml",	// cold fusion
+	"py", 	// python
+	"rb", 	// ruby
+	"pl",	// perl
+	"cgi",	// cgi
+	"jsp", "jhtml", "jhtm", "jws",	// java
+	"do" 
+	];
+{
+	function InjectionPatterns(){
+		this.plainArray = 	[
+												];
+		this.regexArray = 	[
+							/(\<%[\x20-\x80\x0d\x0a\x09]*?%\>)/i,
+							/(\<\?php[\x20-\x80\x0d\x0a\x09]+)/i,
+							/(^#\!\\\/[\s\S]*\\\/perl)/i,
+							/(^#\!\/[\s\S]*?\/python)/i,
+							/(^#\!\/usr\/bin\/env\spython)/i,
+							/(^[\x20-\x80\x0d\x0a\x09]+\s*def\s+\w+\([^)]+\):\s*\n[\x20-\x80\x0d\x0a\x09]+$)/,
+							/(^#\!\/[\s\S]*?\/perl)/i
+                            ];	
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) {
+				return m[0];
+			}
+		}			
+			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();									
+									
+// **************************************************************************************							 
+function alert(uri, job, variant, origFname, matchdText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Backup_Files.xml");
+	ri.name = "Backup files";
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Backup files";	
+	ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original filename: [dark][bold]" + origFname + "[/bold][/dark]";
+	
+	if (matchdText) ri.details = ri.details + "[break]Source code pattern found: [code][pre]" + matchdText + "[/pre][/code]"
+		
+	var ct = job.response.headerValue('content-type');
+	if (ct) {
+		var ctTextRegex = new RegExp('text/.*', 'i').exec(ct);
+		if (!ctTextRegex) {	
+			job.response.body = "Binary file. Unable to display response body.";
+		}
+	}
+	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function goodResponse(file, http, uri) {
+	if (http.wasError) return false; 
+	
+	if (custom404body == "") {
+		// no custom 404
+		return ((!http.notFound && (http.responseStatus == 200 || http.responseStatus == 206)));
+	}
+	else {
+			if (http.response.body != custom404body) {				
+				// trace(uri);		
+				// custom 404
+				// need a confirmation to be sure it's not a false positive		
+				var http2 = new THTTPJob();
+				
+				http2.url = file.url;
+				http2.verb = 'GET';
+				http2.URI = uri + randStr(5);
+				http2.execute();
+			
+				if (!http2.wasError && http2.response.body == custom404body) {
+					return true;
+				}
+		}
+	}	
+	return false;	
+}
+							 
+// **************************************************************************************
+function testFile(file, fileName, fileExt, variant, shouldReport) {
+	var fname = variant.replace("${fileName}", fileName);
+	
+	if (fileExt != "") fname = fname.replace("${fileExt}", "." + fileExt)
+	else fname = fname.replace("${fileExt}", "");
+	
+	var uri = file.path + plain2url(fname);
+	// for Java applications don't bother to test for backup files if the filename doesn't end in .jsp
+	if (isJava) {
+		if (!fname.endsWith(".jsp")) return false;
+	}
+	//trace(uri);
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.request.addHeader('Range', 'bytes=0-99999', true);	
+	http.execute();	
+	
+	//trace(http.responseStatus);
+	if (goodResponse(file, http, uri))
+	{
+		// check if the file is not already in the file structure	
+    	if (shouldReport == 1) {
+	        // trace(fname);
+	        var ct = http.response.headerValue('content-type').toLowerCase();
+	        var acceptedMimeType = false;
+	        for (var j=0; j<acceptedMimeTypes.length; j++)
+	        if (ct == acceptedMimeTypes[j]) {
+	            acceptedMimeType = true;
+	        	
+	    		// verify if the source code is revealed    	
+				var matchedText = InjectionPatterns.searchOnText(http.response.body);
+				if (matchedText) {
+                    alert(uri, http, variant, fileName + "." + fileExt, matchedText);
+                    addLinkToCrawler(uri, file);
+                }
+	            
+	            break;
+	        }
+		}
+				
+		// otwerwise just add it to the crawler
+		if (variant.toLowerCase().indexOf("copy") != -1)
+			addLinkToCrawler(uri, file);
+	}
+}
+// **************************************************************************************
+function preCondition(file, filePath, fileName, fileExt) {
+	var uri = "";
+	
+	// first test
+	
+	if (fileExt != "") 
+	uri= filePath + fileName + randStr(5) + "." + fileExt;
+	else uri= filePath + randStr(5) + fileName;
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	
+	if (!http.wasError && http.notFound)
+	{	
+		// second test		
+		if (fileExt != "") 
+		uri= filePath + "~" + fileName + "." + fileExt + randStr(5);
+		else uri= filePath + fileName + randStr(5);
+		//trace(uri);		
+		
+		var http = new THTTPJob();
+		
+		http.url = file.url;
+		http.verb = 'GET';
+		http.URI = uri;
+		http.execute();	
+		
+		//trace(http.notFound);		
+		return (!http.wasError && http.notFound);		
+	}	
+	else {		
+		// try to better handle sites that are returning a fixed custom404 page
+		custom404body = http.response.body;
+		
+		if (custom404body) {		
+			// second test		
+			if (fileExt != "") 
+			uri= filePath + "~" + fileName + "." + fileExt + randStr(5);
+			else uri= filePath + fileName + randStr(5);
+			//trace(uri);
+			var http = new THTTPJob();
+			
+			http.url = file.url;
+			http.verb = 'GET';
+			http.URI = uri;
+			http.execute();			
+			
+			if (!http.wasError && http.response.body == custom404body)
+			{return true;} else custom404body = "";
+		}
+		return false;
+	}
+}
+// **************************************************************************************
+function fileShouldBeTested(file, ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+		if (ext.toLowerCase() == acceptedExt[i]) 
+			return true;
+      }	
+	
+	// or if it has some inputs
+	if (file.schemeCount > 0) return true;
+	
+	return false;
+}		
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+if (file.response.msg2 == 200) 
+{
+	var fileName = getFileName(file.name);
+	var fileExt  = getFileExt(file.name);
+	// verify if the file should be tested
+	if (file.isFile && fileShouldBeTested(file, fileExt)) 
+	{
+		// first let's test the precondition
+		if (preCondition(file, file.path, fileName, fileExt))
+		{
+      		var totalVariants = variants.length + other_variants.length;
+			 
+			// test it with all backup variants	
+			for (var i=0; i<variants.length; i++) 
+			{
+				testFile(file, fileName, fileExt, variants[i], 1);
+				ScriptProgress(ComputeProgress(i, totalVariants));
+			}
+            
+			// other variants (for crawler)
+			for (var i=0; i<other_variants.length; i++) 
+			{
+				testFile(file, fileName, fileExt, other_variants[i], 0);
+				ScriptProgress(ComputeProgress(i, totalVariants));
+			}            
+		}
+	}
+}

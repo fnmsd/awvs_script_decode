@@ -1,0 +1,71 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.connectionKeepAlive = false;
+	lastJob.url = scanURL;
+	lastJob.verb = '<script>alert(12345)</script>';
+	lastJob.URI = uri;
+	lastJob.addCookies = false;
+	lastJob.request.addHeader('Content-length','9999999999999999999999999999999999999999999999', true);
+	lastJob.request.addHeader('Connection','close', true);
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 413)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestForApacheXSSViaMalformedMethod()
+{
+	var urls = [
+					"/"
+				];
+	
+	matches.plainArray = [
+						'<script>alert(12345)</script>'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Apache_XSS_via_Malformed_Method.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestForApacheXSSViaMalformedMethod();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

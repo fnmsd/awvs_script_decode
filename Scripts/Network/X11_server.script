@@ -1,0 +1,49 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+	
+// test for X11 server
+function prepare_x11_request(data){
+	var res = strFromRawData (
+			0x6c,					// byte-order (LE)
+			0x00,					// ??
+			0x0b, 0x00,		// protocol major version (11)
+			0x00, 0x00,		// protocol minor version (0)
+			0x00, 0x00,		// auth name
+			0x00, 0x00,		// auth data
+			0x00, 0x00);	// ??
+	return res;
+}
+function test_x11_on_port(port){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= port;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		// xdmcp query
+		req = prepare_x11_request();
+		socket.send(req);
+		data = socket.Receive(true);
+		if (data && data.length) {
+			success = data.getByteAt(0);
+			reason_len = data.getByteAt(1);
+			if (success == 0 && data.length > reason_len) {
+				version_maj = data.getWordAt(2, false);
+				version_min = data.getWordAt(4, false);
+				if (version_maj <= 11) {
+				trace("X11 server enabled on port " + port);
+				version = version_maj + "." + version_min;
+				trace("version : " + version);
+				ReportItem("X11_server.xml", "The X11 server is running on TCP port " + port + ". [break]X11 version : " + version);		
+				}
+			}		
+		}
+		socket.Close();
+	}
+}
+// start
+for (var i=6000; i<6010; i++) {
+	if (IsPortOpen(i)) {
+		test_x11_on_port(i);
+	}
+}

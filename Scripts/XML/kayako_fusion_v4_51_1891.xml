@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Kayako Fusion v4.51.1891 - multiple web vulnerabilities" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="3.5" CVSSDescr="AV:N/AC:M/Au:S/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="2.8" CVSSScoreEnv="2.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Multiple persistent input validation vulnerabilities are detected in the Kayako Fusion v4.51.1891 Web Application.
+The vulnerability typus allows an attacker to inject own malicious script code in the vulnerable module on application side (persistent). The vulnerabilities can be exploited with a privileged application user account and low or medium required user interaction.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Successful exploitation of the vulnerability result in persistent session hijacking, persistent phishing, external redirect, external malware 
+loads and persistent vulnerable module context manipulation.</Impact>
+		<Recommendation>Upgrade to the latest version of Kayako Fusion.</Recommendation>
+		<Reference database="Kayako Fusion v4.51.1891 - Multiple Web Vulnerabilities" URL="http://dl.packetstormsecurity.net/1302-exploits/VL-824.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

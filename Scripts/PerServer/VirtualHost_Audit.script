@@ -1,0 +1,247 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include dir_listing_helpers.inc;
+#include string_helpers.inc;
+var FalsePositiveDetector = randStr(8);
+var baseLastResponse = '';
+var foundVirtualHostDirListing = false;
+// **************************************************************************************							 
+function alert(fname, request, response, fullResponse, vhost, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;	
+    
+	ri.request = request;
+	ri.response = response;
+	
+	if (!ri.response) ri.response = "Empty HTML. Consult HTTP response headers.";
+    
+    if (fullResponse)
+	    ri.fullResponse = fullResponse;
+	
+	if (details) 
+	 ri.details = "VirtualHost: [dark][bold]" + vhost + "[/bold][/dark][break]Pattern found: [pre][blue]" + details + "[/blue][/pre]";
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function alert2(fname, request, response, fullResponse, vhost, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = vhost;
+	ri.alertPath = "Scripts/" + fname;	
+    
+	ri.request = request;
+	ri.response = response;
+    if (!ri.response) ri.response = "Empty HTML. Consult HTTP response headers.";
+    
+    //if (fullResponse)
+	//    ri.fullResponse = fullResponse;
+	if (details) 
+	 ri.details = "VirtualHost: [dark][bold]" + vhost + "[/bold][/dark][break]Response: [pre][blue]" + details + "[/blue][/pre]";
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function getVirtualHostResponse(virtualHost)
+{
+	var res = "";
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.retries = 0;
+	lastJob.autoHostHeader = false;
+	lastJob.uri = '/';
+	lastJob.host = scanIP;
+	
+	if (scanURL.Port != "")
+		lastJob.host = lastJob.host + ":" + scanURL.Port;
+		
+	lastJob.Request.addHeader('Host', virtualHost, false);
+	lastJob.execute();
+    
+	if (!lastJob.wasError) 
+		responseBody = lastJob.response.body;
+	else
+		responseBody = '';
+	
+    var result = [];
+    
+    result.push(lastJob.request.toString());        
+    result.push(lastJob.response.headersString);
+    result.push(responseBody);
+    
+    return result;
+}
+// **************************************************************************************	
+function checkVirtualHostForDirListing(virtualHost)
+{
+    var res = getVirtualHostResponse(virtualHost);
+    
+    if (!foundVirtualHostDirListing) {
+    	foundVirtualHostDirListing = true;
+    
+	    var request = res[0];
+	    var response = res[1];
+	    var responseBody = res[2];
+		 
+	    var matchedText = matches.searchOnText(responseBody);
+	    if (matchedText) {
+	        alert("virtualhost_audit.xml", request, response, responseBody, virtualHost, matchedText);
+	    }
+    
+    }
+	return res;
+}
+// **************************************************************************************	
+function checkForPossibleVirtualHost(virtualHost, res)
+{
+    if (virtualHostFalsePositives) return false;
+    var request = res[0];
+    var response = res[1];
+    var responseBody = res[2];
+	 
+	var body = responseBody.replace(virtualHost, "");
+    body = responseBody.substr(0, 512);
+    
+    if (
+        body != baseResponseHost && 
+        body != baseResponseIP && 
+        body != baseLastResponse && 
+        body != baseResponseInvalid
+        ) 
+    {
+        
+        if (virtualHost.startsWith(FalsePositiveDetector)) 
+        {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+        if (response.indexOf("<title>Panther Express | CDN") != -1) {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+        if (response.indexOf("503 Service Temporarily Unavailable") != -1) {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+        if (response.indexOf("<title>403") != -1) {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+        if (response.indexOf("<TITLE>Forbidden</TITLE>") != -1) {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+        if (response.indexOf("<title>DNS resolution error ") != -1) {
+            virtualHostFalsePositives = true;
+            return false;
+        }
+		if (response.indexOf("Not Found") != -1) {
+			virtualHostFalsePositives = true;
+			return false;
+		}
+		if (response.indexOf("<title>404") != -1) {
+			virtualHostFalsePositives = true;
+			return false;
+		}
+        baseLastResponse = body;
+        if (virtualHost && response.startsWith("HTTP/"))
+        	alert2("possible_virtualhost.xml", request, response, responseBody, virtualHost, body);
+        return true;
+    }
+    
+    return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var virtualHosts =  Array(
+    FalsePositiveDetector,
+    ScanIP,
+	"127.0.0.1",
+	"localhost",
+	//"::1",
+	"alpha",
+	"admin",
+	"beta",
+	"demo",
+	"svn",
+	"git",
+	"wiki",
+	"dev",
+	"new",
+	"clients",
+	"test",
+	"staging",
+	"prelive",
+	"mail",
+	"webmail",
+	"secure",
+	"www-test",
+	"www-staging",
+	"intranet",
+	"internal",
+	"development",
+	"services",
+	"console",
+	"apps",
+	"intra",
+	"spool",
+	"corporate",
+	"web",
+	"b",
+	"gamma",
+	"release",
+	"pre",
+	"prerelease",
+	"local",
+	"int"
+);
+var matches = new classDirListingMatches();
+var res = "";
+// check if we can look for virtual hosts as subdomains
+var baseHost = "";
+var m = /^www\d?\.(.*)$/.exec(scanHost);
+if (m) {baseHost = m[1];}
+// host without TLD (from www.acunetix.com => www.acunetix)
+var hostWithoutTLD = "";
+var lastDotIndex = scanHost.lastIndexOf(".");
+if (scanHost !== scanIP && lastDotIndex > 0) {
+    hostWithoutTLD = scanHost.substr(0, lastDotIndex);
+}
+// first, let's get the base responses from hostname and IP
+var baseResponseHost = getVirtualHostResponse(scanHost)[2];
+if (baseResponseHost != '') {
+    baseResponseHost = baseResponseHost.replace(scanHost, '');
+    baseResponseHost = baseResponseHost.substr(0, 512);
+}
+var baseResponseIP = getVirtualHostResponse(ScanIP)[2];
+if (baseResponseIP != '') {
+    baseResponseIP = baseResponseIP.replace(ScanIP, "");
+    baseResponseIP = baseResponseIP.substr(0, 512);
+}
+// also, from an invalid virtual host
+var invalidHost = randStr(8);
+var baseResponseInvalid = getVirtualHostResponse(invalidHost)[2];
+if (baseResponseInvalid != '') {
+    baseResponseInvalid = baseResponseInvalid.replace(invalidHost, "");
+    baseResponseInvalid = baseResponseInvalid.substr(0, 512);
+}
+var virtualHostFalsePositives = false;
+for (var i=0; i<virtualHosts.length; i++) {
+    var virtualHost = virtualHosts[i];
+    res = checkVirtualHostForDirListing(virtualHost);
+    // test for virtual hosts like dev
+    if (virtualHost != '127.0.0.1' && virtualHost != ScanIP) 
+        checkForPossibleVirtualHost(virtualHost, res);    
+    // test for stuff like admin.acunetix.com
+    if (baseHost && virtualHost != '127.0.0.1' && virtualHost != ScanIP) 
+    {
+        var virtualHost = virtualHosts[i] + '.' + baseHost;
+        res = checkVirtualHostForDirListing(virtualHost);     
+        
+        checkForPossibleVirtualHost(virtualHost, res);
+    }
+}

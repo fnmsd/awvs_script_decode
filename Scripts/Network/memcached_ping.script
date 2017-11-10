@@ -1,0 +1,29 @@
+#include reporting_helpers.inc;
+// test for memcached server
+if (IsPortOpen(11211)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 11211;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		
+		var res = "";
+		socket.send("stats\r\n");		
+		do {
+			data = socket.ReceiveLine();
+			res+= data;	
+		} while (data && data.length && data.search("END") == -1);
+		
+		if (res.search("STAT ") == 0)
+		{
+			trace("alert: memcached detected!");
+			trace(res);
+			
+			KBase("Memcached server running", "A memcached server is running on TCP port 11211.[break]Information gathered from this server:[break][pre]" + res + "[/pre]");
+		}
+		socket.send("quit\r\n");
+	
+		socket.Close();
+	}
+}

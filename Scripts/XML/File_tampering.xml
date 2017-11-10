@@ -1,0 +1,79 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="File tampering" version="0.1" released="20081024" updated="20140307" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="abuse_of_functionality" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>This script is possibly vulnerable to file tampering.[break][break]The scanner detected that user input gets written to a file from the server. [bold]This alert requires user confirmation. It may be a false positive.[/bold] It depends on the file that gets written and how/if user input is santitized before being written to this file. Please make sure that user input is not written to a file that gets interpreted by the web server (for example a PHP file) and check if this file is located inside the application directory.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>This vulnerability allows attackers to tamper with the content of particular files from the web server.</Impact>
+		<Recommendation>Please make sure that user input is properly sanitized before being written to the file.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=File_Write;param.1&lt;ACUSTART</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>Cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>Headers combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

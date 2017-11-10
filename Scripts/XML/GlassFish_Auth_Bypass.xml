@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Oracle Sun GlassFish/Java System Application Server Remote Authentication Bypass Vulnerability" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="authentication_bypass,known_vulnerabilities" CVE="CVE-2011-0807" CWE="CWE-287" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C/E:H/RL:OF/RC:C" CVSSScoreTemp="8.7" CVSSScoreEnv="8.8" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Oracle Sun GlassFish/Java System Application Server is prone to a remote authentication-bypass vulnerability. The flaw exists within the Web Administration component which listens by default on TCP port 4848. When handling a malformed GET request to the administrative interface, the application does not properly handle an exception allowing the request to proceed without authentication. A remote attacker can exploit this vulnerability to execute arbitrary code under the context of the application. This vulnerability allows remote attackers to execute arbitrary code on vulnerable installations of Oracle GlassFish Application Server and Oracle Java Application Server. Authentication is not required to exploit this vulnerability. This vulnerability affects the following versions: 2.1, 2.1.1, 3.0.1, 9.1.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Attackers can exploit this issue to bypass authentication and perform unauthorized actions.</Impact>
+		<Recommendation>Vendor updates are available. Please contact the vendor for more information.</Recommendation>
+		<Reference database="Oracle Critical Patch Update Advisory - April 2011" URL="http://www.oracle.com/technetwork/topics/security/cpuapr2011-301950.html"></Reference>
+		<Reference database="DI-11-137 Oracle Application Server Authentication Bypass Remote Code Execution" URL="http://www.zerodayinitiative.com/advisories/ZDI-11-137/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

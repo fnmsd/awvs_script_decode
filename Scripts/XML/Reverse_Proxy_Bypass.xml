@@ -1,0 +1,140 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Reverse proxy bypass" version="0.1" released="20041108" updated="20140228" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="true" DetaliedInformation="" SendCookies="true" AlertTags="xfs" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="CVE-2011-3368" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:F/RL:OF/RC:C" CVSSScoreTemp="4.2" CVSSScoreEnv="4.2"/>
+		<Copyright/>
+		<Description>The mod_proxy module in the Apache HTTP Server 1.3.x through 1.3.42, 2.0.x through 2.0.64, and 2.2.x through 2.2.21 does not properly interact with use of (1) RewriteRule and (2) ProxyPassMatch pattern matches for configuration of a reverse proxy, which allows remote attackers to send requests to intranet servers via a malformed URI containing an initial @ (at sign) character.
+[break][break]
+A configuration like one of the following examples: [break]
+[break]
+[code]
+  RewriteRule (.*)\.(jpg|gif|png)    http://images.example.com$1.$2 [P][break]
+  ProxyPassMatch (.*)\.(jpg|gif|png) http://images.example.com$1.$2[break]
+[/code]
+[break]
+could result in an exposure of internal servers.  A request of the form:
+[break]
+[break]
+[code]
+  GET @other.example.com/something.png HTTP/1.1[break]
+[/code]
+[break]
+
+would get translated to a target of:[break]
+[break]
+[code]
+  http://images.example.com@other.example.com/something.png
+[/code]
+[break][break]
+
+This will cause the proxy to connect to the hostname "other.example.com", as the "images.example.com@" segment would be
+treated as user credentials when parsing the URL.  This would allow a remote attacker the ability to proxy to hosts other than those
+expected, which could be a security exposure in some circumstances.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>All</WebServer><ApplicationServer>All</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>A remote attacker could proxy to hosts other than those expected, which could be a security exposure in some circumstances.</Impact>
+		<Recommendation>Apache HTTPD users should examine their configuration files to determine if they have used an insecure configuration for reverse proxying. Affected users can update their configuration, or apply the patch.[break][break]
+For example, the above RewriteRule could be changed to: [break]
+[break]
+[code]
+  RewriteRule /(.*)\.(jpg|gif|png)    http://images.example.com/$1.$2 [P][break]
+[/code]
+[break]
+to ensure the pattern only matches against paths with a leading "/".
+</Recommendation>
+		<Reference database="Reverse Proxy Bypass" URL="http://www.contextis.com/research/blog/reverseproxybypass/"/>
+		<Reference database="Apache HTTP Server: mod_proxy reverse proxy	exposure (CVE-2011-3368)" URL="http://seclists.org/fulldisclosure/2011/Oct/232"/><Reference database="CVE-2011-3368" URL="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=2011-3368"/><Reference database="Apache patch" URL="http://www.apache.org/dist/httpd/patches/apply_to_2.2.21/"/></TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item></MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="HtmlParser" type="htmlparser">
+					<Description>An extension to VulnXML. A variable of type htmlparser</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${HtmlParser}" test="cont">
+							<Value>tag=iframe;src=http://www.acunetix-long-name-with-some-inexistent-host.tst/</Value>
+						</Compare>
+						<Compare variable="${HtmlParser}" test="cont">
+							<Value>tag=frame;src=http://www.acunetix-long-name-with-some-inexistent-host.tst/</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item></Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="cookie" type="string">
+		<Description>List of cookie combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="headers" type="string">
+		<Description>List of header combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+</WebApplicationTest>

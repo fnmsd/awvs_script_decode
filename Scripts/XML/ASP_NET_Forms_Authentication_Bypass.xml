@@ -1,0 +1,105 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft ASP.NET Forms authentication bypass" version="0.1" released="20040327" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Backup files" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="authentication_bypass" HasPrecondition="false" SendAuth="true" CVE="CVE-2011-3416" CWE="CWE-264" CVSSVer="2.0" CVSSScore="8.5" CVSSDescr="AV:N/AC:M/Au:S/C:C/I:C/A:C/E:POC/RL:OF/RC:C" CVSSScoreTemp="6.7" CVSSScoreEnv="6.8"/>
+		<Reference database="MS11-100 patch" URL="http://technet.microsoft.com/en-us/security/bulletin/ms11-100"/>
+		<Copyright/>
+		<Description>The Forms Authentication feature in the ASP.NET subsystem in Microsoft .NET Framework 1.1 SP1, 2.0 SP2, 3.5 SP1, 3.5.1, and 4.0 allows remote authenticated users to obtain access to arbitrary user accounts via a crafted username. [break]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS</WebServer>
+			<ApplicationServer>ASP.NET</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>By exploiting this vulnerability an attacker is able to log on
+as a different existing user with all the privileges of the targeted user
+(e.g. admin).</Impact>
+		<Recommendation>Immediately apply the MS11-100 patch:
+http://technet.microsoft.com/en-us/security/bulletin/ms11-100. [break][break]
+
+Workaround: [break]In .NET 4.0 the vulnerability can be mitigated by setting the
+ticketCompatibilityMode attribute in the application or global web.config
+file like this:[break][break]
+[code][pre]
+&lt;system.web&gt;
+  &lt;authentication mode="Forms"&gt;
+    &lt;forms ticketCompatibilityMode="Framework40" /&gt;
+  &lt;/authentication&gt;
+&lt;/system.web&gt;
+[/pre][/code]</Recommendation>
+		<Reference database="ASP.Net Forms Authentication Bypass" URL="http://software-security.sans.org/blog/2012/01/12/asp-net-forms-authentication-bypass/"/></TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Application Trace</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests </Description>
+		<Item encoding="Text">${file}${test}</Item>
+	</Variable>
+</WebApplicationTest>

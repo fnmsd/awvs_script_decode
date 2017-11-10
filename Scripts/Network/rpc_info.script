@@ -1,0 +1,106 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test rpc portmapper
+function program_as_string(program){
+	var res = "";
+	switch (program) {
+		case 100000	: res = "rpcbind"; break;
+		case 100001	: res = "rstatd"; break;
+		case 100002 : res = "rusersd"; break;
+		case 100003	: res = "nfs"; break;
+		case 100004	: res = "ypserv"; break;
+		case 100005 : res = "mountd"; break;
+		case 100007	: res = "ypbind"; break;
+		case 100008	: res = "walld"; break;
+		case 100024 : res = "status"; break;
+		case 100133 : res = "nsm_addrand"; break;
+		case 100017 : res = "rexd"; break;
+		case 100011 : res = "rquotad"; break;
+		default: res = program;
+	}
+	return res;
+}
+function protocol_as_string(proto){
+	var res = "";
+	switch (proto) {
+		case 0x06	: res = "TCP"; break;
+		case 0x11	: res = "UDP"; break;
+		default: res = proto;
+	}
+	return res;
+}
+function extract_rpc_portmaps(data){
+	
+	var res = "";
+	var finished = 0;
+	var pos = 0;
+	var	varFollow, portmap;
+	do {
+	//trace(pos);
+	varFollow = data.slice(28 + pos* 20, 28 + pos* 20 + 4);	
+	//trace(varFollow.toHexString());
+	
+	if (varFollow != strFromRawData(0x00, 0x00, 0x00, 0x01)) 	{
+		finished = 1;
+	} 
+	else {
+		portmap = data.slice(28 + pos* 20 + 4, 28 + pos* 20 + 4 + 16);	
+		
+		program  = portmap.getLongAt(0);
+		version  = portmap.getLongAt(4);
+		protocol = portmap.getLongAt(8);
+		port     = portmap.getLongAt(12);
+		programStr = program_as_string(program);
+		res += "program = " + programStr + "\r\n";
+		//trace("program = " + programStr);
+		res += "version = " + version + "\r\n";
+		//trace("version = " + version);
+		protoStr = protocol_as_string(protocol);
+		res += "protocol = " + protoStr + "\r\n";
+		//trace("protocol = " + protoStr);
+		
+		res += "port = " + port + "\r\n";
+		//trace("port = " + port);
+		//trace(portmap.toHexString());				
+	}
+	pos++;	
+	} while (!finished)
+	return res;
+}
+function prepare_rpc_req(){
+	var res = "";
+	res = strFromRawData(
+	 0x80, 0x00, 0x00, 0x28, 0x31, 0x37, 0x31, 0x37, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 
+ 	 0x00, 0x01, 0x86, 0xa0, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 
+	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+		
+	return res;
+}
+//start
+if (IsPortOpen(111)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 111;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		// send rpc dump
+		rpc_req = prepare_rpc_req();
+	
+		socket.send(rpc_req);	
+		data = socket.Receive(true);
+		// check if we are talking with rpc
+		xid = data.slice(4, 8);
+		if (xid == strFromRawData(0x31, 0x37, 0x31, 0x37)){
+			//trace("validated!");
+			
+			var portmaps = extract_rpc_portmaps(data);
+			if (portmaps.length > 0) {
+				//trace(portmaps);
+				trace("List of RPC services: " + portmaps);
+				KBase("List of RPC services", "A RPC portmapper server is listening on TCP port 111. This service converts RPC program numbers into TCP/IP (or UDP/IP) protocol port numbers. It was possible to gather a list of RPC services: [pre]" + portmaps + "[/pre]");				
+			}			
+		}
+		socket.Close();
+	}
+}

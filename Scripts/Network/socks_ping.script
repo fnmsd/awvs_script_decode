@@ -1,0 +1,115 @@
+#include classSocks.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+var testIP = '87.230.63.11';
+function ping(strHost, intPort)
+{
+	var capabilities = new Object();
+			
+	var socks = new classSocks(strHost, intPort, '4');
+	var retval = socks.Connect(testIP, 80);
+	if(retval == -2 ) // cannot connect abort
+		return(null); 
+	if(retval >= 0)
+	{
+		capabilities.socks4Support = true;		
+		
+		if(retval == 1) 
+			capabilities.socks4SupportConnect = true;
+		retval = socks.Bind(testIP, 80);
+		
+		if(retval == 1) 
+			capabilities.socks4SupportBind = true;
+			
+		socks.close();
+	}
+	
+	socks = new classSocks(strHost, intPort, '5');
+	
+	socks.intAutentType = 0;
+	retval = socks.Connect(testIP, 80);
+	
+	if(retval < 0 ) return(capabilities);
+	capabilities.socks5Support = true;
+	if(retval == 1)
+	{
+		capabilities.socks5Support_Connect = true;
+		capabilities.socks5Support_autent_open = true;
+		
+		//we van test here for the other two methods then
+		
+		if(socks.Bind(testIP, 80) == 1)
+			capabilities.socks5Support_Bind = true;
+		if(socks.AssociateUDP(testIP, 80) == 1)
+			capabilities.socks5Support_AssociateUDP = true;
+	} 
+	socks.intAutentType = 1;
+	retval = socks.Connect(testIP, 80);
+	if((retval == 0) && (socks.intConnectionStatus != 0x0b)) 
+		capabilities.socks5Support_autent_GSSAPI = true;
+	
+	socks.intAutentType = 2;
+	retval = socks.Connect(testIP, 80);
+	if((retval == 0) && (socks.intConnectionStatus != 0x0b)) 
+		capabilities.socks5Support_autent_UsernamePassword = true;
+	
+	socks.close();
+	return(capabilities);
+}
+if (IsPortOpen(1080)) {
+	
+	//de refacut testele pentru mai multe porturi
+	var response = ping(ScanHost, 1080);
+	if(response)
+	{
+		//avem server socks vezi capabilitatile detectate in response
+		//response.socks5Support_autent_open => no autentification alert
+		//response.socks5Support_autent_UsernamePassword => clear text autentification alert (sniffing)
+		//socks5Support_autent_GSSAPI este recunoscut dar nu este implementat
+		traceObject(response);
+		
+		if (response.socks5Support || response.socks4Support) {
+				
+			info = "";
+			if (response.socks4Support) {
+				
+				ReportItem("SOCKS_open.xml", "The SOCKS server is running on TCP port 1080.");	
+				
+				info += "Socks4 support: true\r\n";
+				if (response.socks4SupportConnect) {
+					info += "The server can establish a TCP/IP stream connection.\r\n";
+				}	
+				if (response.socks4SupportBind) {
+					info += "The server can establish a TCP/IP port binding.\r\n";
+				}	
+			}
+			if (response.socks5Support) {
+				info += "Socks5 support: true\r\n";
+				if (response.socks5Support_Connect) {
+					info += "The server can establish a TCP/IP stream connection.\r\n";
+				}	
+				if (response.socks5Support_Bind) {
+					info += "The server can establish a TCP/IP port binding.\r\n";
+				}	
+				if (response.socks5Support_AssociateUDP) {
+					info += "The server can associate a UDP port.\r\n";
+				}	
+				
+				if (response.socks5Support_autent_open) {
+					info += "The server doesn't require authentication.\r\n";				
+					ReportItem("SOCKS_open.xml", "The SOCKS server is running on TCP port 1080.");	
+				}				
+				if (response.socks5Support_autent_UsernamePassword) {
+					info += "The server supports Username/Password authentication. ()\r\n";
+					info += "(All information, including passwords, is transmitted unencrypted (making it vulnerable to interception).";
+				}
+				if (response.socks5Support_autent_GSSAPI) {
+					info += "The server supports GSSAPI authentication.\r\n";
+				}			
+				
+			}
+			trace(info);		
+			KBase("SOCKS server running", "A SOCKS server is running on TCP port 1080.[break]Server information: [pre]" + info + "[/pre]");	
+		}
+	}
+}

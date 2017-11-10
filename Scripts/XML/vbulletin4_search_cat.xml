@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="vBulletin 4 (up to 4.1.2) search.php SQL injection" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>vBulletin 4 is vulnerable to an SQL injection vulnerability. Quote from vBulletin security patch "A flaw within a side query that is used in the search UI has recently been discovered. This flaw may enable malicious individuals to inject sql that would allow you to run arbitrary queries on the db via this exploit. To resolve this issue, it has been necessary to release a patch level version on all versions of vBulletin 4.X.The issue does not affect vBulletin 3.X to the best of our knowledge."</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. [break][break]Depending on the back-end database in use, SQL injection vulnerabilities lead to varying levels of data/system access for the attacker. It may be possible to not only manipulate existing queries, but to UNION in arbitrary data, use sub-selects, or append additional queries. In some cases, it may be possible to read in or write out to files, or to execute shell commands on the underlying operating system.</Impact>
+		<Recommendation>Upgrade to the latest version of vBulletin.</Recommendation>
+		<Reference database="vBulletin 4.0.x =&gt; 4.1.2 (search.php) SQL Injection Vulnerability" URL="http://www.exploit-db.com/exploits/17314/"></Reference>
+		<Reference database="vBulletin 4.x SQL Injection Vulnerability" URL="http://j0hnx3r.org/?p=818"></Reference>
+		<Reference database="vBulletin 4.X Security Patch" URL="http://www.vbulletin.com/forum/showthread.php/376995-vBulletin-4.X-Security-Patch"></Reference>
+	</TestDescription>
+</WebApplicationTest>

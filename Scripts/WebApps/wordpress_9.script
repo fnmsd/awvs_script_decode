@@ -1,0 +1,250 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include wordpress_functions.inc;
+#include wordpress_vulns_plugins.inc;
+#include versioning_helpers.inc;
+	
+var debug = false;
+var versionRegex = /Stable tag:\s+([\d\.]+)/;
+var descrRegex = /<p itemprop="description" class="shortdesc">([\s\S]*?)<\/p>/i;
+var lastVersionRegex = /<meta itemprop="softwareVersion" content="([^"]+)" \/>/i;
+var lastJob = null;
+var lastJobPluginDetails = null;
+var pagePlugins = new Array();
+debate","super-simple-google-analytics","wp-post-date-remover","erident-custom-login-and-dashboard","google","wordpress-social-ring","import-users-from-csv","facebook-like-box","oik","basic-seo-pack","private-only","category-posts","raw-html","bwp-minify","pubsubhubbub","custom-post-widget","complete-central-backup","mini-twitter-feed","custom-menu-wizard","jquery-pin-it-button-for-images","event-registration","wp-email-template","xml-sitemaps-for-videos","q2w3-fixed-widget","contactme","revision-control","synved-shortcodes","ultimate-tag-cloud-widget","post-plugin-library","stealth-login-page","user-meta","header-footer","wp-flexible-map","custom-meta-widget","bumpin-twitter","form","facebook-photo-fetcher","bm-custom-login","multi-level-navigation-plugin","multilingual-press","compact-wp-audio-player","statify","auto-thickbox-plus","ecstatic","email-newsletter","easyreservations","photo-dropper","multiple-post-thumbnails","advanced-sidebar-menu","safe-redirect-manager","skype-online-status","wp-united","cleantalk-spam-protect","wp-calendar","wp-noexternallinks","csv-importer","wp-email-capture","nice-paypal-button-lite","simple-social-buttons","constant-contact-api","search-regex","sitetree","wp-imageflow2","font-uploader","flash-mp3-player","extrawatch-pro","wysiwyg-widgets","nextgen-3d-flux-slider-template","forum-server","grunion-contact-form","404-redirection","wp-youtube-lyte","sliding-youtube-gallery","insert-php","lazy-load","widget-settings-importexport","footer-putter","easy-social-icons","websitedefender-wordpress-security","statpress-reloaded","media-tags","theme-tweaker-lite","wp-invoice","formbuilder","wp-backgrounds-lite","genesis-slider","custom-header-images","wp-supersized","hpbtool","nav-menu-images","thesis-openhook","recent-posts-widget-extended","wp-online-store","amazon-affiliate-link-localizer","alo-easymail","posts-to-posts","social-polls-by-opinionstage","jw-share-this","mailpress","global-translator","feedburner-form","floating-social-media-links","easy-theme-and-plugin-upgrades","proplayer","contact-us","addthis-social-sign-in","wp-backitup","import-html-pages","prettyphoto","post-notification","wp-show-ids","backup-scheduler","facebook-social-plugin-widgets","quotes-collection","invite-anyone","site-is-offline-plugin","floating-menu","wp-page-numbers","ditty-news-ticker","wp-hide-dashboard","multisite-language-switcher","robots-meta","s8-custom-login-and-registration","my-twitter-widget","my-wp-login-logo","member-access","xml-sitemaps","youtube-shortcode","rps-image-gallery","aas-digg-digg-alternative","wp-video-lightbox","wp-hide-post","buddymobile","wp-clean-up","facebook-page-publish-2","newsletter-manager","enhanced-admin-bar-with-codex-search","automatic-updater","force-regenerate-thumbnails","calpress-event-calendar","prettyphoto-media","codepress-admin-columns","codepress-admin-columns","wp-simple-booking-calendar","twitter-widget","store-locator","file-gallery","opml-importer","full-page-full-width-backgroud-slider","feed-them-social","kk-star-ratings","wp-deals","tweet-blender","hide-title","countdown-timer","wp-all-import","custom-recent-posts-widget","search-meter","multiple-content-blocks","pronamic-google-maps","fg-joomla-to-wordpress","advanced-random-posts-widget","cleaner-gallery","blog-in-blog","wordpress-firewall-2","catablog","carousel-horizontal-posts-content-slider","woocommerce-de","wp-widget-cache","cyr2lat","wp-document-revisions","sz-video","social-linkz","wp-e-commerce-store-toolkit","wp-translate","testimonial-basics","really-static","simple-301-redirects","calculatorpro-calculators","restricted-site-access","wp-sticky","contact-form-7-honeypot","yarpp-experiments","related-posts-by-zemanta","youtube-upload-widget","wp-gmappity-easy-google-maps","buddypress-toolbar","ultimate-gallery","easyrecipe","backup","daily-stat","dk-new-medias-image-rotator-widget","wp-admin-ui-customize","twenty-eleven-theme-extensions","localendar-for-wordpress","post-views","wp-portfolio","wp-simpleviewer","nospamnx","custom-post-type-permalinks","wordpress-meta-robots","easy-restaurant-menu-manager","simple-staff-list","seriously-simple-podcasting","wp-connect","woocommerce-grid-list-toggle","woocommerce-facebook-share-like-button","sublimevideo-official","contact","woocommerce-customizer","wsi","theme-blvd-wpml-bridge","wp-complete-backup","tw-recent-posts-widget","movabletype-importer","all-video-gallery","facebook-awd","jm-twitter-cards","buddypress-docs","edit-flow","image-watermark","flash-calendar","rumbletalk-chat-a-chat-with-themes","featured-content-gallery","sweetcaptcha-revolutionary-free-captcha-service","upprev","useful-banner-manager","widgetize-pages-light","adminer","wp-simple-galleries","rejected-wp-keyword-link-rejected","wpnewsman-newsletters","wpnewsman-newsletters","automatic-featured-image-posts","all-in-one-schemaorg-rich-snippets","nextgen-galleryview2","easy","simplest-gallery","wp-symposium","baw-post-views-count","contact-form-7-modules","flexible-posts-widget","copyrightpro","gregs-high-performance-seo","ag-custom-admin","code-snippets","wp-google-analytics","photo-galleria");
+var vulnPlugins = [];
+// **************************************************************************************							 
+function pluginInstalled(dir, path, plugin)
+{	
+	lastJob = new THTTPJob();
+	lastJob.url  = dir.url;
+	lastJob.verb = "GET";
+	lastJob.uri  = path + "wp-content/plugins/" + plugin;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && (lastJob.response.msg2 == 301 || lastJob.response.msg2 == 302)) {
+		var location = lastJob.response.headerValue('location');		
+		if (location.endsWith(lastJob.uri + '/')) 
+		{
+			addHTTPJobToCrawler(lastJob, 1, 1);
+			return true;
+		}
+	}
+	return false; 
+}
+// **************************************************************************************							 
+function pluginGetDetails(dir, path, plugin, secure)
+{	
+	lastJob = new THTTPJob();	
+	lastJob.url  = dir.url;
+	lastJob.verb = "GET";
+	lastJob.uri  = path + "wp-content/plugins/" + plugin + "/readme.txt";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 200) {
+		var match = versionRegex.exec(lastJob.response.body);
+		if (match && match[1]) 
+		{
+			return match[1]; 	
+		}	
+	}
+	return false; 
+}
+// **************************************************************************************							 
+function pluginGetLatestVersion(plugin)
+{	
+	lastJob = new THTTPJob();
+	lastJob.autoRedirect = true;
+	lastJob.verb = "GET";
+	lastJob.url  = new TURL('https://wordpress.org/plugins/' + plugin + '/');	 
+	lastJob.execute();
+	details = {};
+	if (!lastJob.wasError && lastJob.response.msg2 == 200) {
+		var match = descrRegex.exec(lastJob.response.body);
+		if (match && match[1]) 
+			 	details['descr'] = match[1];
+		
+		var match = lastVersionRegex.exec(lastJob.response.body);
+		if (match && match[1]) 
+			 	details['ver'] = match[1];
+		return details;
+	}
+	return false; 
+}
+// **************************************************************************************							 
+function alert2(uri, version, vulnVersion, latestVersion, title, descr, ref1, ref2, ref3, ref4, ref5, ref6, ref7, cve, cwe, cvss, cvss3, recomm, request, response)
+{
+	if (uri == '//') uri='/';
+	
+	var ri = new TReportItem();
+	
+	ri.severity = 'high';
+	ri.affects = uri;
+	ri.alertPath = "Scripts/WordPress vulns";
+	// alert info
+	ri.name = title;
+	ri.description = descr;
+	ri.recommendation = recomm;
+	ri.request = request;
+	ri.response = response;
+	ri.impact = "The impact of this vulnerability is not available.";
+	// alert details
+	ri.details = "Current plugin version: [dark]" + version + "[/dark].[break]";
+	ri.details = ri.details + "Latest plugin version: [bold]" + latestVersion + "[/bold].[break]";	
+	ri.details = ri.details + "Plugin versions lower (or equal) to [bold]" + vulnVersion + "[/bold] are affected.";
+	
+	// references
+	if (ref1 != '')
+		ri.addReference(ref1, ref1);
+	if (ref2 != '')
+		ri.addReference(ref2, ref2);
+	if (ref3 != '')
+		ri.addReference(ref3, ref3);
+	if (ref4 != '')
+		ri.addReference(ref4, ref4);
+	if (ref5 != '')
+		ri.addReference(ref5, ref5);
+	if (ref6 != '')
+		ri.addReference(ref6, ref6);
+	if (ref7 != '')
+		ri.addReference(ref7, ref7);
+	// scores
+	ri.CVE = cve;
+	ri.CWE = cwe;
+	ri.CVSSscore = cvss;
+    ri.CVSS3 = cvss3;
+	AddReportItem(ri);	
+}	
+// **************************************************************************************							 
+function getInstalledPlugins(dir, wpURL)
+{
+	// prepare a KB item
+	var kbi = new TKBaseItem()
+	kbi.Name = 'WordPress plugins';
+	kbi.Text = 'List of plugins installed for WordPress [dark]' + wpURL + '[/dark]: [break][ul]';			
+	
+	var foundPlugins = false;
+	
+	// false positive check
+	if (!pluginInstalled(dir, wpURL, randStr(12)))
+		
+	for (var i=0;i<plugins.length;i++) 
+	{
+		//trace(i);
+		
+		pluginName = plugins[i];
+		if (pluginInstalled(dir, wpURL, pluginName))
+		{
+			foundPlugins = true;
+			
+			if (debug) trace(pluginName + " is installed");
+			
+			var name = pluginName;
+			var version = "";
+			var descr = "";
+			var latestVersion = "N/A";
+			
+			pluginInstalledVersion = pluginGetDetails(dir, wpURL, pluginName);
+			if (pluginInstalledVersion){
+				if (debug) trace("version: " + pluginInstalledVersion);				
+				
+				version = pluginInstalledVersion;				
+				details = pluginGetLatestVersion(pluginName);
+				if (details) {
+					descr = details['descr'];
+					latestVersion = details['ver'];
+				}
+			}
+			
+			if (descr) 
+			kbi.Text = kbi.Text + "[break][bold]" + name + "[/bold] version " + version + " (latest " + latestVersion + ")[break]" + descr + "[break]";
+			else
+			kbi.Text = kbi.Text + "[break][bold]" + name + "[/bold] version " + version + " (latest " + latestVersion + ")[break]";				
+			
+			// check if the plugin is vulnerable
+			if (pluginInstalledVersion && vulnPlugins.indexOf(pluginName) != -1) {
+				if (debug) trace("plugin " + pluginName + " has vulnerabilities?");
+				
+				var gotPluginDetails = false;
+				
+				for (var j=0; j<vulns.length; j++) {
+					if (vulns[j][1] == pluginName) {
+						if (debug) trace("  [+] " + vulns[j][0]);		
+						
+						vulnVersion = vulns[j][2];
+						
+						if (debug) trace("vuln version: " + vulnVersion);
+						
+						if (version_compare(pluginInstalledVersion, vulnVersion, '<=')) {
+							if (debug) trace("   [*] vulnerable");
+							
+							// prepare alert details
+							var title = (vulns[j][0]);
+							var descr = vulns[j][3];
+							var ref1 = vulns[j][4];
+							var ref2 = vulns[j][5];
+							var ref3 = vulns[j][6];
+							var ref4 = vulns[j][7];
+							var ref5 = vulns[j][8];
+							var ref6 = vulns[j][9];
+							var ref7 = vulns[j][10];
+							var cve = vulns[j][11];
+							var cwe = vulns[j][12];
+							if (cwe.indexOf(",") != -1) {
+								cwe = cwe.split(",")[0].trim();
+							}
+							var cvss = vulns[j][13];
+							var cvss3 = vulns[j][14];
+							var recomm = vulns[j][15];
+							if (!recomm.trim().endsWith(".")) recomm = recomm + ".";	
+							
+							var pluginpath = wpURL + "wp-content/plugins/" + pluginName + "/";							
+														
+							if (!gotPluginDetails) {
+								gotPluginDetails = true;
+								pluginGetDetails(dir, wpURL, pluginName);
+							}
+														
+							alert2(pluginpath, pluginInstalledVersion, vulnVersion, latestVersion, title, descr, ref1, ref2, ref3, ref4, ref5, ref6, ref7, cve, cwe, cvss, cvss3, recomm, lastJob.request.toString(), lastJob.response.headersString);
+						}
+					}
+				}				
+			}			
+			
+			
+		}		
+	}
+	// add kbitem if at least one plugin was found.	
+	if (foundPlugins) AddKBItem(kbi);
+}
+// **************************************************************************************							 
+function getPluginNamesFromResponse(body) {
+	var regex = /\/wp-content\/plugins\/([^\/]+)\//gi;
+	var e;
+	while (e = regex.exec(body))
+	if (e && e[1] && plugins.indexOf(e[1]) == -1) 
+	{
+		plugins.push(e[1]);
+	}
+}
+// **************************************************************************************							 
+function getPluginNamesWordPressVulnerablePlugins() {
+	for (var i=0; i<vulns.length; i++) {
+		var pluginName = vulns[i][1];
+		vulnPlugins.push(pluginName);
+		
+		if (plugins.indexOf(pluginName) == -1) {
+			//trace(pluginName);
+			plugins.push(pluginName);	
+		}
+	}
+}
+// main()
+var dir = getCurrentDirectory();
+var wpURL = dir.fullPath;
+if (!wpURL.endsWith("/")) wpURL = wpURL + '/';
+getPluginNamesFromResponse(dir.response.body);
+getPluginNamesWordPressVulnerablePlugins();
+if (debug) trace("get installed plugins");
+getInstalledPlugins(dir, wpURL);

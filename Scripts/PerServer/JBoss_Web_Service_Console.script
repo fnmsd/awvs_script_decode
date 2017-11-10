@@ -1,0 +1,60 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestJBossWebServiceConsole()
+{
+	if (request('/jbossws/services'))
+	{
+		matches.plainArray = [
+							'>JBossWS/Services<'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("JBoss_Web_Service_Console.xml", matchedText); 	
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestJBossWebServiceConsole();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

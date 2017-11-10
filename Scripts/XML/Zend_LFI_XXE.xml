@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Zend Framework local file disclosure via XXE injection" version="0.1" released="20080307" updated="20150903" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,known_vulnerabilities" CVE="CVE-2012-3363, CVE-2015-5161" CWE="CWE-611" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.1" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The XmlRpc package of Zend Framework is vulnerable to XML eXternal Entity
+Injection attacks (both server and client). The SimpleXMLElement class
+(SimpleXML PHP extension) is used in an insecure way to parse XML data.
+External entities can be specified by adding a specific DOCTYPE element to
+XML-RPC requests. By exploiting this vulnerability an application may be
+coerced to open arbitrary files and/or TCP connections. Other software that uses the XmlRpc package of Zend Framework is then also vulnerable to XML eXternal Entity Injection attacks!</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>By exploiting this vulnerability an application may be coerced to open arbitrary files and/or TCP connections.</Impact>
+		<Recommendation>Upgrade to the latest version of Zend Framework.</Recommendation>
+		<Reference database="ZF2012-01: Local file disclosure via XXE injection in Zend_XmlRpc" URL="http://framework.zend.com/security/advisory/ZF2012-01"></Reference>
+		<Reference database="XML eXternal Entity Injection (XXE) on PHP FPM" URL="http://legalhackers.com/advisories/zend-framework-XXE-vuln.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

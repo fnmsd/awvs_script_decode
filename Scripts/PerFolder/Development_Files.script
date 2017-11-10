@@ -1,0 +1,118 @@
+#include constants.inc;
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include perFolder_helpers.inc;
+#include json_helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+#include debug_helpers.inc;
+#include composer_vulns.inc;
+#include composer_vulns_audit.inc;
+#include versioning_helpers.inc;
+#include rest_helpers.inc;
+#noretest;
+var debug = true;
+var files = [
+    {"name":"application.wadl", "descr":"[bold]${fname}[/bold] => The Web Application Description Language (WADL) is a machine-readable XML description of HTTP-based web applications (typically REST web services).", "pattern":/(<(\w+:)?application)/},
+    {"name":"Gemfile", "descr":"[bold]${fname}[/bold] => A format for describing gem dependencies for Ruby programs.", "pattern":/(gem\s+(['"])[^\2]+?\2)/},
+    {"name":"Gemfile.lock", "descr":"[bold]${fname}[/bold] => A format for describing gem dependencies for Ruby programs.", "pattern":/(gem\s+(['"])[^\2]+?\2)/},
+    {"name":"Gruntfile.js", "descr":"[bold]${fname}[/bold] => Grunt configuration file. Grunt is a JavaScript task runner.", "pattern":/(\.initConfig)/},
+    {"name":"gruntFile.js", "descr":"[bold]${fname}[/bold] => Grunt configuration file. Grunt is a JavaScript task runner.", "pattern":/(\.initConfig)/},
+    {"name":"Gruntfile.coffee", "descr":"[bold]${fname}[/bold] => Grunt configuration file. Grunt is a JavaScript task runner.", "pattern":/(\.initConfig)/},
+    {"name":"GruntFile.coffee", "descr":"[bold]${fname}[/bold] => Grunt configuration file. Grunt is a JavaScript task runner.", "pattern":/(\.initConfig)/},
+    {"name":"Rakefile", "descr":"[bold]${fname}[/bold] => A Rakefile contains executable Ruby code.", "pattern":/(#!\/usr\/bin\/\env rake)/},
+    {"name":"Dockerfile", "descr":"[bold]${fname}[/bold] => Docker configuration file. Docker is an open platform for developers and sysadmins to build, ship, and run distributed applications.", "pattern": /\n((FROM|ADD|COPY|CMD)\s.*)/ },
+    {"name":"package.json", "descr":"[bold]${fname}[/bold] => Grunt configuration file. Grunt is a JavaScript task runner.", "pattern":/(\"(dependencies|devDependencies)\"\:)/},
+    {"name":"config.ru", "descr":"[bold]${fname}[/bold] => This file is used by Rack-based servers to start the application.", "pattern":/(This file is used by Rack-based servers to start the application)/},
+    {"name":"config.rb", "descr":"[bold]${fname}[/bold] => Compass configuration file. Compass is an open-source CSS Authoring Framework.", "pattern":/((preferred_syntax|http_path|project_path|css_dir|sass_dir|images_dir|javascripts_dir|http_javascripts_dir|relative_assets|line_comments)\s+=\s+.*)/},
+    {"name":"compass.rb", "descr":"[bold]${fname}[/bold] => Compass configuration file. Compass is an open-source CSS Authoring Framework.", "pattern":/((preferred_syntax|http_path|project_path|css_dir|sass_dir|images_dir|javascripts_dir|http_javascripts_dir|relative_assets|line_comments)\s+=\s+.*)/},
+    {"name":"Vagrantfile", "descr":"[bold]${fname}[/bold] => Vagrant configuration file. Vagrant is computer software that creates and configures virtual development environments", "pattern":/(Vagrant\.configure)/},
+    {"name":"Vagrantfile.backup", "descr":"[bold]${fname}[/bold] => Vagrant configuration file. Vagrant is computer software that creates and configures virtual development environments", "pattern":/(Vagrant\.configure)/},
+    {"name":"phpunit.xml", "descr":"[bold]${fname}[/bold] => PHPUnit configuration file. PHPUnit is a programmer-oriented testing framework for PHP.", "pattern":/(<phpunit)/},
+    {"name":"bower.json", "descr":"[bold]${fname}[/bold] => Bower manifest file. Bower is a package manager for the web.", "pattern":/(\"(dependencies|devDependencies)\"\:)/},
+    {"name":".bower.json", "descr":"[bold]${fname}[/bold] => Bower manifest file. Bower is a package manager for the web.", "pattern":/(\"(dependencies|devDependencies)\"\:)/},
+    {"name":"composer.json", "descr":"[bold]${fname}[/bold] => Composer configuration file. Composer is a dependency manager for PHP.", "pattern":/("(name|description|keywords|homepage|authors|require)"\s*:\s*.*")/},
+    {"name":"composer.lock", "descr":"[bold]${fname}[/bold] => Composer lock file. Composer is a dependency manager for PHP.", "pattern":/("(name|description|keywords|homepage|authors|require)"\s*:\s*.*")/},
+    {"name":"Gulpfile.js", "descr":"[bold]${fname}[/bold] => gulp configuration file. gulp is a toolkit that will help you automate painful or time-consuming tasks in your development workflow.", "pattern":/(require\(\'gulp\'\))/},
+    {"name":"gulpfile.js", "descr":"[bold]${fname}[/bold] => gulp configuration file. gulp is a toolkit that will help you automate painful or time-consuming tasks in your development workflow.", "pattern":/(require\(\'gulp\'\))/},
+    {"name":"Gulpfile.coffee", "descr":"[bold]${fname}[/bold] => gulp configuration file. gulp is a toolkit that will help you automate painful or time-consuming tasks in your development workflow.", "pattern":/(require\(\'gulp\'\))/},
+    {"name":".travis.yml", "descr":"[bold]${fname}[/bold] => Travis CI configuration file. Travis CI makes working in a team for a software project easier with automated builds. ", "pattern": /((language|matrix|before_install):)/},
+    {"name":"pom.xml", "descr":"[bold]${fname}[/bold] => A Project Object Model or POM is the fundamental unit of work in Maven. Apache Maven is a software project management and comprehension tool.", "pattern": /(<project)/},
+    {"name":"Guardfile", "descr":"[bold]${fname}[/bold] => Guardfile configuration file. Guard automates various tasks by running custom rules whenever file or directories are modified.", "pattern": /(development|guard)/},
+    {"name":"app.js", "descr":"[bold]${fname}[/bold] => Express application file. Express is a minimal and flexible Node.js web application framework.", "pattern": /(require\(\'express\'\))/},
+    {"name":"server.js", "descr":"[bold]${fname}[/bold] => Express application file. Express is a minimal and flexible Node.js web application framework.", "pattern": /(require\(\'express\'\))/},
+    {"name":".pydevproject", "descr":"[bold]${fname}[/bold] => PyDev configuration file. PyDev is a Python IDE for Eclipse.", "pattern": /(<pydev_project)/},
+    {"name":".project", "descr":"[bold]${fname}[/bold] => Eclipse configuration file. Eclipse is a project aiming to provide a universal toolset for development.", "pattern": /(<projectDescription)/},
+    {"name":"appveyor.yml", "descr":"[bold]${fname}[/bold] => AppVeyor configuration file. AppVeyor is a continuous delivery service for Windows.", "pattern":/((environment|install|build_script|test_script|on_failure|artifacts):)/},
+    {"name":"config.xml", "descr":"[bold]${fname}[/bold] => Jenkins configuration file. Jenkins is an extensible open source continuous integration server.", "pattern":/(<project)/},
+    {"name":"credentials.xml", "descr":"[bold]${fname}[/bold] => Jenkins credentials file. Jenkins is an extensible open source continuous integration server.", "pattern": /(<password)/},
+    {"name":"wp-cli.yml", "descr":"[bold]${fname}[/bold] => WP-CLI configuration file. WP-CLI is a set of command-line tools for managing WordPress installations.", "pattern":/((disabled_commands|require|dbuser|core config|user):)/}
+]
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job, details, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Development_file.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/DevelopmentFile";
+    ri.details = "File info: [break]" + details + "[break]";
+	if (matchedText) {
+		ri.details = ri.details + "[break]Pattern found: [break][dark][bold]" + matchedText + "[/bold][/dark]";
+	}
+	
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the directory
+if (dir.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+	var DEVFILESCount = getGlobalValue('DEVFILESCount');
+	if (!DEVFILESCount) DEVFILESCount = 1
+	else DEVFILESCount = DEVFILESCount + 1;
+	// don't run more than 15 times
+	if (DEVFILESCount < 15) {
+		SetGlobalValue("DEVFILESCount", DEVFILESCount, true);
+        for (var i=0; i<files.length; i++) {
+            // make sure the directory ends with /
+            var dirName = dir.fullPath;
+            if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+            var file = files[i];
+            // URI
+            var testURI = dirName + file.name;
+            var http = new THTTPJob();
+            http.url = dir.url;
+            http.verb = 'GET';
+            http.URI = testURI;
+            http.execute();
+            if (!http.wasError && !http.notFound && http.responseStatus == 200){
+                // look for matches
+                var match = http.response.toString().match(file.pattern);
+                if (match && match[1]) {
+                    // confirm it
+                    var confirmhttp = new THTTPJob();
+                    confirmhttp.url = dir.url;
+                    confirmhttp.verb = 'GET';
+                    confirmhttp.URI = testURI + randStr(5);
+                    confirmhttp.execute();
+                    if (!confirmhttp.wasError && !(confirmhttp.response.toString().match(file.pattern))) {
+                        var matchedText = match[1];
+                        var details = file.descr.replace("${fname}", file.name);
+                        alert(testURI, http, details, matchedText);
+                        // composer.lock audit
+                        if (file.name == 'composer.lock') {
+                            auditComposerLockFile(http.URI, http.response.body, http);
+                        }
+                        // wadl file processing
+                        if (file.name == 'application.wadl') {
+                            processWADL(http.response.body);
+                        }
+                    }
+                }
+            }
+            ScriptProgress(ComputeProgress(i, files.length));
+        }
+	}
+}

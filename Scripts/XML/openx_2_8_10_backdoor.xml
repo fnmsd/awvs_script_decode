@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="OpenX 2.8.10 backdoor" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2013-4211" CWE="CWE-95" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>OpenX Source v. 2.8.10 (the binary distribution) was compromised, and two of the files were replaced with two new modified files that contained a remote code execution vulnerability. All OpenX downloads since at least November 2012 through August 2013 were affected.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Arbitrary PHP code execution.</Impact>
+		<Recommendation>Upgrade to OpenX version 2.8.11.</Recommendation>
+		<Reference database="OpenX Security Advisory, 2013/8/6" URL="http://forum.openx.org/index.php?showtopic=503521628"></Reference>
+		<Reference database="Warning: OpenX Ad Server contains a backdoor" URL="http://www.heise.de/security/meldung/Achtung-Anzeigen-Server-OpenX-enthaelt-eine-Hintertuer-1929769.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

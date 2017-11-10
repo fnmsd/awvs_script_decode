@@ -1,0 +1,71 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP unserialize() used on user input" version="0.1" released="20091116" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="denial_of_service,abuse_of_functionality" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:L/AC:M/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+This script is using the PHP function unserialize() on user input. This is not recommended as it can lead to various vulnerabilities. Consult "Web references" for more information about this problem. [break][break]
+
+unserialize() takes a single serialized variable and converts it back into a PHP value. However, if the variable being unserialized is an object, after successfully reconstructing the object PHP will automatically attempt to call the [bold]__wakeup(), __destruct()[/bold] member functions (if they exist). In some cases, this can lead to PHP code execution.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>All</WebServer><ApplicationServer>PHP</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Denial of service and possible arbitrary PHP code execution.</Impact>
+		<Recommendation>It is not recommended to use unserialize() on user input.</Recommendation>
+		<Reference database="Shocking News in PHP Exploitation" URL="http://www.suspekt.org/downloads/POC2009-ShockingNewsInPHPExploitation.pdf"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item></MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Unserialize;param.*&lt;=ACUTEST</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item></Variable>
+	<Variable name="cookie" type="string">
+		<Description>Cookie combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="headers" type="string">
+		<Description>Headers combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item></Variable>
+</WebApplicationTest>

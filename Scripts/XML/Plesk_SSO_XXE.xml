@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Parallels Plesk SSO XML External Entity and Cross-site scripting" version="0.1" released="20080307" updated="20140509" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss,xxe" CVE="" CWE="CWE-611" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:POC/RC:C" CVSSScoreTemp="5.8" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The Parallels Plesk Panel software package is a commercial web hosting automation program.  Parallels Plesk Single Sign-On (SSO) technology make it easy for customers to use and manage applications, and reduce the administrative costs of password management for hosting providers. Parallels Plesk Single Sign-On (SSO) implementation was found vulnerable to XXE (XML External Entity) and XSS (Cross-site scripting) vulnerabilities.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Attacks can include disclosing local files, which may contain sensitive data such as passwords or private user data, using file: schemes or relative paths in the system identifier. Since the attack occurs relative to the application processing the XML document, an attacker may use this trusted application to pivot to other internal systems, possibly disclosing other internal content via http(s) requests.</Impact>
+		<Recommendation>To disable SSO-mode in Parallels Plesk Panel: [break]
+[pre]
+~# /usr/local/psa/bin/sso --disable
+[/pre]</Recommendation>
+		<Reference database="Plesk 10 &amp; 11 SSO XXE/XSS" URL="http://makthepla.net/blog/=/plesk-sso-xxe-xss"></Reference>
+		<Reference database="How can I manage integration of the Single sign-on feature (SSO) with Parallels Plesk Panel and Parallels Plesk SiteBuilder?" URL="http://kb.parallels.com/en/5978"></Reference>
+	</TestDescription>
+</WebApplicationTest>

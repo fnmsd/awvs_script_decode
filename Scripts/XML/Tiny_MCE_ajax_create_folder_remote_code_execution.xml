@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="TinyMCE ajax_create_folder remote code execution vulnerability" version="0.1" released="20090714" updated="20140227" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" HasPrecondition="false" AlertTags="code_execution,known_vulnerabilities" SendCookies="false" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.7" CVSSScoreEnv="5.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Multiple vendor applications utilize the TinyMCE script. TinyMCE is a platform independent web based Javascript HTML WYSIWYG editor control. This plugin includes a file './plugins/ajaxfilemanager/ajax_create_folder.php' that is vulnerable to remote PHP code execution. The writeInfo() function simply writes all the $_POST content into a file called 'data.php' so an attacker can execute arbitrary PHP code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker could upload and execute malicious PHP code.</Impact>
+		<Recommendation>Upgrade TinyMCE script to the latest version or delete the ajax_create_folder.php if you don't use the AJAX file manager functionality.</Recommendation>
+		<Reference database="TinyMCE" URL="http://www.tinymce.com/"></Reference>
+		<Reference database="Zenphoto &lt;= 1.4.1.4 (ajax_create_folder.php) Remote Code Execution" URL="http://www.exploit-db.com/exploits/18083/"></Reference>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>POST</Method>
+					<URI>${scheme}://${host}:${port}${file}?Command=FileUpload&amp;Type=File&amp;CurrentFolder=%2F</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Content-Type</Name>
+						<Value encoding="text">multipart/form-data; boundary=---------------------------29565348729577</Value>
+					</Header>
+					<Header>
+						<Name encoding="text">Content-Length</Name>
+						<Value encoding="text">236</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator>\x0d\x0a</Separator>
+					<Item encoding="text">-----------------------------29565348729577</Item>
+					<Item encoding="text">Content-Disposition: form-data; name="NewFile"; filename="Acunetix_WVS_File_Upload_test.txt"</Item>
+					<Item encoding="text">Content-Type: text/plain</Item>
+					<Item encoding="text"></Item>
+					<Item encoding="text">Testing file upload.</Item>
+					<Item encoding="text">-----------------------------29565348729577--</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>OnUploadCompleted</Value>
+							<Compare variable="${FullBody}" test="cont">
+								<Value>Acunetix_WVS_File_Upload_test</Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

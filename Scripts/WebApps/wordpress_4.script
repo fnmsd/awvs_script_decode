@@ -1,0 +1,42 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+    lastJob.uri  = uri;
+    
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Wordpress";	
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function lookforToolsPackPlugin(dir, themeName) {
+    var root_path = dir.fullPath;
+    if (root_path.charAt(root_path.length-1) != '/') root_path = root_path + '/';
+        
+    var uri = root_path + "wp-content/plugins/ToolsPack/ToolsPack.php";
+    if (request(dir, uri + "?e=cHJpbnQobWQ1KCdhY3VuZXRpeCcpKTsg"))
+    {
+        if (lastJob.response.body.indexOf('082119f75623eb7abd7bf357698ff66c') != -1) 
+            alert(uri, "ToolsPackPlugin.xml");
+    }
+}    
+// main()
+var dir = getCurrentDirectory();
+lookforToolsPackPlugin(dir);

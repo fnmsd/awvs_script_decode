@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="DotNetNuke multiple vulnerabilities" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,known_vulnerabilities" CVE="CVE-2012-1030" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:U/RL:OF/RC:C" CVSSScoreTemp="3.3" CVSSScoreEnv="3.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A weakness and two vulnerabilities have been reported in DotNetNuke,
+which can be exploited by malicious users to enumerate files on an
+affected system and bypass certain security restrictions and by
+malicious people to conduct cross-site scripting attacks. [break][break]
+
+1) Certain unspecified input passed via DotNetNuke.RadEditorProvider
+is not properly sanitised before being used to check for the
+existence of certain files. This can be exploited to enumerate e.g.
+.resources or .config files.[break][break]
+
+This weakness is reported in versions 6.0.0 through 6.1.2.[break][break]
+
+2) Certain input passed via the URL is not properly sanitised before
+being returned to the user. This can be exploited to execute
+arbitrary HTML and script code in a user's browser session in context
+of an affected site.[break][break]
+
+This vulnerability is reported in versions 6.0.0 through 6.0.2.[break][break]
+
+3) An error within the authorization for certain user management
+functions can be exploited to e.g. create new users, delete users,
+and edit existing users and roles.[break][break]
+
+This vulnerability is reported in versions prior to 5.6.7 and prior
+to 6.1.3.[break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can conduct cross-site scripting attacks. An attacker can create new users, delete users,
+and edit existing users and roles.</Impact>
+		<Recommendation>Update to version 5.6.8 or 6.1.3.</Recommendation>
+		<Reference database="Microsoft Vulnerability Research Advisory MSVR12-003" URL="http://technet.microsoft.com/en-us/security/msvr/msvr12-003"></Reference>
+		<Reference database="DotNetNuke Multiple Vulnerabilities" URL="http://dl.packetstormsecurity.net/1202-advisories/sa47872.txt"></Reference>
+		<Reference database="Security bulletin no.62" URL="http://www.dotnetnuke.com/News/Security-Policy/Security-bulletin-no.62.aspx"></Reference>
+		<Reference database="Security bulletin no.63" URL="http://www.dotnetnuke.com/News/Security-Policy/Security-bulletin-no.63.aspx"></Reference>
+		<Reference database="Security bulletin no.64" URL="http://www.dotnetnuke.com/News/Security-Policy/Security-bulletin-no.64.aspx"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,222 @@
+#include dir_listing_helpers.inc;
+#include constants.inc;
+#include helpers.inc;
+#include os_detection.inc;
+#include perFolder_helpers.inc;
+#include string_helpers.inc;
+#noretest;
+var reportedFilesDirs = [];
+var variants = [
+				"users.txt", "user.txt", "info.txt", "log.txt", ".gitignore",
+				"users.ini", "users.db", 
+                "databases.yml", "propel.ini", "schema.yml", "sqlnet.log",
+                "private.key", "id_rsa", "id_dsa", "id_dsa.ppk",
+				"db.inc", "database.inc", "config.inc", "common.inc", "connect.inc", "sql.inc", 
+				"debug.inc", "debug.php", "admin.php", "debug.txt",
+				"bigdump.php",	
+				".htaccess", ".htpasswd", ".passwd", "password.txt", "passwords.txt",
+                "htaccess.bak", "htaccess.txt",
+				"database.log", "database.sql", "database.csv", 
+				"db.log", "db.csv", "db.sql", 
+                "dbaccess.log",
+				"admin.htm", "admin.html",
+				"error.log", "errors.log", "debug.log",	"cleanup.log",
+				"access.log", "error.log",
+				"server.log", "system.log",
+                "localhost.sql",
+				"test.txt", "test.htm", "test.html", "test.php", "test.jsp", "test.asp", "test.aspx", "test.chm",
+				"webstats.html", "wwwstats.htm",                
+				"auth_user_file.txt", 
+				"web.config", 
+				"global.asa.bak", "global.asa.old", "global.asa.tmp", "global.asa.temp", "global.asa.orig",
+				"web.config.bak", "web.config.bakup", "web.config.old", "web.config.tmp", "web.config.temp",
+				"global.asax.bak", "global.asax.old", "global.asax.tmp", "global.asax.temp", "global.asax.orig",
+				"service.asmx", "citydesk.xml",
+				"php.ini", ".user.ini", ".DS_Store",
+				"validator.php",
+				"output-build.txt",
+                "schema.sql", "publication_list.xml",
+                ".listing", "environment.rb", "nohup.out",
+    
+                "database_credentials.inc", 
+                "phpliteadmin.php",
+    
+    			'.viminfo', 'dead.letter', 'authorized_keys',
+    
+				"log.htm", "log.txt", "logs.htm", "log.html", "logs.html", 
+				"customers.log", "customers.csv", "customers.xls", "customers.txt", "customers.sql", "customers.sql.gz", 
+				"members.log", "members.csv", "members.xls", "members.txt", "members.sql", "members.sql.gz", 
+				"users.log", "users.csv", "users.xls", "users.txt", "users.sql", "users.sql.gz",
+    
+				"sales.log", "sales.csv", "sales.xls", "sales.txt", "sales.sql", "sales.sql.gz",
+				"orders.log", "orders.csv", "orders.xls", "orders.txt", "orders.sql", "orders.sql.gz",
+				"${dirName}.dump", "${dirName}.sql", "${dirName}.sql.gz", "${dirName}.sql.bz2", "${dirName}.zip", "${dirName}.gz", "${dirName}.bz2", "${dirName}.tar",
+				"${dirName}.tar.gz", "${dirName}.sln", "${dirName}.tar.bz2", "${dirName}.7z", "${dirName}.ini", "${dirName}.cfg", "${dirName}.sh", "${dirName}.csv", "${dirName}.pst", "${dirName}.ost", "${dirName}.old", "${dirName}.bak",  
+				"../${dirName}.dump", "../${dirName}.sql", "../${dirName}.sql.gz", "../${dirName}.sql.bz2", "../${dirName}.zip", "../${dirName}.gz", "../${dirName}.bz2", "../${dirName}.tar",
+				"../${dirName}.tar.gz", "../${dirName}.sln", "../${dirName}.tar.bz2", "../${dirName}.7z",  "../${dirName}.jar", "../${dirName}.war", "../${dirName}.ini", "../${dirName}.cfg", "../${dirName}.sh", "../${dirName}.csv", "../${dirName}.pst", "../${dirName}.ost", "../${dirName}.old", "../${dirName}.bak"
+			   ];
+			   
+var variants_not_sensitive = 
+	[	
+        "mt-check.cgi",     
+    	"application.wadl",
+        "ajax.php", "uploadify.php", "uploadify.swf", "phpThumb.php",  "timthumb.php", "ZeroClipboard.swf", "open-flash-chart.swf", "open-flash-chart2.swf", "player.swf", "Jplayer.swf", "flowplayer.swf",
+        // register
+        "register.php",
+        // configuration files
+        "config.php", "configuration.php", "database.php", "settings.php",
+        // xmlrpc servers
+        "xmlrpc_server.php"
+    ]
+            
+var variants_rootOnly = 
+	[	
+		"home.php", "login.php", "members.php", "forgot.php", "recover.php", "join.php", "index.php", "install.php", "functions.php", "export.php", "cp.php", "mysql.php", "sql.php", "header.php", "footer.php", "info.php", "misc.php", "account.php", "callback.php", "redirect.php", "download.php", "stats.php", "log.php", "upload.php", "fileupload.php", "file_upload.php", "Upload.php",  "cache.php", "customers.php", "modules.php", "tools.php", "database.php", "orders.php", "file_manager.php", "manager.php", "files.php", "signup.php", "register.php",
+		"home.asp", "login.asp", "members.asp", "forgot.asp", "recover.asp", "join.asp", "index.asp", "install.asp", "functions.asp", "export.asp", "cp.asp", "mysql.asp", "sql.asp", "header.asp", "footer.asp", "info.asp", "misc.asp", "account.asp", "callback.asp", "redirect.asp", "download.asp", "stats.asp", "log.asp", "upload.asp", "fileupload.asp", "file_upload.asp", "Upload.asp",  "cache.asp", "customers.asp", "modules.asp", "tools.asp", "database.asp", "orders.asp", "file_manager.asp", "manager.asp", "files.asp", "signup.asp", "register.asp",   
+		"home.aspx", "login.aspx", "members.aspx", "forgot.aspx", "recover.aspx", "join.aspx", "index.aspx", "install.aspx", "functions.aspx", "export.aspx", "cp.aspx", "mysql.aspx", "sql.aspx", "header.aspx", "footer.aspx", "info.aspx", "misc.aspx", "account.aspx", "callback.aspx", "redirect.aspx", "download.aspx", "stats.aspx", "log.aspx", "upload.aspx", "fileupload.aspx", "file_upload.aspx", "Upload.aspx",  "cache.aspx", "customers.aspx", "modules.aspx", "tools.aspx", "database.aspx", "orders.aspx", "file_manager.aspx", "manager.aspx", "files.aspx", "signup.aspx", "register.aspx",  
+		"home.jsp", "login.jsp", "members.jsp", "forgot.jsp", "recover.jsp", "join.jsp", "index.jsp", "install.jsp", "functions.jsp", "export.jsp", "cp.jsp", "mysql.jsp", "sql.jsp", "header.jsp", "footer.jsp", "info.jsp", "misc.jsp", "account.jsp", "callback.jsp", "redirect.jsp", "download.jsp", "stats.jsp", "log.jsp", "upload.jsp", "fileupload.jsp", "file_upload.jsp", "Upload.jsp",  "cache.jsp", "customers.jsp", "modules.jsp", "tools.jsp", "database.jsp", "orders.jsp", "file_manager.jsp", "manager.jsp", "files.jsp", "signup.jsp", "register.jsp",
+		"home", "login", "members", "forgot", "recover", "join", "index", "install", "functions", "export", "cp", "mysql", "sql", "header", "footer", "info", "misc", "account", "callback", "redirect", "download", "stats", "log", "upload", "fileupload", "file_upload", "Upload",  "cache", "customers", "modules", "tools", "database", "orders", "file_manager", "manager", "files", "signup", "register"
+    ]
+            
+var variants_Java = 
+	[	
+		"home.jsp","login.jsp","members.jsp","forgot.jsp","recover.jsp","join.jsp","index.jsp","install.jsp","functions.jsp","export.jsp","cp.jsp","mysql.jsp","sql.jsp","header.jsp","footer.jsp","info.jsp","misc.jsp","account.jsp","callback.jsp","redirect.jsp","download.jsp","stats.jsp","log.jsp","upload.jsp","fileupload.jsp","file_upload.jsp","Upload.jsp","cache.jsp","customers.jsp","modules.jsp","tools.jsp","database.jsp","orders.jsp","file_manager.jsp","manager.jsp","files.jsp","signup.jsp","register.jsp","user.jsp","users.jsp","config.jsp","debug.jsp","createaccount.jsp","error.jsp","formhandler.jsp","application.wadl"
+    ]    
+    
+// **************************************************************************************							 
+function alreadyReportedThisFileName(fileName)
+{	
+	var fileNameLC = fileName.toLowerCase();
+	if (reportedFilesDirs.indexOf(fileNameLC) == -1) {
+		reportedFilesDirs.push(fileNameLC);
+		return false;
+	}
+	else return true;
+}    
+    
+// **************************************************************************************							 
+function alert(uri, job, variant, origName)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Possible_sensitive_files.xml");
+	ri.name = "Possible sensitive files";
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Possible sensitive files";	
+	//ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original directory: [dark][bold]" + origName + "[/bold][/dark]";
+	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 
+							 
+// **************************************************************************************
+function testFile(file, dirName, variant, report) {
+	// don't test for stuff like /../.old and so on
+	if (variant.indexOf("${dirName}") != -1 && dirName == "") return;
+		
+	var fname = variant.replace("${dirName}", dirName);
+	var dirName = file.path + file.name;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/'; 		
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = dirName + plain2url(fname);
+	http.request.addHeader('Accept', 'acunetix/wvs', true);
+	http.execute();	
+	
+	//trace(http.URI + " " + http.responseStatus);
+	
+	if (!http.wasError && !http.notFound && (http.responseStatus == 200 || http.responseStatus == 206 || http.responseStatus == 406)){
+		if (http.responseStatus == 406)
+		{ 	// these responses need to handled differently
+		
+			// extract alternates from header
+			var alternates = http.response.headerValue('Alternates');			
+			if (alternates) 
+			{				
+				var re = /{"(.*?)"\s\d+\s{/g;	
+				var match;
+				while (match = re.exec(alternates)) 
+				{
+					//logError('SF alternate:' + match[1]);
+					var fname = plain2url(match[1]);
+					if (!alreadyReportedThisFileName(fname)) addLinkToCrawler(fname, file);
+				}			
+			}
+		}
+		
+		else 
+		{		
+			// escape of some false positives
+			if (http.response.body.search(/(page|file|url)\s?not\s?found/i) == -1) 
+			{		
+				//trace(http.URI);
+				//trace(http.responseStatus);
+				
+				if (report) alert(dirName + plain2url(fname), http, variant, dirName);
+				var fname = dirName + plain2url(fname);
+				if (!alreadyReportedThisFileName(fname)) addLinkToCrawler(fname, file);
+			}
+		}
+	}
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+if (file.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{ 
+	// don't test files that have directory listing (waste of time)
+	var matches = new classDirListingMatches();	
+	// don't scan if acusensor is enabled or directory listings
+	if (!acuSensorWasEnabled(file) && !matches.searchOnText(file.response.body))
+	{
+		// first let's test the precondition
+		if (canIScanThisFolder(file)) 
+		{
+			// handle case insensitive scans (remove duplicates)
+			if (getGlobalValue('caseInsensitiveScan') == 1)                     
+            {
+            	variants = removeCaseInsensitiveDuplicatesFromStringArray(variants);
+            	variants_not_sensitive = removeCaseInsensitiveDuplicatesFromStringArray(variants_not_sensitive);
+            	variants_rootOnly = removeCaseInsensitiveDuplicatesFromStringArray(variants_rootOnly);
+            }
+			
+			// for java applications only test for fixed list of common .jsp filenames
+			if (isJava) {						
+            	variants = [];
+            	variants_not_sensitive = variants_Java;
+            	variants_rootOnly = [];
+			}
+			
+			var total = variants.length + variants_not_sensitive.length;
+            
+            // current dir
+            var strDir = file.fullPath.replace(scanURL.path, "/");			        						
+    	    if (strDir == '/') total = total + variants_rootOnly.length;
+            
+			// test it with all backup variants	
+			for (var i=0; i<variants.length; i++) 
+			{	
+				testFile(file, file.name, variants[i], 1);
+				ScriptProgress(ComputeProgress(i, total));
+			}
+			
+			// test it also with non-backup variants	
+			for (var j=0; j<variants_not_sensitive.length; j++) 
+			{	
+				testFile(file, file.name, variants_not_sensitive[j], 0);
+				ScriptProgress(ComputeProgress(i+j, total));
+			}
+            
+            // also test the rootonly variants
+            if (strDir == '/') {
+				for (var j=0; j<variants_rootOnly.length; j++) 
+				{	
+					testFile(file, file.name, variants_rootOnly[j], 0);
+					ScriptProgress(ComputeProgress(i+j, total));
+				}                    
+            }
+		}
+	}
+}

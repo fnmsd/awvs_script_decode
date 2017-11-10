@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress MailPoet Newsletters (wysija-newsletters) unauthenticated file upload" version="0.1" released="20080307" updated="20140729" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,unauthenticated_file_upload" CVE="" CWE="CWE-434" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The WordPress plugin "MailPoet Newsletters" (wysija-newsletters) before version 2.6.8 is vulnerable to an unauthenticated file upload. An attacker can use the Upload Theme functionality to upload a zip file containing a PHP shell.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>It may be possible for an attacker to use this vulnerability to execute arbitrary code.</Impact>
+		<Recommendation>Upgrade to the latest version of MailPoet Newsletters (this issue was fixed in version 2.6.8).</Recommendation>
+		<Reference database="MailPoet Newsletters Changelog" URL="https://wordpress.org/plugins/wysija-newsletters/changelog/"></Reference>
+		<Reference database="Remote File Upload Vulnerability in WordPress MailPoet Plugin (wysija-newsletters)" URL="http://blog.sucuri.net/2014/07/remote-file-upload-vulnerability-on-mailpoet-wysija-newsletters.html"></Reference>
+		<Reference database="WordPress MailPoet Newsletters (wysija-newsletters) Unauthenticated File Upload" URL="https://github.com/rapid7/metasploit-framework/blob/master/modules/exploits/unix/webapp/wp_wysija_newsletters_upload.rb"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Email Header Injection" version="0.1" released="20080307" updated="20140520" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="[p]The following report provides information about the email message received.[/p][ul][li]Date: {date}[/li][li]Email details: {emailDetails}[/li][/ul]" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>[p]One of the scans performed by Acunetix WVS has generated an Email Header Injection Alert. This caused an email to be sent from your website to the Acunetix AcuMonitor Service.[/p]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>One of the input parameters of the [bold]mail[/bold] function are not properly validated. Therefore, it's possible for a remote attacker to inject custom SMTP headers. For example, an attacker can inject additional email recipients and use the script for sending spam.</Impact>
+		<Recommendation>You need to restrict CR(0x13) and LF(0x10) from the user input. Check references for more information about fixing this vulnerability.</Recommendation>
+		<Reference database="Email Injection" URL="http://www.securephpwiki.com/index.php/Email_Injection"/><Reference database="PHP mail() Header Injection Through Subject and To Parameters" URL="http://www.php-security.org/MOPB/MOPB-34-2007.html"/></TestDescription>
+</WebApplicationTest>

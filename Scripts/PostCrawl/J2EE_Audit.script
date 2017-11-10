@@ -1,0 +1,151 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+// directories to be tested
+var dirs 		= new Array();
+var lastJob 	= null;
+var alertedTest1 = false;
+var alertedTest2 = false;
+{
+	// *********************************************************************************************
+	// look for web.xml file contents
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.regexArray = [
+							/(<web-app[\s\S]+<\/web-app>)/
+						  ];
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) {				
+				var matchedText = m[0];
+				if (matchedText && matchedText.length > 1024)  return matchedText.substring(0, 1024) + ' ...'; 
+				else return matchedText;
+			}
+		}			
+		return false;	
+	}
+}
+var injectionPatterns = new classInjectionPatterns();
+// **************************************************************************************							 
+function alert(job, vxml, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = job.uri;
+	ri.alertPath = "Scripts/" + vxml;	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [pre]" + pattern + "[/pre]";
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.addCookies = false;
+	lastJob.execute();	
+	if (!lastJob.wasError)
+	{
+		return true;
+	}
+	
+	return false;
+}		
+/***********************************************************************************/
+function testWebXMLFileDisclosure(rootPath)
+{
+	var variants = Array("./WEB-INF/web.xml", "./WEB-INF/web.xml%00.jsp");
+	
+	for (var i=0;i<variants.length;i++) {
+		var testURL = rootPath + variants[i];
+		
+		//trace(testURL);
+		
+		if (request(testURL)) {
+			var matchedText = injectionPatterns.searchOnText(lastJob.response.body);		
+			if (matchedText) {
+				if (!alertedTest1) {
+					alertedTest1 = true;
+					alert(lastJob, "WebInfWebXML_Audit2.xml", matchedText);
+				}
+			}
+		}
+	}		
+}
+/***********************************************************************************/
+function testWebSphereDirListing(rootPath)
+{
+	var variants = Array("%c0%ae/WEB-INF/web.xml%C0%80.jsp", "%2e/WEB-INF/web.xml%00.jsp", "%c0%ae/WEB-INF/web.xml", "%2e/WEB-INF/web.xml");
+	
+	for (var i=0;i<variants.length;i++) {
+		var testURL = rootPath + variants[i];
+		
+		// trace(testURL);
+		
+		if (request(testURL)) {
+			var matchedText = injectionPatterns.searchOnText(lastJob.response.body);		
+			if (matchedText) {
+				if (!alertedTest2) {
+					alertedTest2 = true;
+					alert(lastJob, "WebSphere_PK81387.xml", matchedText);
+				}
+			}
+		}
+	}		
+}
+/***********************************************************************************/
+function testContextRoot(sf) 
+{
+	var rootPath = sf.fullPath;
+	if (!rootPath.endsWith("/")) rootPath = rootPath + "/";
+	
+	testWebXMLFileDisclosure(rootPath);
+	testWebSphereDirListing(rootPath);
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var addedCount 	= 0;
+	var maxDirs = 10;
+	
+	if (isJava) maxDirs = 100;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		
+		if(!sf.ignored && sf.scanSiteFile && (sf.isMarkedAs(MARKED_AS_RealDir)) )
+		if (addedCount < maxDirs)
+		{
+				dirs.push(sf);
+				addedCount+=1;
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+	{
+		//trace(dirs[i].fullPath);
+		testContextRoot(dirs[i]);
+	}
+}

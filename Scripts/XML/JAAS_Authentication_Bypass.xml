@@ -1,0 +1,36 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="JAAS authentication bypass" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="authentication_bypass,configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P" CVSSScoreTemp="7.5" CVSSScoreEnv="7.5"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+Your web application is possibly vulnerable to JAAS Authentication Bypass. JAAS (Java Authentication and Authorization Service)  is the Java implementation of the standard Pluggable Authentication Module (PAM) information security framework. The main goal of JAAS is to separate the concerns of user authentication so that they may be managed independently. [break][break]
+
+Sometimes, JAAS is not configured correctly and an attacker can bypass the authentication. As an example, take a look at the code below: 
+[pre]
+  &lt;security-constraint&gt;
+    &lt;web-resource-collection&gt;
+      &lt;web-resource-name&gt;Adminarea&lt;/web-resource-name&gt;
+      &lt;url-pattern&gt;/admin/*&lt;/url-pattern&gt;
+      &lt;http-method&gt;GET&lt;/http-method&gt;
+      &lt;http-method&gt;POST&lt;/http-method&gt;
+    &lt;/web-resource-collection&gt;
+    &lt;auth-constraint&gt;
+      &lt;role-name&gt;administrator&lt;/role-name&gt;
+    &lt;/auth-constraint&gt;
+  &lt;/security-constraint&gt;
+[/pre]
+
+In this case the security constraint is defined only for HTTP methods GET and POST. If an attacker is using the HEAD HTTP method he can bypass the authentication.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can use the HTTP method HEAD to bypass the authentication.</Impact>
+		<Recommendation>Remove all http-method definitions from the security-constraint section. This will default to "all HTTP methods".</Recommendation>
+		<Reference database="Java Authentication and Authorization Service (JAAS) Reference Guide" URL="http://docs.oracle.com/javase/7/docs/technotes/guides/security/jaas/JAASRefGuide.html"/></TestDescription>
+</WebApplicationTest>

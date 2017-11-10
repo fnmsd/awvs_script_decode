@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Slow HTTP Denial of Service Attack" version="0.1" released="20080307" updated="20121206" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="denial_of_service" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Your web server is vulnerable to Slow HTTP DoS (Denial of Service) attacks. [break][break]
+
+Slowloris and Slow HTTP POST DoS attacks rely on the fact that the HTTP protocol, by design, requires requests to be completely received by the server before they are processed. If an HTTP request is not complete, or if the transfer rate is very low, the server keeps its resources busy waiting for the rest of the data. If the server keeps too many resources busy, this creates a denial of service.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A single machine can take down another machine's web server with minimal bandwidth and side effects on unrelated services and ports.</Impact>
+		<Recommendation>Consult Web references for information about protecting your web server against this type of attack.</Recommendation>
+		<Reference database="Slowloris HTTP DoS" URL="http://ha.ckers.org/slowloris/"></Reference>
+		<Reference database="Slowloris DOS Mitigation Guide" URL="http://www.funtoo.org/wiki/Slowloris_DOS_Mitigation_Guide"></Reference>
+		<Reference database="Protect Apache Against Slowloris Attack" URL="http://blog.secaserver.com/2011/08/protect-apache-slowloris-attack/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

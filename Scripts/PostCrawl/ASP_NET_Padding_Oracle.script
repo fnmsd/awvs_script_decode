@@ -1,0 +1,68 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#noretest;
+// **************************************************************************************							 
+function alert(uri, details)
+{	
+	var vxml = 'ASP_Net_Oracle_Padding.xml'; 
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	
+	if (details) 
+		ri.Details = details;
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function isVulnerable(token) 
+{
+    var d = token;
+    d = d.replace("-", "+");
+    d = d.replace("_", "/");
+    var padding = d.charAt( d.length-1 );
+    d = d.slice(0, -1);
+    for (var i=1;i<=padding; i++) d=d+"=";    
+    var decoded = b642plain(d);
+    
+    if(decoded.length % 8 == 0) return true;
+    else return false;
+}
+/***********************************************************************************/
+function findResourceURIs(list)
+{	
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.response.body)
+		{
+			var token = "";
+			var m = tokenKeyRegex.exec(sf.response.body);            
+			if (m && m.length > 1) {
+				scriptTag = m[1];
+				token = m[3]; 
+                
+    			if (token) {				
+                    if (isVulnerable(token)) {
+											
+											var details = "Acunetix detected this vulnerability by analyzing the [bold]d[/bold] token and using its value to determine if the [bold]MS10-070[/bold] patch was applied or not.[break]";
+											details = details + "[break]d token: [bold]" + token  + "[/bold][break]";											
+											details = details + "script tag: [pre]" + scriptTag  + "[/pre] [break]";											
+											
+											alert(sf.fullPath, details);
+										}
+    				break;
+    			}                
+			}			
+		}	
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+if (false) { // disable this test for now, needs to be rewritten
+	var tokenKeyRegex = /(<script src="[\/\w]+?(Script|Web)Resource\.axd\?d=([^&]+)&amp\;.*?><\/script>)/i;
+	var list = getNewFiles(loadHttp);
+	findResourceURIs(list);
+}

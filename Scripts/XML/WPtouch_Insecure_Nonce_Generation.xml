@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress plugin WPtouch insecure nonce generation" version="0.1" released="20080307" updated="20140801" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,arbitrary_file_creation" CVE="" CWE="CWE-287" CVSSVer="2.0" CVSSScore="6.0" CVSSDescr="AV:N/AC:M/Au:S/C:P/I:P/A:P" CVSSScoreTemp="6.0" CVSSScoreEnv="6.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Marc-Alexandre Montpas reported a security issue in the popular WordPress plugin WPtouch that could potentially allow a user with no administrative privileges, who was logged in (like a subscriber or an author), to upload PHP files to the target server.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>This vulnerability can only be triggered if your website allows guest users to register. An attacker could potentially take over your website by uploading a backdoor.</Impact>
+		<Recommendation>Upgrade to the latest version of WPtouch (this problem was fixed in version 3.4.3).</Recommendation>
+		<Reference database="Disclosure: Insecure Nonce Generation in WPtouch" URL="http://blog.sucuri.net/2014/07/disclosure-insecure-nonce-generation-in-wptouch.html"></Reference>
+		<Reference database="WPtouch Changelog" URL="https://wordpress.org/plugins/wptouch/changelog/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

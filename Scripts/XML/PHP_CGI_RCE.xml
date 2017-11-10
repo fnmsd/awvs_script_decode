@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP-CGI remote code execution" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="denial_of_service,information_disclosure,known_vulnerabilities" CVE="CVE-2012-1823,CVE-2012-2311" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Copyright></Copyright>
+		<Description>PHP is a widely-used general-purpose scripting language that is especially suited for Web development and can be embedded into HTML. When PHP is used in a CGI-based setup (such as Apache's mod_cgid), the php-cgi receives a processed query string parameter as command line arguments which allows command-line switches, such as -s, -d or -c to be passed to the php-cgi binary, which can be exploited to disclose source code and obtain arbitrary code execution. [break][break]
+An example of the -s command, allowing an attacker to view the source code of index.php is below:
+[pre]
+http://localhost/index.php?-s
+[/pre]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote unauthenticated attacker could obtain sensitive information, cause a denial of service condition or may be able to execute arbitrary code with the privileges of the web server.</Impact>
+		<Recommendation>An alternative is to configure your web server to not let these types of requests with query strings starting with a "-" and not containing a "=" through. Adding a rule like this should not break any sites. For Apache using mod_rewrite it would look like this: [break][break]
+[code][pre]
+         RewriteCond %{QUERY_STRING} ^(%2d|-)[^=]+$ [NC]
+         RewriteRule ^(.*) $1? [L]
+[/pre][/code]</Recommendation>
+		<Reference database="Eindbazen PHP-CGI advisory (CVE-2012-1823)" URL="http://eindbazen.net/2012/05/php-cgi-advisory-cve-2012-1823/"/><Reference database="CVE-2012-1823-mitigation" URL="http://eindbazen.net/wp-content/uploads/2012/05/CVE-2012-1823-mitigation.tar.gz"/><Reference database="PHP-CGI query string parameter vulnerability" URL="http://www.kb.cert.org/vuls/id/520827"/><Reference database="PHP 5.3.12 and PHP 5.4.2 Released!" URL="http://www.php.net/archive/2012.php#id2012-05-03-1"/></TestDescription>
+</WebApplicationTest>

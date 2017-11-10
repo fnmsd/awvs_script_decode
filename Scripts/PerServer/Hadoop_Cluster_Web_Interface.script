@@ -1,0 +1,47 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, lastJob, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = lastJob.uri;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function CheckHadoopWebInterface(port)
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.port = port;
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/browseDirectory.jsp";	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	
+	var patternStr = "<title>HDFS:";
+	
+	lastJob.execute();
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(patternStr) != -1 && lastJob.response.body.indexOf('<a href="http://www.cloudera.com/hadoop/">') != -1)
+	{
+		var details = "Pattern found: [bold][dark]" + patternStr + "[/dark][/bold]";
+		alert('Hadoop_Cluster_Web_Interface.xml', lastJob, details);
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+CheckHadoopWebInterface(50075);
+CheckHadoopWebInterface(50070);
+CheckHadoopWebInterface(1022);

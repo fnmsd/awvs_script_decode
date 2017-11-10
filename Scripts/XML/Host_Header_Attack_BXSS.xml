@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Host header attack AcuMonitor" version="0.1" released="20080307" updated="20150105" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="[p]The following report provides information about the email message received.[/p][ul][li]Date: {date}[/li][li]Full URL: {details}[/li][/ul]" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="2.6" CVSSDescr="AV:L/AC:H/Au:N/C:P/I:P/A:N/E:U/RL:W" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[p]One of the scans performed by Acunetix WVS has generated an Host Header Attack Alert. The scan made a password reset request with a custom Host header. When the user clicked on the reset link the AcuMonitor Service captured this request and issued this alert.[/p]
+
+In many cases, developers are trusting the HTTP Host header value and using it to generate links, import scripts and even generate password resets links with its value. This is a very bad idea, because the HTTP Host header can be controlled by an attacker. This can be exploited using web-cache poisoning and by abusing alternative channels like password reset emails.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can manipulate the Host header as seen by the web application and cause the application to behave in unexpected ways.</Impact>
+		<Recommendation>The web application should use the SERVER_NAME instead of the Host header.
+It should also create a dummy vhost that catches all requests with unrecognized Host headers. This can also be done under Nginx by specifying a non-wildcard SERVER_NAME, and under Apache by using a non-wildcard serverName and turning the UseCanonicalName directive on. Consult references for detailed information.</Recommendation>
+		<Reference database="Practical HTTP Host header attacks" URL="http://www.skeletonscribe.net/2013/05/practical-http-host-header-attacks.html"></Reference>
+		<Reference database="Apache" URL="http://httpd.apache.org/docs/trunk/vhosts/examples.html#defaultallports"></Reference>
+		<Reference database="nginx" URL="http://wiki.nginx.org/ServerBlockExample"></Reference>
+		<Reference database="Automated Detection of Host Header Attacks" URL="http://www.acunetix.com/blog/articles/automated-detection-of-host-header-attacks/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

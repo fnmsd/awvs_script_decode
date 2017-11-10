@@ -1,0 +1,32 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Spring Boot Actuator" version="0.1" released="20080307" updated="20151105" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Actuator endpoints allow you to monitor and interact with your Spring application. Spring Boot includes a number of built-in endpoints and you can also add your own. For example the health endpoint provides basic application health information.
+The following endpoints are available: [break]
+[ul]
+[li][bold]/autoconfig[/bold] - Displays an auto-configuration report showing all auto-configuration candidates and the reason why they 'were' or 'were not' applied.[/li]
+[li][bold]/beans[/bold] - Displays a complete list of all the Spring beans in your application.[/li]
+[li][bold]/configprops[/bold] - Displays a collated list of all @ConfigurationProperties.[/li]
+[li][bold]/dump[/bold] - Performs a thread dump.[/li]
+[li][bold]/env[/bold] - Exposes properties from Spring's ConfigurableEnvironment.[/li]
+[li][bold]/health[/bold] - Shows application health information (a simple 'status' when accessed over an unauthenticated connection or full message details when authenticated).[/li]
+[li][bold]/info[/bold] - Displays arbitrary application info.[/li]
+[li][bold]/metrics[/bold] - Shows 'metrics' information for the current application.[/li]
+[li][bold]/mappings[/bold] - Displays a collated list of all @RequestMapping paths.[/li]
+[li][bold]/shutdown[/bold] - Allows the application to be gracefully shutdown (not enabled by default).[/li]
+[li][bold]/trace[/bold] - Displays trace information (by default the last few HTTP requests).[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>These endpoints may leak sensitive information to a potential attacker. An attacker can use this information to conduct further attacks.</Impact>
+		<Recommendation>In production is recommended to disable access to these endpoints.</Recommendation>
+		<Reference database="Spring Boot Actuator: Production-ready features" URL="http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#production-ready"/></TestDescription>
+</WebApplicationTest>

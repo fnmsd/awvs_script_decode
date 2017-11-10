@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress admin accessible without HTTP authentication" version="0.1" released="20080307" updated="20150210" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>It's recommended to restrict access to the WordPress administration dashboard using HTTP authentication. Password protecting your WordPress admin dashboard through a layer of HTTP authentication is an effective measure to thwart attackers attempting to guess user's passwords. Additionally, if attackers manage to steal a user's password, they will need to get past HTTP authentication in order to gain access to WordPress login form.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>No impact is associated with this vulnerability.</Impact>
+		<Recommendation>Add server-side password protection (such as BasicAuth) to the /wp-admin/ directory. Consult web references for more information.</Recommendation>
+		<Reference database="Securing wp-admin" URL="http://codex.wordpress.org/Hardening_WordPress#Securing_wp-admin"/><Reference database="WordPress Security Tips Part 5 | Restrict Access to wp-admin Directory" URL="http://www.acunetix.com/blog/articles/wordpress-security-wpadmin-directory/"/></TestDescription>
+</WebApplicationTest>

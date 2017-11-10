@@ -1,0 +1,94 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestJBossStatusServlet1()
+{
+	if (request('/status?full=true'))
+	{
+		matches.plainArray = [
+							'<title>Tomcat Status</title>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("JBoss_server_status_info_leak.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestJBossStatusServlet2()
+{
+	if (request('/web-console/status?full=true'))
+	{
+		matches.plainArray = [
+							'<title>Tomcat Status</title>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("JBoss_server_status_info_leak.xml", matchedText); 	
+	}
+}
+// **************************************************************************************
+function TestJBossStatusServlet3()
+{
+	if (request('/manager/status/all'))
+	{
+		matches.plainArray = [
+							'<title>Tomcat Status</title>'
+						  ];
+		
+		matches.regexArray = [
+						  ];	
+		var matchedText = matches.searchOnText(lastJob.response.body);	
+		if (matchedText)
+			alert("JBoss_server_status_info_leak.xml", matchedText); 	
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestJBossStatusServlet1();
+	TestJBossStatusServlet2();
+	TestJBossStatusServlet3();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

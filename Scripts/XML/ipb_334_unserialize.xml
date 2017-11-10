@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Invision Power Board version 3.3.4 unserialize PHP code execution" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2012-5692" CWE="CWE-20" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C" CVSSScoreTemp="8.3" CVSSScoreEnv="8.3"/>
+		<Copyright></Copyright>
+		<Description>The vulnerability is caused due to this method unserialize user input passed through cookies without a proper
+    sanitization. The only one check is done at line 4026,  where is controlled that the serialized string starts
+    with 'a:',  but this is not  sufficient to prevent a  "PHP Object Injection"  because an attacker may send  a
+    serialized string which represents an array of objects.  This can be  exploited to execute arbitrary PHP code
+    via the  "__destruct()" method of the  "dbMain" class,  which calls the "writeDebugLog" method to write debug
+    info into a file.  PHP code may  be injected  only through the  $_SERVER['QUERY_STRING']  variable,  for this
+    reason successful exploitation of this vulnerability requires short_open_tag to be enabled.
+ 
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>impact</Impact>
+		<Recommendation>Apply the security patch provided by the vendor (IP.Board 3.1.x, 3.2.x and 3.3.x Critical Security Update).</Recommendation>
+		<Reference database="IP.Board 3.1.x, 3.2.x and 3.3.x Critical Security Update" URL="http://community.invisionpower.com/topic/371625-ipboard-31x-32x-and-33x-critical-security-update/"/><Reference database="Invision Power Board 3.3.4 unserialize PHP Code Execution" URL="http://www.exploit-db.com/exploits/22398/"/></TestDescription>
+</WebApplicationTest>

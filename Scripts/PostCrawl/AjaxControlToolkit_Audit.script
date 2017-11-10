@@ -1,0 +1,69 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var foundVulnFile = false;
+var vulnVersions = ['4.5.7.1213','4.5.7.1005', '4.5.7.1002', '4.5.7.930', '4.5.7.725', '4.5.7.607', '4.5.7.429'];
+// **************************************************************************************
+function alert(uri, vxml, details)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = uri;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    AddReportItem(ri);
+}
+// **************************************************************************************	
+function testFile(siteFile)
+{
+    if (foundVulnFile) return;
+    if (siteFile.response.body.match(/Assembly\s*:\s*AjaxControlToolkit/)) {
+        var m = /\sVersion:\s+([\d\.]+)/.exec(siteFile.response.body);
+        if (m && m[1]) {
+            var version = m[1];
+            for (var j=0; j<vulnVersions.length; j++) {
+                if (version == vulnVersions[j]) {
+                    version = version.replace("4.5.", "") + ".0";
+                    foundVulnFile = true;
+                    var uri = siteFile.fullPath;
+                    var vxml = "AjaxControlToolkit_RCE_CVE-2015-4670.xml";
+                    var details = "Current version: [bold][dark]" + version + "[/dark][/bold].";
+                    alert(uri, vxml, details);
+                }
+            }
+        }
+    }
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{
+	for (var i=0;i<list.count; i++){
+        // don't test more than 100 files
+        if (files.length >= 100) break;
+        
+		var sf = list.getFile(i);
+		
+		// only test files with variations
+		if(sf.name =="ScriptResource.axd" && !sf.ignored && sf.scanSiteFile && sf.isFile && sf.hasVariations)
+		{
+            // find first variation that is not null
+            var variation = sf.getFirstVariation();
+            while (variation != null) {
+                files.push(variation);
+                variation = variation.getNextSibling();
+            }
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+        testFile(files[i]);
+}

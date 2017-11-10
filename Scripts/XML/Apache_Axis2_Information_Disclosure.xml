@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Axis2 information disclosure" version="0.1" released="20080307" updated="20150219" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Apache Axis2 installation includes a JSP page accessible at [dark]axis2-web/HappyAxis.jsp[/dark] that discloses at lot of sensitive information. An attacker could use this information to conduct further attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker could use this information to conduct further attacks.</Impact>
+		<Recommendation>If you don't want this information to be publicly accessible you need to restrict access to the [dark]/axis2-web/[/dark] directory.</Recommendation>
+		<Reference database="Apache Axis2 Web Administrator's Guide" URL="https://axis.apache.org/axis2/java/core/docs/webadminguide.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

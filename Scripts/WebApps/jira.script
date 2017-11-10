@@ -1,0 +1,64 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+var lastJob = false;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************
+function getJIRAVersion(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.uri = path + 'osd.jsp';
+	lastJob.verb = 'GET';
+	
+	lastJob.execute();	
+	
+	if (!lastJob.wasError && lastJob.responseStatus == 200){
+		var m = /<ShortName>JIRA\s([\d\.]+)<\/ShortName>/.exec(lastJob.response.body);
+		if (m && m[1]) {
+			return m[1];
+		}
+	}
+	
+	return false;
+}
+var dir = getCurrentDirectory();
+var jiraVersionStr = getJIRAVersion(dir, dir.fullPath);
+var alreadyReportedWebApplication = getGlobalValue("detectedAppJIRA");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppJIRA", 1, true);           
+    var kbaseText = "Atlassian JIRA web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].";
+    if (jiraVersionStr)  kbaseText = "Atlassian JIRA web application version [dark][bold]" + jiraVersionStr + " [/bold][/dark]was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].";
+    
+    KBase("Atlassian JIRA web application", kbaseText);
+}
+if (jiraVersionStr) {
+	var details = "Current version is [dark][bold]" + jiraVersionStr + "[/bold][/dark]";
+	if (version_compare(jiraVersionStr, '6.1', '<')) {		
+		alert(lastJob, dir.fullPath, "JIRA_2014-02-26.xml", details);
+	}	
+	if (version_compare(jiraVersionStr, '5.1', '<')) {		
+		alert(lastJob, dir.fullPath, "JIRA_2013-02-21.xml", details);
+	}	
+	if (version_compare(jiraVersionStr, '5.0', '<')) {		
+		alert(lastJob, dir.fullPath, "JIRA_2012-08-28.xml", details);
+	}
+	if (version_compare(jiraVersionStr, '6.4.11', '<')) {		
+		alert(lastJob, dir.fullPath, "JIRA-JRA-44831.xml", details);
+	}
+	if (version_compare(jiraVersionStr, '6.0', '>=') && version_compare(jiraVersionStr, '6.1.4', '<=')) {
+		alert(lastJob, dir.fullPath, "JIRA-JRA-44831.xml", details);
+	}
+}

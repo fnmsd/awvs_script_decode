@@ -1,0 +1,62 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+	ri.setHttpInfo(lastJob);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.autoRedirect = false;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestOracleReportsVulnerabilities()
+{
+	var urls = [
+                    "/reports/rwservlet?report=test.rdf+desformat=html+destype=cache+JOBTYPE=rwurl+URLPARAMETER=%22http://testasp.vulnweb.com/rpb.png%22"
+				];
+	
+	matches.plainArray = [
+                        '39a6ea3246b507782676a6d79812fa1d29e12e9c'
+				];
+	
+	matches.regexArray = [
+				];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+            {
+								alert("Oracle_Reports_RWServlet.xml"); 	
+                break;
+            }
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+TestOracleReportsVulnerabilities();

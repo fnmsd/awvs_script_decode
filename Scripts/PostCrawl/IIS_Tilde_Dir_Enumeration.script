@@ -1,0 +1,128 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+#noretest;
+var dirs = new Array();
+// **************************************************************************************							 
+function alert(uri)
+{	
+    
+    SetGlobalValue("iis_tilde_dir_enum", 1, true);
+	var vxml = 'IIS_Tilde_Dir_Enumeration.xml'; 
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function findDirs(list)
+{	
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		if (sf.response.msg2 == 200 || sf.response.msg2 == 403)
+		{
+			if (dirs.length < 10)
+				dirs.push(sf.fullPath);
+		}
+	}
+}
+/***********************************************************************************/
+function testDir(uri, valid)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	
+	if (lastJob.wasError) return false;
+	
+	if (valid) {
+		//trace("test for valid");
+		if (lastJob.response.msg2 == 404) return true;
+		if (lastJob.response.body.indexOf("Error Code") != -1 && lastJob.response.body.indexOf("0x00000000") != -1) return true;
+		return false;
+	}
+	
+	else {
+		//trace("test for invalid");
+		if (lastJob.response.msg2 == 400) {
+			// false positives
+			if (lastJob.response.body.indexOf("ASP.NET detected invalid characters in the URL.") != -1) return false;			
+			return true;
+		}		
+		
+		if (lastJob.response.body.indexOf("Error Code") != -1 && lastJob.response.body.indexOf("0x80070002") != -1) 
+			return true;
+			
+		return false;
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function test2Dir(uri, valid)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "OPTIONS";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.execute();
+	
+	if (lastJob.wasError) return false;
+	
+	if (valid) {
+		//trace("test for valid");
+		if (lastJob.response.body.indexOf("404 - File or directory not found.") != -1) return true;
+		return false;
+	}
+	
+	else {
+		//trace("test for invalid");
+		if (lastJob.response.msg2 == 200 && lastJob.response.body.length == 0) return true;			
+		return false;
+	}
+	
+	return false;
+}
+/***********************************************************************************/
+function testDirs() {	
+	for (var i=0; i<dirs.length; i++) {
+		//trace("testing " + dirs[i]);
+		if (testDir(dirs[i] + "/*~0*/a.aspx?aspxerrorpath=/", false) && testDir(dirs[i] + "/*~1*/a.aspx?aspxerrorpath=/", true)) {
+			//trace("vulnerable " + dirs[i]);
+			alert(dirs[i]);
+			// stop on first vulnerable
+			break;
+		}		
+		
+		// a new test using the new technique from https://soroush.secproject.com/blog/2014/08/iis-short-file-name-disclosure-is-back-is-your-server-vulnerable/
+		//trace("testing " + dirs[i]);
+		if (test2Dir(dirs[i] + "/*~0*/a.aspx?aspxerrorpath=/", false) && test2Dir(dirs[i] + "/*~1*/a.aspx?aspxerrorpath=/", true)) {
+			//trace("vulnerable " + dirs[i]);
+			alert(dirs[i]);
+			// stop on first vulnerable
+			break;
+		}		
+		
+	}
+}
+// main()
+// don't test this vulnerability twice
+var tested = getGlobalValue("iis_tilde_dir_enum");
+if (!tested)
+{
+    // only test this on IIS
+    if (isIIS) {
+        var list = getNewFiles(loadHttp);
+        findDirs(list);
+        if (dirs.length >0) 
+            testDirs();
+    }
+}

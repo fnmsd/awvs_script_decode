@@ -1,0 +1,64 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(uri, fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function startTesting()
+{
+    var siteRoot = getPathDirectory(scanURL.path);
+	var urls = [
+					"database.yml",
+                    "database.yml_original",
+                    "database.yml~",
+                    "database.yml.pgsql",
+                    "database.yml.sqlite3",
+					"config/database.yml",
+                    "config/database.yml_original",
+                    "config/database.yml~",
+                    "config/database.yml.pgsql",
+                    "config/database.yml.sqlite3",
+					"app/config/database.yml",
+                    "app/config/database.yml_original",
+                    "app/config/database.yml~",
+                    "app/config/database.yml.pgsql",
+                    "app/config/database.yml.sqlite3"
+				];	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(siteRoot + urls[i]))
+		{
+			if (lastJob.response.body.indexOf('development:') != -1 && lastJob.response.body.indexOf('production:') != -1 && (lastJob.response.body.indexOf('adapter:') != -1 || lastJob.response.body.indexOf('type:') != -1))
+				alert(siteRoot + urls[i], "Rails_database_yml.xml"); 	
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var lastJob = null;
+startTesting();

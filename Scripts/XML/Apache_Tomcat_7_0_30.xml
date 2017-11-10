@@ -1,0 +1,39 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 7.0.30" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,missing_update" CVE="CVE-2012-3439,CVE-2012-3544,CVE-2012-3546" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:U/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.8"/>
+		<Copyright></Copyright>
+		<Description>The following problems were fixed in Apache Tomcat version 7.0.30: [break][break]
+
+[ul]
+
+[li]
+[bold]Important: Bypass of security constraints CVE-2012-3546[/bold][break]
+When using FORM authentication it was possible to bypass the security constraint checks in the FORM authenticator by appending /j_security_check to the end of the URL if some other component (such as the Single-Sign-On valve) had called request.setUserPrincipal() before the call to FormAuthenticator#authenticate(). This was fixed in revision 1377892.
+[/li]
+
+[li]
+[bold]DIGEST authentication weakness CVE-2012-3439[/bold][break]
+Three weaknesses in Tomcat's implementation of DIGEST authentication were identified and resolved:[break]
+Tomcat tracked client rather than server nonces and nonce count.[break]
+When a session ID was present, authentication was bypassed.[break]
+The user name and password were not checked before when indicating that a nonce was stale.[break]
+These issues reduced the security of DIGEST authentication making replay attacks possible in some circumstances.
+[/li]
+
+[/ul]
+
+
+[break][break][navy]Affected Apache Tomcat versions (7.0.0 - 7.0.31).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Bypass of security constraints and DIGEST authentication weakness.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache Tomcat.</Recommendation>
+		<Reference database="CVE-2012-3439" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-3439"/><Reference database="CVE-2012-3546" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-3546"/><Reference database="Apache Tomcat 7.x vulnerabilities" URL="http://tomcat.apache.org/security-7.html"/></TestDescription>
+</WebApplicationTest>

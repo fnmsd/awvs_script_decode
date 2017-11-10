@@ -1,0 +1,64 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP super-globals-overwrite" version="0.1" released="20091116" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="abuse_of_functionality" HasPrecondition="false" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="1.9" CVSSDescr="AV:L/AC:M/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="1.5" CVSSScoreEnv="1.5"/>
+		<Copyright/>
+		<Description>A common security problem with PHP is the register_globals setting in PHP's configuration file (php.ini). This setting (which can be either On or Off) tells whether or not to register the contents of the EGPCS (Environment, GET, POST, Cookie, Server) variables as global variables. For example, if register_globals is on, the url http://www.example.com/test.php?id=3 will declare $id as a global variable. This feature is a great security risk, and you should ensure that register_globals is Off for all scripts (as of PHP 4.2.0 this is the default). [break][break]
+Some applications will detect if register_globals is turned off and in that case emulate register_globals by globalizing everything within the _REQUEST array using a code like: [break]
+[code][pre]
+foreach ($_REQUEST as $key =&gt; $val) {
+      $$key = $val;
+   }
+[/pre][/code]
+Code similar to this is used by many projects to emulate register_globals=on. 
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>All</WebServer><ApplicationServer>PHP</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>The impact of this vulnerability depends on the affected web application.</Impact>
+		<Recommendation>Review the source code of this script. If register_globals is required for the functionality of this script, make sure that all the variables are properly initialized. However, it is strongly recommended not to rely on register_globals.</Recommendation>
+		<Reference database="Using Register Globals" URL="http://www.php.net/manual/en/security.globals.php"/>
+		<Reference database="PHP Superglobals" URL="http://www.nusphere.com/php/php_superglobals.htm"/><Reference database="Some facts about the PHPList vulnerability and the phpbb.com hack" URL="http://www.suspekt.org/2009/02/06/some-facts-about-the-phplist-vulnerability-and-the-phpbbcom-hack/"/><Reference database="PHP Programming/Register Globals" URL="http://en.wikibooks.org/wiki/PHP_Programming/Register_Globals"/></TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>POST</Method>
+					<URI>${scheme}://${host}:${port}${path}/${file}?__ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite</URI>
+					<Version>HTTP/1.0</Version>
+					<Header><Name encoding="text">Cookie</Name><Value encoding="text"> __ACUNETIX_TestForGlobalOverwrite=ACUNETIX_TestForGlobalOverwrite</Value></Header></MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">__ACUNETIX_TestForGlobalOverwrite = ACUNETIX_TestForGlobalOverwrite</Item></MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="AspectDataQuery" type="aspectdata">
+					<Description>Query the AspectData items</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${AspectDataQuery}" test="cont">
+					<Value>key=Global_Overwrite</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="path" type="string">
+		<Description>Site file path</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="file" type="string">
+		<Description>Site file filename</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="test" type="string">
+		<Description>A list of backup tests</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="check" type="string">
+		<Description>Full URL</Description>
+		<Item encoding="Text">${path}/${file}</Item></Variable>
+</WebApplicationTest>

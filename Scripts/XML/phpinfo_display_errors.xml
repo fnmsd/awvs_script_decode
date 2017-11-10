@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP errors enabled" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>The display_errors directive determines whether error messages should be sent to the browser. These messages frequently contain sensitive information about your web application environment, and should never be presented to untrusted sources. [break][break]display_errors is on by default.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible information disclosure.</Impact>
+		<Recommendation>You can disable display_errors from php.ini or .htaccess.[break][break][bold]php.ini[/bold][break]display_errors = 'off'[break]log_errors = 'on'[break][break][bold].htaccess[/bold][break]php_flag  display_errors  off[break]php_flag  log_errors  on</Recommendation>
+		<Reference database="Runtime Configuration" URL="http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting"/></TestDescription>
+</WebApplicationTest>

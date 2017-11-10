@@ -1,0 +1,218 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include credentials_medium.inc;
+var serviceName = "Version";
+var roots = ['/axis2/', '/dswsbobje/', '/axis1/', '/axis/', '/jboss-net/']
+// **************************************************************************************							 
+function alert(fname, affects, lastJob, matchedText, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	else if (details) ri.Details =  details;	
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************	
+function detectAxisVersion(rootPath)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	lastJob.uri  = rootPath + "services/Version/getVersion";	
+	
+	lastJob.execute();
+	
+	if (lastJob.responseStatus==200)
+	{
+	    var regex = />Hello I am Axis2 version service , My version is ([\d\.]+)</i;
+	    
+	    var result = [];
+	    var match  = regex.exec(lastJob.response.body);
+	    
+	    if (match && match[1]) {
+	        versionStr = match[1];
+	        
+			// prepare a KB item
+			var kbi = new TKBaseItem()
+			kbi.Name = "Apache Axis2";
+			kbi.Text = "Apache Axis2 version [bold]" + versionStr + "[/bold] was detected in directory [bold]" + rootPath + "[/bold]";
+			
+			AddKBItem(kbi);	        
+	        
+	        return true;
+		}
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function apacheAxisInstalled(rootPath)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	lastJob.uri  = rootPath + "services/listServices";	
+	
+	lastJob.execute();
+	
+	var pattern = "<title>List Services</title>";
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(pattern) !=-1)
+	{
+		alert('Apache_Axis2_Services_List.xml', lastJob.uri, lastJob, pattern);
+		// save the first service name for later usage in LFI test
+		var regex = /Service EPR : <\/font><font color="black">.*?\/services\/([^<]+)<\/font><br>/;
+	    
+	    var result = [];
+	    var match  = regex.exec(lastJob.response.body);
+	    
+	    if (match && match[1]) {
+	    	serviceName = match[1];		
+	    	//trace(serviceName);
+	    }	    
+	
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************	
+function apacheAxisAdminInterface(rootPath)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	lastJob.uri  = rootPath + "axis2-admin/";	
+	
+	lastJob.execute();
+	
+	var pattern = "<title>Login to Axis2 :: Administration page</title>";
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(pattern) !=-1)
+	{
+		// prepare a KB item
+		var kbi = new TKBaseItem()
+		kbi.Name = "Apache Axis2 administration console";
+		kbi.Text = "Apache Axis2 administration console was detected in directory [bold]" + rootPath + "axis2-admin/[/bold]";
+		
+		AddKBItem(kbi);	 
+		
+		return true;
+	}
+	
+	return false;
+}
+// **************************************************************************************	
+function apacheAxisInfoDisclosure(rootPath, useWeb)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	
+	if (useWeb) 
+		lastJob.uri  = rootPath + "axis2-web/HappyAxis.jsp";	
+	else
+		lastJob.uri  = rootPath + "happyaxis.jsp";		
+	
+	lastJob.execute();
+	
+	var pattern = "<h2>Examining System Properties</h2>";
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(pattern) !=-1)
+	{
+		alert('Apache_Axis2_Information_Disclosure.xml', lastJob.uri, lastJob, pattern);
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************							 
+function lookForWeakCredentials(rootPath)
+{
+	var pattern = "<title>Axis2 :: Administration Page</title>";
+	
+	// default Apache Axis2
+	Passwords.unshift("axis2");	
+	
+	for (var i=0;i<Usernames.length;i++) {
+		for (var j=0;j<Passwords.length;j++) {
+			var username = Usernames[i];
+			var password = Passwords[j];
+			
+			lastJob = new THTTPJob();
+				
+			lastJob.url = scanURL;
+			lastJob.verb = 'POST';
+			lastJob.URI = rootPath + "axis2-admin/login";
+			lastJob.addCookies = false;
+			lastJob.request.body = "userName=" + username + "&password=" + password + "&submit=+Login+";
+			lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+			lastJob.execute();	
+			if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf(pattern) != -1)
+			{
+				var details = "Username: [bold][dark]" + username + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('Apache_Axis2_Weak_password.xml', lastJob.URI, lastJob, false, details);
+				
+				return true;
+			}
+		}	
+	}
+	
+	return false;
+}
+// **************************************************************************************	
+function apacheAxisLFI(rootPath)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	lastJob.uri  = rootPath + "services/" + serviceName + "?xsd=../conf/axis2.xml";	
+	
+	lastJob.execute();
+	
+	var pattern = "<axisconfig";
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf(pattern) !=-1)
+	{
+		alert('Apache_Axis2_LFI.xml', rootPath + "services/" + serviceName, lastJob, pattern);
+		return true;
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0;i<roots.length;i++)
+{
+	var rootPath = roots[i];
+	if (apacheAxisInstalled(rootPath)) {
+		// trace("apache axis installed " + rootPath);
+		
+		detectAxisVersion(rootPath);	
+			
+		apacheAxisInfoDisclosure(rootPath, true);
+		apacheAxisInfoDisclosure(rootPath, false);
+		
+		if (apacheAxisAdminInterface(rootPath)) {
+			lookForWeakCredentials(rootPath);
+		}
+		
+		if (serviceName) apacheAxisLFI(rootPath);
+	}
+}

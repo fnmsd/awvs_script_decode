@@ -1,0 +1,63 @@
+#include classMySQL.inc;
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+function bruteforceMySQL(host, port)
+{
+	var loginRetval, i, j;
+		for(i = 0; i < Usernames.length; i++)
+		{
+			for(j = 0; j < Passwords.length; j++)
+			{
+				var mysql  = new mySQLHandlerClass(host, port); 
+				var retval = mysql.open();
+				if(retval < 0)
+					return(null);
+				if(retval == 0)
+				{
+					//server does not like us ...
+					trace(mysql.intErrorNumber);
+					trace(mysql.strErrorState);
+					trace(mysql.strError);
+					mysql.disconect();
+					return(null);
+				}
+				if(retval == 1)
+				{
+					var strUser = Usernames[i];
+					var strPass = Passwords[j];
+					var loginRetval = mysql.login(strUser, strPass);
+					mysql.disconect();
+					
+					ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+				
+					if(loginRetval == 1) //LOGIN SUCCESS
+					{
+						return({"username" : strUser, "password": strPass});
+					}
+					if(loginRetval = 0 ) //acces denied
+						continue;
+					
+					if(loginRetval == -1) //Not implemented
+						continue;
+					
+					if(loginRetval == -2) //Connection or protocol problems abort test
+						return(null);
+				}
+				mysql.disconect();
+			}
+		}
+	return(null);
+}
+if(IsPortOpen(3306))
+{
+	var obj =	bruteforceMySQL(ScanHost, 3306);
+	if(obj)
+	{
+		trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+		ReportItem("Mysql_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.password + "[/dark]");
+	}
+	else 
+	{
+		trace ("Can not guess login credentials.");
+	}
+}

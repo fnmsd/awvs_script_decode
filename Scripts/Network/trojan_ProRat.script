@@ -1,0 +1,21 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for ProRat 
+// http://www.prorat.net/
+if (IsPortOpen(5110)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 5110;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		resp = socket.ReceiveBytes(14);
+		trace(resp);
+		if (resp == "Sifre_Korumasi")
+		{
+			trace("trojan ProRat detected! - alert here");
+			ReportItem("Trojan.xml", "The ProRat trojan horse is running on TCP port 5110.");
+		}
+		socket.Close();
+	}
+}

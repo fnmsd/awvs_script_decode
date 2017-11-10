@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Error message on page" version="0.1" released="20091120" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="information_disclosure,error_handling" SendCookies="true" HasPrecondition="false" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This page contains an error/warning message that may disclose sensitive information. The message can also contain the location of the file that produced the unhandled exception.[break][break]
+This may be a false positive if the error message is found in documentation pages.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>The error messages may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Review the source code for this script.</Recommendation>
+		<Reference database="PHP Runtime Configuration" URL="http://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors"></Reference>
+	</TestDescription>
+</WebApplicationTest>

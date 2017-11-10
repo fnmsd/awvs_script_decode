@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Struts 2 development mode" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>Struts 2 has a setting (which can be set to true or false in struts.properties) called devMode (= development mode). When this setting is enabled, Struts 2 will provide additional logging and debug information, which can significantly speed up development. [break][break]
+The development mode flag enables an OGNL injection backdoor allowing the developers to check their Value Stacks with ease and from a handy OGNL console or request parameter. This handy feature for developers turns into a security nightmare if application is released into production servers with this flag on.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary commands on the affected server.</Impact>
+		<Recommendation>Struts 2 development mode should be disabled on production servers.</Recommendation>
+		<Reference database="Struts 2 Devmode: An OGNL Backdoor" URL="http://www.pwntester.com/blog/2014/01/21/struts-2-devmode/"/><Reference database="Development Mode" URL="http://struts.apache.org/release/2.3.x/docs/devmode.html"/></TestDescription>
+</WebApplicationTest>

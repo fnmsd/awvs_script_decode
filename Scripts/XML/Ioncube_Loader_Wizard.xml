@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Multiple vulnerabilities in Ioncube loader-wizard.php" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,directory_traversal,information_disclosure" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9"/>
+		<Copyright></Copyright>
+		<Description>ionCube PHP Encoder makes it easy to protect PHP source code from easy observation, theft and change by compiling to bytecode. An automated Installer and Wizard ([bold]loader-wizard.php[/bold]) are available to help with install, as well as manual instructions. Multiple vulnerabilities were reported in older versions of this file (version before 2.46).</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can access phpinfo() and php.ini settings file. Also, it's possible to read arbitrary files the webserver has access to.</Impact>
+		<Recommendation>Upgrade to the latest version of Ioncube loader-wizard.php (the problem was fixed in version 2.46) or remove the file from the server. </Recommendation>
+		<Reference database="Multiple vulnerabilities in Ioncube loader-wizard.php" URL="http://www.firefart.net/multiple-vulnerabilities-in-ioncube-loader-wizard/"/></TestDescription>
+</WebApplicationTest>

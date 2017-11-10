@@ -1,0 +1,107 @@
+#include constants.inc;
+#include helpers.inc;
+#include os_detection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for EL Injection
+	function classELInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	classELInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+        
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classELInjection.prototype.alert = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("Expression_Language_Injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/EL injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classELInjection.prototype.testInjection = function(value, expectedResult)
+	{
+		if (!this.request(value)) return false;
+        if (this.lastJob.response.body.indexOf(expectedResult) != -1) 		
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	classELInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;
+					
+			this.currentVariation = i;
+            
+            var num1 = 9999000+(Math.floor(Math.random()*1500));
+            var num2 = 9999000+(Math.floor(Math.random()*1500));
+                        
+			if (this.testInjection("${" + num1 + "+" +  num2 + "}", num1+num2)) {                
+                // make second test (to make the test more reliable)
+                num2 = 10000+(Math.floor(Math.random()*1500));                
+                
+                if (this.testInjection("${" + num1 + "-" +  num2 + "}", num1-num2))
+                	// make another fake test to remove false positives
+                	if (!this.testInjection("${0+0}", num1-num2))
+                   		this.alert("${" + num1 + "-" +  num2 + "}", num1-num2); 
+            }
+            
+            // for Java, test again with #{}
+            if (isJava) {            	
+				if (this.testInjection("#{" + num1 + "+" +  num2 + "}", num1+num2)) {                
+	                // make second test (to make the test more reliable)
+	                num2 = 10000+(Math.floor(Math.random()*1500));                
+	                
+	                if (this.testInjection("#{" + num1 + "-" +  num2 + "}", num1-num2))
+	                	// make another fake test to remove false positives
+	                	if (!this.testInjection("#{0+0}", num1-num2))
+	                   		this.alert("#{" + num1 + "-" +  num2 + "}", num1-num2); 
+	            }            	
+            }
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classELInjection(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

@@ -1,0 +1,404 @@
+#include constants.inc;
+#include helpers.inc;
+#include credentials_medium.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var lastJob  = null;
+var lastJob2 = null;
+var debug = false;
+var userInputIndex 		= -1;
+var passInputIndex 		= -1;
+var username_input_regexes = [
+	/username/i,
+	/uname/i,
+	/user/i,
+	/usr/i,
+	/name/i,
+	/^u$/i,
+	/^nom$/i,
+	/^nick$/i,
+	/^utilisateur$/i,
+	/^benutzer$/i,
+	/^utente$/i,
+	/log/i,
+	/usuario/i
+];
+var email_input_regexes = [
+	/mail/i,
+	/email/i,
+	/e-mail/i,
+	/e_mail/i
+];
+//--------------------------------------------------------------------------------------------------------
+function alert(path, lastJob, details, vulnxml)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile(vulnxml);
+		ri.affects = path;
+		ri.alertPath = "Scripts/Authentication";
+		
+		ri.setHttpInfo(lastJob);
+		
+		ri.details = details;
+		
+		if (vulnxml == "Weak_password.xml")
+			ri.description = "[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]" + ri.description;		
+		
+		AddReportItem(ri);	
+	}		
+	
+/**************************************************************************************************************/
+function extractTextFromBody(body)
+{
+	//trace('extractTextFromBody');
+	var tokens = htmlTokens(body);
+	var str = "";
+	var includeText = true;
+	
+	while (token = tokens.nextToken()) 
+	{
+		if (token.isTag)
+		{
+			if (token.tagName == 'STYLE') includeText = false;
+			else if (token.tagName == '/STYLE') includeText = true;
+			else if (token.tagName == 'SCRIPT') includeText = false;
+			else if (token.tagName == '/SCRIPT') includeText = true; 
+		}
+		
+		else
+		if (token.isText) 
+		{
+			if (includeText) str = str + token.raw + "\n";	
+		}
+	}	
+	
+	return str;
+}
+//--------------------------------------------------------------------------------------------------------
+function filterBody(body, username, password)
+{
+    // extract text from HTML
+    body = extractTextFromBody(body);    
+	// remove possible time string
+	body = body.replace(/([0-1]?[0-9]|[2][0-3]):([0-5][0-9])[.|:]([0-9][0-9])/g, "");
+	body = body.replace(/time\s*[:]\s*\d+\.?\d*/g, "");
+	// remove possible session id-s
+	body = body.replace(/sess(ion|ionid|id)?\s*=\s*(([a-fA-F0-9])*)/g, "");
+	
+	// remove username and password
+	if (username) body = body.replace(username, "");
+	if (password) body = body.replace(password, "");
+	
+	return body;
+}
+//--------------------------------------------------------------------------------------------------------
+function request(username, password)
+{	
+	lastJob = new THTTPJob();
+	lastJob.url = targetUrl;
+	lastJob.addCookies = false;
+	lastJob.autoRedirect = false;
+	
+	scheme.setInputValue(userInputIndex, username);
+	scheme.setInputValue(passInputIndex, password);
+	
+	scheme.populateRequest(lastJob);
+	
+    // populate referer tag - some sites may need it
+    if (!lastJob.request.headerExists('Referer'))
+        lastJob.request.addHeader('Referer', scanURL.url, false);
+	lastJob.execute();
+	
+	return (!lastJob.wasError && !lastJob.notFound); 
+}
+//--------------------------------------------------------------------------------------------------------
+function requestConfirm(username, password)
+{
+    lastJob2 = new THTTPJob();
+    lastJob2.url = targetUrl;
+    lastJob2.addCookies = false;
+    lastJob2.autoRedirect = false;
+    scheme.setInputValue(userInputIndex, username);
+    scheme.setInputValue(passInputIndex, password);
+    scheme.populateRequest(lastJob2);
+    // populate referer tag - some sites may need it
+    if (!lastJob2.request.headerExists('Referer'))
+        lastJob2.request.addHeader('Referer', scanURL.url, false);
+    lastJob2.execute();
+    return (!lastJob2.wasError && !lastJob2.notFound);
+}
+//--------------------------------------------------------------------------------------------------------
+function BruteForceAttackPossible(username, initialBody, initialStatus, initialLocation, duration)
+{
+	if (debug) trace("test BruteForceAttack");
+	// let's make 10 attempts (we will stop at the first failure)
+	for (var i=0; i<10; i++){
+		// generate another random password each time
+		password = randStr(8);
+		
+		if (request(username, password)) 
+		{
+			var filteredBody = filterBody(lastJob.response.body, username, password);
+			
+			// stop on obvious duration differences
+			if (lastJob.duration > (5000 + duration)) break;			
+			//trace(duration);
+			//trace(lastJob.duration);
+			// stop on different status codes
+			if (lastJob.responseStatus != initialStatus) break;
+			// stop on different location headers
+			if (lastJob.response.headerValue('Location') != initialLocation) break;
+					
+			// stop on body differences			
+			if (filteredBody != initialBody) {
+			//trace(filteredBody);
+			//trace(initialBody);
+			break;
+			}
+		}		
+		
+		else break;
+	}	
+	
+	// have we reached the end?
+	if (i>=9) return true	
+	else return false;	
+}
+// ******************************************************************************************************************
+// main() entry point 
+// ******************************************************************************************************************
+// don't test more than 5 html auths
+var HTMLAuthCount = getGlobalValue('HTMLAuthCount');
+// determine if we need to test this scheme
+if ((!HTMLAuthCount || HTMLAuthCount < 5)  && scheme.inputCount >= 2 && scheme.inputCount < 10) {
+	var testScheme 		= false;
+	var havePassword 	= false;
+	var havePassword2 	= false;
+	
+	var userEchoed 		= false;	
+	
+	// check if we have a password input
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		if ((scheme.getInputFlags(i) & INPUT_FLAG_IS_PASSWORD) && scheme.getInputName(i) != 'j_password')
+		{
+			if (!havePassword) havePassword = true;
+			else havePassword2 = true;
+			
+			passInputIndex = i;
+			if (debug) trace("found password input: " + url2plain(scheme.getInputName(i)));
+		}	
+	}
+	
+	// look for a username input and a password input
+	if (havePassword && !havePassword2 && (passInputIndex >= 0)) {
+		var found_user_input = false;
+		var user_input_is_email = false;
+		
+		for (var i=0;i<scheme.inputCount; i++)
+		if (!found_user_input)
+		{
+			
+			user_input_name = url2plain(scheme.getInputName(i));
+			
+			for (var j=0; j<username_input_regexes.length;j++)			
+			if (!found_user_input)
+			{
+				if (username_input_regexes[j].exec(user_input_name))
+					if (!(scheme.getInputFlags(i) & INPUT_FLAG_IS_BUTTON))
+					{
+						userInputIndex = i;
+						found_user_input = true;
+						if (debug) trace("found user input: " + user_input_name);
+						break;
+					}
+			}					
+			// let's look through email regexes			
+			for (var j=0; j<email_input_regexes.length;j++)			
+			if (!found_user_input)
+			{
+				if (email_input_regexes[j].exec(user_input_name)){
+					userInputIndex = i;
+					found_user_input = true;
+					user_input_is_email = true;
+					//trace(user_input_name);
+					break;
+				}
+			}		
+		}
+		
+		// if we found the username input then we are OK
+		if (found_user_input) 
+			testScheme = true;	
+	}
+		
+	if (testScheme) 
+	{
+		if (debug) trace("testScheme");
+		
+		if (!HTMLAuthCount) HTMLAuthCount = 1
+		else HTMLAuthCount = HTMLAuthCount + 1;
+		
+		SetGlobalValue("HTMLAuthCount", HTMLAuthCount, true);
+		username = randStr(8);
+		if (user_input_is_email) username = username + '@' + scanHost;
+		password = randStr(8);
+		
+		//test if the username is echoed in the response
+		if (request(username, password))
+		{		
+			if (lastJob.response.body.indexOf(username) != -1)
+			{
+				// here we alert about username being echoed in the response
+				if (debug) trace("username echoed in the response.");
+				userEchoed = true;
+			}
+			
+			// now let's make more requests using the same username and various passwords (like an attempt to try to guess the password).
+			// and check if the responses are the same and the timeout is not much different
+			var unfilteredBody = lastJob.response.body;
+			var responseStatus = lastJob.responseStatus;
+			var location = lastJob.response.headerValue('Location');
+			var filteredBody = filterBody(unfilteredBody, username, password);	
+			
+			var unfilteredBody2 = unfilteredBody;
+			var responseStatus2 = responseStatus;
+			var location2 = location;
+			var filteredBody2 = filteredBody;
+			
+			if (BruteForceAttackPossible(username, filteredBody, responseStatus, location, lastJob.duration)){
+				if (debug) trace("BruteForceAttackPossible");			
+				var details = "The scanner tested 10 invalid credentials and no account lockout was detected.";
+				alert(targetUrl.path, lastJob, details, "Login_Page_Brute_Force_Possible.xml")
+				
+				// don't try to guess passwords if user is echoed in response
+				if (!userEchoed){
+					// let's try to guess some usernames and passwords
+					var found = false;
+					var error = false;
+				
+					for (var i=0; i<Usernames.length; i++)
+					{
+						if (!found && !error) 
+						
+						for (var j=0; j<Passwords.length; j++)
+						{
+							
+							var username = Usernames[i];
+							if (user_input_is_email) username = username + '@' + scanHost;
+							var password = Passwords[j];
+							
+							//trace(username + ", " + password);
+							
+							if (request(username, password)) 
+							{
+								var lastLocation = lastJob.response.headerValue('Location');
+								if (		(lastJob.response.body != unfilteredBody && lastJob.response.body != unfilteredBody2)
+										|| 	(lastJob.responseStatus != responseStatus && lastJob.responseStatus != responseStatus2 && lastJob.responseStatus in [200,301,302]) 
+										||	(lastLocation != location && lastLocation != location2)
+									)
+ 								{						
+									// if the match is on the first password we might have a false positive
+									// different messages when username is bad and when password is bad.
+									if (j != 0) 
+									{										
+										// confirm it (sometimes after a number of tries the user gets banned)
+										
+										var confirmBody1 = lastJob.response.body;
+										var confirmStatus1 = lastJob.responseStatus;
+										var confirmLocation1 = lastJob.response.headerValue('Location');
+										var confirmFilteredBody1 = filterBody(confirmBody1, username, password);
+										
+										// request again with an invalid password
+										var randPassword = randStr(8);
+										if (request(username, randPassword)) 
+										{								
+											var confirmBody2 = lastJob.response.body;
+											var confirmStatus2 = lastJob.responseStatus;
+											var confirmLocation2 = lastJob.response.headerValue('Location');
+											var confirmFilteredBody2 = filterBody(confirmBody2, username, randPassword);
+											// compare with what we received before (it should be different)
+											if (
+													(confirmBody1 == confirmBody2) &&
+													(confirmStatus1 == confirmStatus2) &&
+													(confirmLocation1 == confirmLocation2) &&
+													(confirmFilteredBody1 == confirmFilteredBody2)												
+												)
+											{
+												// false positive (we probably got banned)
+												error = true; break;
+											}	
+											
+											else
+											{
+												request(username, password);
+													
+												var confirmBody3 = lastJob.response.body;
+												var confirmLocation3 = lastJob.response.headerValue('Location');
+												var confirmFilteredBody3 = filterBody(confirmBody3, username, password);													
+												// confirmation (req1 with good pass = req 3 and <> req 2 with bad pass)
+												if (
+														((confirmBody2 != confirmBody3) && (confirmBody1 == confirmBody3)) &&
+														((!confirmLocation1) || (confirmLocation1 && (confirmLocation2 != confirmLocation3) && (confirmLocation1 == confirmLocation3))) && 
+														((confirmFilteredBody2 != confirmFilteredBody3) && (confirmFilteredBody1 == confirmFilteredBody3))
+													)												
+												{
+                                                    // one more, i still receive false positives from time to tim
+                                                    var randPassword = randStr(8);
+                                                    var randUsername = randStr(8);
+                                                    requestConfirm(randUsername, randPassword);
+                                                    var confirmBody4 = lastJob2.response.body;
+                                                    var confirmFilteredBody4 = filterBody(confirmBody4, username, password);
+                                                    // last confirmation (req1 with good pass != req 3 and == req 2 with bad pass)
+                                                    if (
+                                                        ((confirmBody2 == confirmBody4) && (confirmBody1 != confirmBody4)) &&
+                                                        ((confirmFilteredBody2 == confirmFilteredBody4) && (confirmFilteredBody1 != confirmFilteredBody4))
+                                                    ) {
+                                                        // alert
+                                                        var details = "Username: [bold][dark]" + username + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+                                                        alert(targetUrl.path, lastJob, details, "Weak_password.xml")
+                                                        found = true;
+                                                        break;
+                                                    }
+												}
+												
+												else
+												{
+													// false positive
+													error = true; break;
+												}												
+											}
+										}
+									} 
+									
+									else 
+									{
+										// j=0 (first password)
+										// different messages when username is bad and when password is bad.	
+										// let's save these messages
+										if (unfilteredBody2 == unfilteredBody) 
+										{
+											unfilteredBody2 = lastJob.response.body;
+											responseStatus2 = lastJob.responseStatus;
+											location2 = lastJob.response.headerValue('Location');
+											filteredBody2 = filterBody(unfilteredBody, username, password);	
+										}
+										else
+										{
+											error = true; break;
+										}
+									}		
+								}
+								
+							}	else {error = true; break;}							
+							
+							ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+						}						
+					}				
+				}				
+			}
+		}
+	}
+}

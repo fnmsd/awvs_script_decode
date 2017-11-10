@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="The Heartbleed Bug" version="0.1" released="20080307" updated="20140408" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="buffer_overflow,configuration,information_disclosure" CVE="CVE-2014-0160" CWE="CWE-200" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N" CVSSScoreTemp="6.5" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The Heartbleed Bug is a serious vulnerability in the popular OpenSSL cryptographic software library. This weakness allows stealing the information protected, under normal conditions, by the SSL/TLS encryption used to secure the Internet. SSL/TLS provides communication security and privacy over the Internet for applications such as web, email, instant messaging (IM) and some virtual private networks (VPNs). [break][break]
+
+The Heartbleed bug allows anyone on the Internet to read the memory of the systems protected by the vulnerable versions of the OpenSSL software. This compromises the secret keys used to identify the service providers and to encrypt the traffic, the names and passwords of the users and the actual content. This allows attackers to eavesdrop on communications, steal data directly from the services and users and to impersonate services and users.
+
+[break][break]
+What versions of the OpenSSL are affected?[break]
+Status of different versions:[break][break]
+OpenSSL 1.0.1 through 1.0.1f (inclusive) are vulnerable[break]
+OpenSSL 1.0.1g is NOT vulnerable[break]
+OpenSSL 1.0.0 branch is NOT vulnerable[break]
+OpenSSL 0.9.8 branch is NOT vulnerable[break]
+[break]
+Bug was introduced to OpenSSL in December 2011 and has been out in the wild since OpenSSL release 1.0.1 on 14th of March 2012. OpenSSL 1.0.1g released on 7th of April 2014 fixes the bug.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read the memory of the systems protected by the vulnerable versions of the OpenSSL software.</Impact>
+		<Recommendation>Upgrade to the latest version of OpenSSL.</Recommendation>
+		<Reference database="The Heartbleed Bug" URL="http://heartbleed.com/"></Reference>
+		<Reference database="OpenSSL advisory" URL="https://www.openssl.org/news/secadv_20140407.txt"></Reference>
+	</TestDescription>
+</WebApplicationTest>

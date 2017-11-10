@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Plupload cross-site scripting vulnerability" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities, xss" CVE="CVE-2013-0237" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.5" CVSSScoreEnv="3.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Plupload allows you to upload files using HTML5 Gears, Silverlight, Flash, BrowserPlus or normal forms, providing some unique features such as upload progress, image resizing and chunked uploads. This version of Plupload is vulnerable to cross-site scripting. The affected file is [dark][bold]plupload.flash.swf[/bold][/dark]. [break][break]
+The vulnerable file is included in WordPress versions 3.5, 3.4.2, 3.4.1, 3.4, 3.3.3 and 3.3.2.[break][break]
+Proof of Concept:
+[pre]
+wp-includes/js/plupload/plupload.flash.swf?id=\"));}catch(e){alert(1);}//
+[/pre]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them. An attacker can steal the session cookie and take over the account, impersonating the user. It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of Plupload.</Recommendation>
+		<Reference database="WordPress 3.5 Issues" URL="https://github.com/wpscanteam/wpscan/wiki/WordPress-3.5-Issues"></Reference>
+		<Reference database="Plupload homepage" URL="http://www.plupload.com/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

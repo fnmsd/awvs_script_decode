@@ -1,0 +1,18 @@
+#include constants.inc;
+#include classCodeExecution.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var injectionPatterns = new classInjectionPatterns();
+// main entry point
+var bxss_enabled = getGlobalValue('blindxss.enabled');
+var bxss_userId = getGlobalValue('blindxss.userid');
+var bxss_url = getGlobalValue('blindxss.url');
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classCodeExecution(targetUrl, injectionPatterns, scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

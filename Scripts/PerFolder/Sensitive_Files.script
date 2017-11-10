@@ -1,0 +1,89 @@
+#include constants.inc;
+#include helpers.inc;
+#include perFolder_helpers.inc;
+	
+var files = [
+   {"name":"config/secrets.yml", "descr":"[bold]${fname}[/bold] => Rails configuration file. Rails is a model–view–controller (MVC) framework.", "pattern": /(secret_key_base\:)/ },
+   {"name":"config/initializers/secret_token.rb", "descr":"[bold]${fname}[/bold] => Rails configuration file. Rails is a model–view–controller (MVC) framework.", "pattern": /(Your secret key for verifying the integrity of signed cookies)/},
+   {"name":".zshrc", "descr":"[bold]${fname}[/bold] => Zsh configuration file. The Z shell (zsh) is a Unix shell that can be used as an interactive login shell and as a powerful command interpreter for shell scripting.", "pattern": /\n((alias|export|source|EDITOR|bindkey|setopt|autoload).*)/ },
+   {"name":".bash_profile", "descr":"[bold]${fname}[/bold] => Bash configuration file. Bash is a Unix shell and command language.", "pattern": /\n((alias|export|source|EDITOR).*)/ },
+   {"name":".bash_history", "descr":"[bold]${fname}[/bold] => Bash history file. Bash is a Unix shell and command language.", "pattern": /\n((apt-get|whoami|clear|sudo|rvm|curl|wget|gem|rails|rake|pico|nano|vim|pwd|mkdir|service|chmod|bundle|reboot|poweroff|rvmsudo|grep|mysql|useradd).*)/ },
+   {"name":".nano_history", "descr":"[bold]${fname}[/bold] => nano history file. Nano is a clone of the Pico text editor with some enhancements..", "pattern": /\n((apt-get|whoami|clear|sudo|rvm|curl|wget|gem|rails|rake|pico|nano|vim|pwd|mkdir|service|chmod|bundle|reboot|poweroff|rvmsudo|grep|mysql|useradd).*)/ },
+   {"name":".sh_history", "descr":"[bold]${fname}[/bold] => Bash history file. Bash is a Unix shell and command language.", "pattern": /\n((apt-get|whoami|clear|sudo|rvm|curl|wget|gem|rails|rake|pico|nano|vim|pwd|mkdir|service|chmod|bundle|reboot|poweroff|rvmsudo|grep|mysql|useradd).*)/ },
+   {"name":".irb_history", "descr":"[bold]${fname}[/bold] => Ruby IRB console history file. Ruby is a dynamic, reflective, object-oriented, general-purpose programming language.", "pattern": /\n((require|ARGV|IRB|class|exit|module|private|Wirble|extend).*)/ },
+   {"name":".irbrc", "descr":"[bold]${fname}[/bold] => Ruby IRB console history file. Ruby is a dynamic, reflective, object-oriented, general-purpose programming language.", "pattern": /\n((require|ARGV|IRB|class|exit|module|private|Wirble|extend).*)/ },
+   {"name":".history", "descr":"[bold]${fname}[/bold] => Bash history file. Bash is a Unix shell and command language.", "pattern": /\n((apt-get|whoami|clear|sudo|rvm|curl|wget|gem|rails|rake|pico|nano|vim|pwd|mkdir|service|chmod|bundle|reboot|poweroff|rvmsudo|grep|mysql|useradd).*)/ },
+   {"name":".viminfo", "descr":"[bold]${fname}[/bold] => Vim cache file. Vim is a text editor for Unix.", "pattern": /(\#\sJumplist\s\(newest\sfirst\)\:)/},
+   {"name":"project.xml", "descr":"[bold]${fname}[/bold] => NetBeans project file.", "pattern": /(<\/project>)/},
+   {"name":".histfile", "descr":"[bold]${fname}[/bold] => zsh history file. zsh is a Unix shell and command language.", "pattern": /\n((apt-get|whoami|clear|sudo|rvm|curl|wget|gem|rails|rake|pico|nano|vim|pwd|mkdir|service|chmod|bundle|reboot|poweroff|rvmsudo|grep|mysql|useradd).*)/ },
+   {"name":"id_rsa", "descr":"[bold]${fname}[/bold] => RSA private key.", "pattern": /(-----BEGIN RSA PRIVATE KEY-----(\n[^\-]+)+-----END RSA PRIVATE KEY-----)/},
+   {"name":".psql_history", "descr":"[bold]${fname}[/bold] => PostgreSQL history file. PostgreSQL is an open-source relational database.", "pattern":/(\n(create|grant|flush|select|update)\s.*)/i},
+   {"name":".sqlite_history", "descr":"[bold]${fname}[/bold] => SQLite history file. SQLite is an open-source relational database.", "pattern":/(\n(create|grant|flush|select|update)\s.*)/i},
+   {"name":".mysql_history", "descr":"[bold]${fname}[/bold] => MySQL history file. MySQL is an open-source relational database.", "pattern":/(\n(create|grant|flush|select|update)\s.*)/i},
+   {"name":".s3cfg", "descr":"[bold]${fname}[/bold] => S3cmd configuration file. S3cmd is a command line S3 client and backup for Linux and Mac.", "pattern": /\n((access_key|\[default\]|secret_key|host_base|host_bucket|access_token|bucket_location|add_encoding_exts|simpledb_host|enable_multipart).*)/ },
+   {"name":".htaccess~", "descr":"[bold]${fname}[/bold] => Configuration file. A .htaccess (hypertext access) file is a directory-level configuration file supported by several web servers.", "pattern":/(RewriteEngine|RewriteCond|RewriteRule|AuthType|AuthName|AuthUserFile|ErrorDocument|deny from|AddType|AddHandler|IndexIgnore|ContentDigest|AddOutputFilterByType|php_flag|php_value)\s/},
+   {"name":".htaccess.old", "descr":"[bold]${fname}[/bold] => Configuration file. A .htaccess (hypertext access) file is a directory-level configuration file supported by several web servers.", "pattern":/(RewriteEngine|RewriteCond|RewriteRule|AuthType|AuthName|AuthUserFile|ErrorDocument|deny from|AddType|AddHandler|IndexIgnore|ContentDigest|AddOutputFilterByType|php_flag|php_value)\s/},
+   {"name":".htaccess.save", "descr":"[bold]${fname}[/bold] => Configuration file. A .htaccess (hypertext access) file is a directory-level configuration file supported by several web servers.", "pattern":/(RewriteEngine|RewriteCond|RewriteRule|AuthType|AuthName|AuthUserFile|ErrorDocument|deny from|AddType|AddHandler|IndexIgnore|ContentDigest|AddOutputFilterByType|php_flag|php_value)\s/},
+   {"name":".gitignore", "descr":"[bold]${fname}[/bold] => Git configuration file. Git is a free and open source distributed version control system.", "pattern":/(\.(htaccess|bash_history|bash_profile|inputrc|mysql_history))/},
+   {"name":"${dirname}.sublime-workspace", "descr":"[bold]${fname}[/bold] => Sublime configuration file. Sublime Text is a text editor.", "pattern":/(\"file_history\")/}
+]
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job, details, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Possible_sensitive_files.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Possible_sensitive_files.xml";
+    ri.details = "File info: [break]" + details + "[break]";
+	if (matchedText) {
+		ri.details = ri.details + "[break]Pattern found: [break][dark][bold]" + matchedText + "[/bold][/dark]";
+	}
+	
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the directory
+if (dir.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+	var SENSFILESCount = getGlobalValue('SENSFILESCount');
+	if (!SENSFILESCount) SENSFILESCount = 1
+	else SENSFILESCount = SENSFILESCount + 1;
+	// don't run more than 15 times
+	if (SENSFILESCount < 15) {
+		SetGlobalValue("SENSFILESCount", SENSFILESCount, true);
+        for (var i=0; i<files.length; i++) {
+            // make sure the directory ends with /
+            var dirName = dir.fullPath;
+            if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+            var file = files[i];
+            // URI
+            var testURI = dirName + file.name.replace("${dirname}", dir.name);
+            var http = new THTTPJob();
+            http.url = dir.url;
+            http.verb = 'GET';
+            http.URI = testURI;
+            http.execute();
+            if (!http.wasError && !http.notFound && http.responseStatus == 200){
+                // look for matches
+                var match = http.response.toString().match(file.pattern);
+                if (match && match[1]) {
+                    // confirm it
+                    var confirmhttp = new THTTPJob();
+                    confirmhttp.url = dir.url;
+                    confirmhttp.verb = 'GET';
+                    confirmhttp.URI = testURI + randStr(5);
+                    confirmhttp.execute();
+                    if (!confirmhttp.wasError && !(confirmhttp.response.toString().match(file.pattern))) {
+                        var matchedText = match[1];
+                        var details = file.descr.replace("${fname}", file.name).replace("${dirname}", dir.name);
+                        alert(testURI, http, details, matchedText);
+                    }
+                }
+            }
+            ScriptProgress(ComputeProgress(i, files.length));
+        }
+	}
+}

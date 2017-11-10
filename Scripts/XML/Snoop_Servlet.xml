@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Snoop Servlet information disclosure" version="0.1" released="20080307" updated="20150219" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2012-2170" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The Application Snoop Servlet in IBM WebSphere Application Server 7.0 before 7.0.0.23 does not properly restrict access, which allows remote attackers to obtain sensitive client and request information via a direct request.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker could obtain request and client information.</Impact>
+		<Recommendation>Restrict access to the Snoop servlet URL or install the latest version of IBM WebSphere Application Server.</Recommendation>
+		<Reference database="IBM WebSphere Application Server snoop servlet information disclosure" URL="http://xforce.iss.net/xforce/xfdb/75234"></Reference>
+	</TestDescription>
+</WebApplicationTest>

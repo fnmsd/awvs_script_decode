@@ -1,0 +1,80 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for AXFR - DNS zone transfer
+function prepare_domain_name(domain)
+{
+	var res = "";
+	parts = domain.split(".");
+	for (i=0;i<parts.length;i++)
+	if ((parts[i].length > 0) && (parts[i].toLowerCase() != "www") && (parts[i].toLowerCase() != "www2"))
+	{
+		res += String.fromCharCode(parts[i].length);
+		res += parts[i];
+	}
+	//trace(res);
+	return res;
+}
+function prepare_axfr_request(domain)
+{
+	var res = "";	
+	res = String.fromCharCode(
+						 0x00, 0x00,	 // length	
+						 0x68, 0xb3,   // transaction ID
+             0x00, 0x00,   // flags - standard query
+             0x00, 0x01,   // questions
+             0x00, 0x00,   // answers
+             0x00, 0x00,   // auth rrs
+             0x00, 0x00),  // additional rrs
+	res += prepare_domain_name(domain); 
+	res += String.fromCharCode(
+						 0x00,         // null
+             0x00, 0xFC,   // AXFR
+             0x00, 0x01)   // class IN
+	res = res.setWordAt(res.length - 2, 0, true);
+	return res;
+}
+// start
+// check is tcp port 53 is open (DNS)
+if(IsPortOpen(53))
+{
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 53;
+	socket.Timeout = 5;
+	socket.Connect();
+  if(socket.IsConnected){
+		//trace("connected");
+		axfr_req = prepare_axfr_request(ScanHost);
+		//trace(axfr_req.toHexString());	
+	
+		socket.Send(axfr_req);
+		dnsRespLenStr = socket.ReceiveBytes(2);
+	
+		// get response length
+		if (dnsRespLenStr.length == 2 ) {
+			
+			var dnsRespLen = dnsRespLenStr.getWordAt(0, true);
+			//trace(dnsRespLen);
+			// receive response
+			var dnsResp = socket.ReceiveBytes(dnsRespLen);
+			// valid length?
+			if (dnsResp.length == dnsRespLen){
+				//trace(dnsResp.toHexString());
+				//trace(dnsResp.length);
+				trace("DNS server running on TCP");
+				KBase("DNS server running on TCP", "A DNS server is running on TCP port 53.");		
+				
+				// get number of answers
+				var numberAnswers = dnsResp.getWordAt(6, true);
+				//trace(numberAnswers);
+				if (numberAnswers > 0)
+				{
+					// here we can report success
+					trace("zone transfer is enabled!");
+					ReportItem("Dns_zone_transfer.xml", "The DNS server is running on TCP port 53.");
+				}
+			}			
+		}
+		socket.Close();
+	}
+}

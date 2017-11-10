@@ -1,0 +1,60 @@
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+// test for SMTP VRFY, EXPN
+function TestVRFYEXPN(port){
+var result = false;
+	if (IsPortOpen(port)){
+		socket = new TSocket("TCP");
+		socket.Host = ScanHost;
+		socket.Port	= port;
+		socket.Timeout = 5;
+		socket.Connect();
+		if (socket.IsConnected) {
+			// receive banner
+			data = socket.Receive(true);
+			//trace(data);
+			socket.send("HELO acunetix.com\r\n");
+			data = socket.ReceiveLine();
+			//trace(data);
+			// test VRFY
+			if (data.match(/^[2-3][0-9][0-9] .*/)) {
+				socket.send("VRFY root\r\n");
+				data = socket.ReceiveLine();
+				//trace(data);
+				if (data.match(/^(250)/)) {
+							trace("success - vrfy enabled!");	
+							result = true;
+				}
+				else 
+				// test EXPN
+				{
+					socket.send("EXPN root\r\n");
+					data = socket.ReceiveLine();
+					//trace(data);
+					if (data.match(/^(250)/)) {
+							trace("success - expn enabled!");	
+							result = true;
+					}
+				}		
+				socket.Close();
+			}
+		}
+	}
+	
+	return result;
+}
+//start
+if(!IsPrivateIpAddress(scanip)){
+	if (TestVRFYEXPN(25)){
+		trace("expn/vrfy enabled on port 25");
+		ReportItem("SMTP_vrfy_expn.xml", "The SMTP server is running on TCP port 25.");	
+	}
+	if (TestVRFYEXPN(587)){
+		trace("expn/vrfy enabled on port 587");
+		ReportItem("SMTP_vrfy_expn.xml", "The SMTP server is running on TCP port 587.");		
+	}
+	if (TestVRFYEXPN(465)){
+		trace("expn/vrfy enabled on port 465");
+		ReportItem("SMTP_vrfy_expn.xml", "The SMTP server is running on TCP port 465.");		
+	}
+}

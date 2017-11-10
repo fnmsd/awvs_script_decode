@@ -1,0 +1,128 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include backup_file_variants.inc;
+#include webapp_config_backup.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	if (matchedText) {
+		ri.Details =  ri.Details + "OpenX version found : [pre][blue]" + matchedText + "[/blue][/pre]";
+	}
+	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_OFC_upload_image(dir, uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '?name=acunetix_test';		
+	lastJob.request.addHeader("Content-Type", "acunetix/wvs", true);
+	
+	lastJob.request.body = 'acunetix test';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('Saving your image to: ..') != -1)
+		{
+				// upload was successful
+				alert(uri, 'OpenX_Arbitrary_File_Upload.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function test_openX_2_8_10_backdoor(dir, uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/www/delivery/fc.php?file_to_serve=flowplayer/3.1.1/flowplayer-3.1.1.min.js&script=deliveryLog:vastServeVideoPlayer:player';
+	lastJob.request.addHeader("Content-Type", "application/x-www-form-urlencoded", true);
+	
+	lastJob.request.body = 'vastPlayer=;)(rvq;))kvgrahpn(5qz(gavec';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('082119f75623eb7abd7bf357698ff66c') != -1)
+		{
+				alert(uri, 'openx_2_8_10_backdoor.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function testXajaxSQLInjection(dir, uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri + '/www/admin/index.php';		
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+		
+				var vulnRegex = /<meta name="generator" content="OpenX (v2.8.[1-9]) -/;
+				var m = vulnRegex.exec(lastJob.response.body);            
+					if (m && m.length > 1) {
+						// vulnerable
+						alert(uri, 'OpenX_xajaxargs_SQL_injection.xml', lastJob, m[1]);
+					}
+				
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir)
+{
+		var alreadyReportedWebApplication = getGlobalValue("detectedAppOpenX");
+		if (!alreadyReportedWebApplication)
+		{
+		    setGlobalValue("detectedAppOpenX", 1, true);           
+		    KBase("OpenX web application", "OpenX web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+		}
+		// test for openx 2.8.10 backdoor
+		test_openX_2_8_10_backdoor(dir, dir.fullPath);
+	
+		// test for 2.8.9 xajax sql injection
+		testXajaxSQLInjection(dir, dir.fullPath);
+		// OFC upload image
+		test_OFC_upload_image(dir, dir.fullPath  + '/www/admin/plugins/videoReport/lib/ofc2/ofc_upload_image.php');
+		test_OFC_upload_image(dir, dir.fullPath  + '/admin/plugins/videoReport/lib/ofc2/ofc_upload_image.php');
+		
+		// test for config file backup files
+		testConfigFileBackupFile(dir, dir.fullPath + "/var", scanURL.Host + ".conf", "php");
+}

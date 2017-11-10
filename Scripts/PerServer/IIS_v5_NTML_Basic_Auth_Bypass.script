@@ -1,0 +1,68 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function Test1()
+{
+	var urls = [
+					"/long_inexistent_path12345_/Null.htw?CiWebhitsfile=:&CiRestriction=b&CiHiliteType=full"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+						/<HTML>\s*<BODY>\s*<p><h3><center>The filename, directory name, or volume label syntax is incorrect.<BR><\/center><\/h3><BR><\/BODY>\s*<\/HTML>/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Microsoft_IIS5_NTLM_and_Basic_authentication_bypass.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	Test1();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

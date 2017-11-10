@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress XML-RPC authentication brute force" version="0.1" released="20080307" updated="20140729" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-521" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WordPress provides an XML-RPC interface via the xmlrpc.php script. XML-RPC is remote procedure calling using HTTP as the transport and XML as the encoding. An attacker can abuse this interface to brute force authentication credentials using API calls such as [bold]wp.getUsersBlogs[/bold].</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can brute force the authentication credentials for your WordPress blog.</Impact>
+		<Recommendation>It is possible to disable the XML-RPC script if you do not want to use it. Consult references for a WordPress plugin that does that. If you don't want to disable XML-RPC you can monitor for XML-RPC authentication failures with a Web Application Firewall like ModSecurity.</Recommendation>
+		<Reference database="WordPress XML-RPC Brute Force Scanning" URL="http://blog.spiderlabs.com/2014/07/honeypot-alert-wordpress-xml-rpc-brute-force-scanning.html"></Reference>
+		<Reference database="Prevent XMLRPC" URL="http://wordpress.org/plugins/prevent-xmlrpc/"></Reference>
+		<Reference database="WordPress brute force attack via wp.getUsersBlogs" URL="https://isc.sans.edu/diary/+WordPress+brute+force+attack+via+wp.getUsersBlogs/18427"></Reference>
+	</TestDescription>
+</WebApplicationTest>

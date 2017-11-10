@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="XDMCP service running" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>An X Display Manager Control Protocol (XDMCP) service is running on this host. XDMCP allows the starting of a session on an X server from the same or another computer. A display manager presents the user with a login screen which prompts for a username and password. A session starts when the user successfully enters a valid combination of username and password. An attacker may also use this service to mount a dictionary attack against the remote host to try to log in remotely. Also, all information, including passwords, is transmitted unencrypted (making it vulnerable to interception).</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it.</Recommendation>
+		<Reference database="X display manager" URL="http://en.wikipedia.org/wiki/X_display_manager"/>
+	</TestDescription>
+</WebApplicationTest>

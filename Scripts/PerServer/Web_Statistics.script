@@ -1,0 +1,105 @@
+#include helpers.inc;
+var dirs = 
+    [
+    "stat",
+    "stats",
+    "awstats",
+    "_awstats",
+    "webstats",
+    "webstat",
+    "statistics",
+    "Statistik",
+    "sysstat",
+    "editor/stats",
+    "cgi-bin",
+    "cgi-bin/awstats",
+    "Estadisticas",
+    "reports/Webalizer",
+    "webalizer",
+    "Webalizer",
+    "usagedata",
+    "logs",
+    "_webalizer",
+    "usage",
+    ".stats",
+    "beheer",
+    "wstat",
+    "statystyka"
+   ];
+var dirs2test = 
+    [
+    "/"
+    ]
+// **************************************************************************************							 
+function alert(job, URL, vxml)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = URL;
+	ri.alertPath = "Scripts/" + vxml; 	
+		
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function testDirectory(uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;
+	
+	lastJob.execute();
+	return (!lastJob.wasError && (lastJob.responseStatus == 200 || lastJob.responseStatus == 403));
+}
+// **************************************************************************************							 
+function checkAwStats(dir)
+{	
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "awstats.pl";
+	
+	lastJob.execute();
+	if (!lastJob.wasError && (lastJob.response.body.indexOf('<frame name="mainleft" src="awstats.pl?framename=mainleft"') != -1)) {
+        alert(lastJob, lastJob.uri, 'awstats.xml');
+        return true;
+    }
+    else return false;
+}
+// **************************************************************************************							 
+function checkWebalizer(dir)
+{	
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;	
+	lastJob.uri  = dir + "index.html";
+	
+	lastJob.execute();
+	if (!lastJob.wasError && (lastJob.response.body.indexOf('<H2>Usage Statistics for') != -1)) {
+        alert(lastJob, lastJob.uri, 'webalizer.xml');
+        return true;
+    }
+    else return false;
+}
+// **************************************************************************************							 
+function audit(dir)
+{
+    if (!checkWebalizer(dir)) checkAwStats(dir);
+}
+/***********************************************************************************/
+/* main entry point */
+for (var i=0; i<dirs.length; i++) 
+{
+	if (testDirectory("/" + dirs[i] + "/")) {
+        dirs2test.push("/" + dirs[i] + "/");
+    }
+}
+// test confirmed directories
+for (var i=0; i<dirs2test.length; i++) 
+{
+    audit(dirs2test[i]);
+}

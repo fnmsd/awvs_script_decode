@@ -1,0 +1,80 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="SVN repository found" version="0.1" released="20090925" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Backup files" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="information_disclosure,test_files,dev_files" HasPrecondition="true" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Reference database="Apache Tips &amp; Tricks: Deny access to some folders" URL="http://www.ducea.com/2006/08/11/apache-tips-tricks-deny-access-to-some-folders/"/>
+		<Copyright/>
+		<Description>Subversion metadata directory (.svn) was found in this folder. An attacker can extract sensitive information by requesting the hidden metadata directory that popular version control tool Subversion creates. The metadata directories are used for development purposes to keep track of development changes to a set of source code before it is committed back to a central repository (and vice-versa). When code is rolled to a live server from a repository, it is supposed to be done as an export rather than as a local working copy, and hence this problem.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>All</WebServer><ApplicationServer>All</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>These files may expose sensitive information that may help an malicious user to prepare more advanced attacks.</Impact>
+		<Recommendation>Remove these files from production systems or restrict access to the .svn directory. To deny access to all the .svn folders you need to add the following lines in the appropriate context (either global config, or vhost/directory, or from .htaccess):
+[code][pre]
+&lt;Directory ~ "\.svn"&gt;
+Order allow,deny
+Deny from all
+&lt;/Directory&gt;
+[/pre][/code]</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="precondition">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests </Description>
+		<Item encoding="Text">${file}${test}</Item></Variable>
+</WebApplicationTest>

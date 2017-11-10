@@ -1,0 +1,22 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for tftp server
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port	= 69;
+socket.Timeout = 5;
+socket.Connect();
+if (socket.IsConnected) {
+	// request an inexistent file
+	req_file = strFromRawData(0x00, 0x01) + "acunetix-file-" + Random(100) + 
+						 strFromRawData(0x00) + "netascii" + strFromRawData(0x00);
+	
+	socket.send(req_file);
+	data = socket.ReceiveBytes(3);
+	//trace(data);
+	if (data == strFromRawData(0x00, 0x05, 0x00) || data == strFromRawData(0x00, 0x03, 0x00)) {
+		trace("tftpd detected! - alert here");
+		KBase("TFTPD server running", "A TFTPD ((Trivial File Transfer Protocol) server is running on UDP port 69.[break]If you are not using this service, it is recommended to disable it.");
+	}
+	socket.Close();
+}

@@ -1,0 +1,150 @@
+#include helpers.inc;
+#include classMatches.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, url, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = url;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.request.addHeader('Range', 'bytes=0-99999', true);	
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && (lastJob.response.msg2 == 200 || lastJob.response.msg2 == 206) && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************							 
+function request2(uri)
+{
+	lastJob2 = new THTTPJob();
+		
+	lastJob2.url = scanURL;
+	lastJob2.request.addHeader('Range', 'bytes=0-99999', true);
+	lastJob2.addCookies = false;
+	lastJob2.verb = 'GET';
+	lastJob2.URI = uri;
+	lastJob2.execute();	
+	if (!lastJob2.wasError && (lastJob2.response.msg2 == 200 || lastJob2.response.msg2 == 206)  && !lastJob2.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestDatabaseBackups(hostname)
+{
+	var urls = [];
+	
+	urls.push("/db.sql");
+	urls.push("/dump.sql");
+	urls.push("/dbdump.sql");
+	urls.push("/database.sql");
+	urls.push("/backup.sql");
+	urls.push("/" + hostname + ".sql");
+	urls.push("/" + hostname + "db.sql");
+	urls.push("/" + hostname + "_db.sql");
+	urls.push("/" + hostname + "-db.sql");
+	urls.push("/" + hostname + "_database.sql");
+	urls.push("/" + hostname + "-database.sql");
+	urls.push("/" + hostname + "_dump.sql");
+	urls.push("/" + hostname + "-dump.sql");
+	urls.push("/" + hostname + "backup.sql");
+	urls.push("/" + hostname + "_backup.sql");
+	urls.push("/" + hostname + "-backup.sql");
+	urls.push("/backup" + hostname + ".sql");
+	urls.push("/backup-" + hostname + ".sql");
+	urls.push("/backup_" + hostname + ".sql");
+	
+	
+	matches.plainArray = [
+							'DROP TABLE IF EXISTS',
+							'INSERT INTO ',
+							'CREATE TABLE ',
+					  	];
+	
+	matches.regexArray = [/(MySQL|PostgreSQL|SQLite)\s+dump/];
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		//trace(urls[i]);
+		
+		if (request(urls[i]))
+		{
+			//trace("hit");
+			
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("Database_Backup.xml", urls[i], matchedText); 	
+		}
+	}
+	
+	var postfixes = [".sql.gz", ".sql.tar", ".zip", ".tar.gz", ".tar", ".7z", ".rar"];
+	for (var i=0;i<postfixes.length;i++) {
+		for (var j=0;j<urls.length;j++) {
+			
+			var url = urls[j].replace(".sql", postfixes[i]);			
+			if (request(url))
+			{
+				var cl = lastJob.response.headerValue("content-length");
+				var ct = lastJob.response.headerValue("content-type");
+				if (ct && cl && !ct.startsWith("text/") && cl > 0) {
+					// make a second request for confirmation
+					urlConfirm = url.replace(hostname, randStr(10));
+					if (request2(urlConfirm)) { 
+						var ct2 = lastJob.response.headerValue("content-type")
+						// this is a false positive
+						if (ct2 && !ct2.startsWith("text/")) break;
+					}
+                    // html
+                    if (
+						(lastJob.response.body && lastJob.response.body.length > 1024) &&
+                        (lastJob.response.body.indexOf("<!doctype html>") == -1) &&
+                        (lastJob.response.body.indexOf("<html>") == -1) &&
+                        (lastJob.response.body.indexOf("<body>") == -1) &&
+                        (lastJob.response.body.indexOf("<head>") == -1)
+                    )
+                    {
+                        // confirmed
+                        alert("Database_Backup.xml", url);
+                    }
+				}
+			}
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	var hostname = extractHostForCredentials();
+	TestDatabaseBackups(hostname);
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+var lastJob2 = null;
+startTesting();

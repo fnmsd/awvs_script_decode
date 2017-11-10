@@ -1,0 +1,140 @@
+#include constants.inc;
+#include helpers.inc;
+#include error_messages_helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{
+	function InjectionPatterns(){
+		this.plainArray = [
+							'MongoCursorException: invalid operator:',
+                            'MongoCursorException: $where compile error'
+                            ];
+		this.regexArray = [
+						  ];											
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();
+{ // class for testing for MongoDB Injection
+	function classMongoDBInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+	
+	classMongoDBInjection.prototype.request = function(inputName, value)
+	{	
+		this.scheme.setTempInputName(this.inputIndex, inputName);
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}
+	
+	classMongoDBInjection.prototype.alert = function(inputName, testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("MongoDB_injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/MongoDB injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + inputName + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	classMongoDBInjection.prototype.testInjection = function(inputName, value)
+	{
+		if (!this.request(inputName, value)) return false;
+		
+		var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.body);		
+		
+		if (matchedText) {
+			this.alert(inputName, value, matchedText);
+			return false;
+		} 
+		
+		return true;
+	}
+	
+	classMongoDBInjection.prototype.getOrigValue = function()
+	{   
+		var value = "";
+		
+		for (var i=0; i<this.variations.count; i++){
+			var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+			
+			// if the value is not yet set      
+			if(value == "" && varValue != "") {
+				value = varValue;                       
+				//trace(value);
+			}   
+		}        
+		return value;
+	}	
+	
+	classMongoDBInjection.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;    	
+			this.currentVariation = i;
+			this.scheme.loadVariation(this.variations.item(this.currentVariation));
+			// test for PHP [] problem
+			if (!this.testInjection(this.scheme.getInputName(this.inputIndex) + '[$acunetix]', "1")) continue;
+            // test for $where compile error
+			if (!this.testInjection(this.scheme.getInputName(this.inputIndex), "'\"()")) continue;
+			
+			var origValue = this.getOrigValue();
+			// test for decode_json problem (if the input value looks like json)
+			if (origValue.indexOf("{") != -1 && origValue.indexOf("\"") != -1) 
+			{
+				if (!this.testInjection(this.scheme.getInputName(this.inputIndex), "{\"name\":{\"$acunetix\":\"1\"}}")) continue;
+			}
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+    if ( scheme.inputHasFlag(i, INPUT_FLAG_CAN_BE_ARRAY) ) 
+    {
+    	var tester = new classMongoDBInjection(scheme, i);
+    	tester.startTesting();
+    	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+    	tester = null;
+    }
+}

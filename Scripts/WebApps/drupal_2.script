@@ -1,0 +1,41 @@
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	if (matchedText) 
+		ri.Details =  "Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+		
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function lookforDrupalViewsUserEnumeration(dir, drupalDir) {
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = drupalDir + '/admin/views/ajax/autocomplete/user/a';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.response.msg2 == 200){
+		ct = http.response.headerValue('content-type');
+		if (ct.indexOf('text/javascript') != -1)
+		{
+			var match = /{\s*"[^"]+":\s*"[^"]+".*}/.exec(http.response.body);
+			if (match) {
+				//trace('vuln');
+				//trace(match[0]);
+				alert(http.uri, 'drupal_views_user_enumeration.xml', http, match[0]);
+			}	
+		} 
+	}
+}
+var dir = getCurrentDirectory();
+var drupalDir = dir.fullPath;
+if (!drupalDir.endsWith("/")) drupalDir = drupalDir + '/';
+// test for drupal views user enumeration
+lookforDrupalViewsUserEnumeration(dir, drupalDir);

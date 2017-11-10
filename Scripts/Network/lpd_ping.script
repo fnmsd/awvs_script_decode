@@ -1,0 +1,27 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for lpd (printer daemon)
+function prepare_lpd_req(){
+	var res = strFromRawData(0x04) + "acunetix-test" + random(10) + " " + "\n";
+	return res;
+}
+if (IsPortOpen(515)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 515;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		req = prepare_lpd_req();
+		socket.send(req);	
+		data = socket.Receive(true);
+		if (data && data.length > 0) {
+			
+			if (data.search("lpd ") >= 0)	{
+				trace("lpd enabled! - kbase here!");
+				KBase("LPD server running", "An LPD server is running on TCP port 515.");	
+			}
+		}
+		socket.Close();
+	}
+}

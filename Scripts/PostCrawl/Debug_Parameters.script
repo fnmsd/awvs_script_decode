@@ -1,0 +1,180 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var confirmJob = null;
+var debugParams	= [
+    "adm1n=1",
+    "adm1n=true",
+    "adm1n=y",
+    "adm1n=yes",
+    "admin=1",
+    "admin=true",
+    "admin=y",
+    "admin=yes",
+    "adm=1",
+    "adm=true",
+    "adm=y",
+    "adm=yes",
+    "dbg=1",
+    "dbg=true",
+    "dbg=y",
+    "dbg=yes",
+    "debug=1",
+    "debug=true",
+    "debug=y",
+    "debug=yes",
+    "edit=1",
+    "edit=true",
+    "edit=y",
+    "edit=yes",
+    "test=1",
+    "test=true",
+    "test=y",
+    "test=yes",
+    "_debug=1"
+];
+    
+// **************************************************************************************							 
+function searchForDebugData(input, randomStr)
+{
+    var result = {"res":0, "data":""};
+        
+	var m = /(GATEWAY_INTERFACE|DOCUMENT_ROOT|REQUEST_URI|SERVER_PROTOCOL|REQUEST_METHOD|PHP_SELF|SERVER_SIGNATURE)/.exec(input);
+	if (m) return {"res":1, "data":m[1]}
+            
+	var m = /(SELECT\s+.*?FROM\s+\w+\s(WHERE\s[\w+\d='"\s%]+)?|INSERT\s+INTO\s*.*?VALUES|UPDATE\s+.*?SET\s+.*?=)/i.exec(input);
+	if (m) return {"res":2, "data":m[1]}
+    if (randomStr && input.indexOf(randomStr) != -1) return {"res":3, "data":randomStr}
+    
+    return result;            
+}
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+    
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+    if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+// **************************************************************************************	
+function testFile(siteFile)
+{
+    var res = searchForDebugData(siteFile.response.body, ""); 
+    // reduce false positives (if some debug data already present on page just exit).
+    if (res && res["res"] > 0) return false;
+        
+    for (var i=0; i<debugParams.length; i++) {
+        
+        // prepare HTTP request 
+    	lastJob = new THTTPJob();
+    	lastJob.request.copyFrom(siteFile.request);
+        // prepare URI
+        var uri = siteFile.request.msg2;        
+        if (uri.indexOf("?") != -1) startChar = "&"
+        else startChar = "?";
+        
+        // prepare a random string
+        var randomString = randStr(8);
+        
+    	uri = uri + startChar + debugParams[i] + "&" + randomString + "=1";        
+        lastJob.uri = uri;
+        
+    	lastJob.execute();
+    	
+    	if (!lastJob.wasError && !lastJob.notFound) 
+        {
+            var res = searchForDebugData(lastJob.response.body, randomString);
+            
+            if (res && res["res"] > 0) {
+                
+                var initialRes = res["res"];
+                var initialResData = res["data"];
+						
+                //trace(uri);
+                //trace(res["res"]);
+                // trace(res["data"]);
+                
+                // confirmation
+                // input parameter reflected in the response
+                // send another request without the debug parameter
+                
+            	confirmJob = new THTTPJob();
+            	confirmJob.request.copyFrom(siteFile.request);
+                
+                confirmUri = siteFile.request.msg2;  
+            	confirmUri = confirmUri + startChar + randomString + "=1";        
+                confirmJob.uri = confirmUri;
+                
+            	confirmJob.execute();
+            	
+            	if (!confirmJob.wasError && !confirmJob.notFound) 
+                {
+                    var res = searchForDebugData(confirmJob.response.body, randomString);
+                    if (res && res["res"] == 0)
+                    {
+                        if (initialRes == 3) {
+                        
+                        details = "Debug parameter: [bold][dark]" + debugParams[i] + "[/dark][/bold]";
+                        details += "[break]Random test parameter [bold][dark]" + randomString + "[/dark][/bold] was reflected in the response body when the debug parameter was used.";
+                        
+                        }
+                        
+                        else {
+                            
+                        details = "Debug parameter: [bold][dark]" + debugParams[i] + "[/dark][/bold]";
+                        details += "[break]Pattern found: [bold][dark]" + initialResData + "[/dark][/bold]";
+                            
+                        }
+                        
+                        alert(siteFile.fullPath, 'Debug_Parameter_Found.xml', lastJob, details);
+                    }
+                }                    
+                
+                // stop on first hit
+                break;
+            }
+        }    
+	}
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){        
+        // don't test more than 3 files	
+        if (files.length >= 3) break;
+        
+		var sf = list.getFile(i);
+		
+		// only test files with variations
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile && sf.hasVariations)
+		{
+            // find first variation that is not null
+            var variation = sf.getFirstVariation();
+            while (variation == null) {
+                variation = variation.getNextSibling();
+            } 
+            
+            if (variation != null) 
+                files.push(variation);  
+		}
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+        testFile(files[i]);
+}

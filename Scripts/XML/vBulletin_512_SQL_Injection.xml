@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="vBulletin 5.1.2 SQL injection" version="0.1" released="20080307" updated="20140729" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="sql_injection" CVE="CVE-2014-5102" CWE="CWE-89" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A security issue has been reported that affects the versions of vBulletin listed here: 5.0.4, 5.0.5, 5.1.0, 5.1.1, and 5.1.2. vBulletin have released security patches to account for this vulnerability. The issue may allow attackers to perform SQL injection attacks on your database. It is recommended that all users update as soon as possible.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. [break][break]Depending on the back-end database in use, SQL injection vulnerabilities lead to varying levels of data/system access for the attacker. It may be possible to not only manipulate existing queries, but to UNION in arbitrary data, use sub selects, or append additional queries. In some cases, it may be possible to read in or write out to files, or to execute shell commands on the underlying operating system.[break][break]Certain SQL Servers such as Microsoft SQL Server contain stored and extended procedures (database server functions). If an attacker can obtain access to these procedures it may be possible to compromise the entire machine.</Impact>
+		<Recommendation>Download and install the patch provided the vendor.</Recommendation>
+		<Reference database="Security Patch Release for vBulletin 5.0.4, 5.0.5, 5.1.0, 5.1.1, and 5.1.2" URL="http://www.vbulletin.com/forum/forum/vbulletin-announcements/vbulletin-announcements_aa/4097503-security-patch-release-for-vbulletin-5-0-4-5-0-5-5-1-0-5-1-1-and-5-1-2"></Reference>
+	</TestDescription>
+</WebApplicationTest>

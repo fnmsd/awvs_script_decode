@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Path Traversal in Oracle GlassFish server open source edition" version="0.1" released="20080307" updated="20160118" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal" CVE="" CWE="CWE-22" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The Administration Console of Oracle GlassFish Server, which is listening by default on port 4848/TCP, is prone to a directory traversal vulnerability that can be exploited by remote attackers to access sensitive data on the server.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>By exploiting path traversal vulnerabilities, attackers step out of the root directory and access files in other directories. As a result, attackers might view restricted files or execute commands, leading to a full compromise of the Web server.</Impact>
+		<Recommendation>No fix is available at this time for the GlassFish Server Open Source
+Edition release. However, this vulnerability can be mitigated with the use
+of technologies, such as Web Application Firewalls (WAF) or Intrusion
+Prevention Systems (IPS).  [break][break]
+
+Oracle GlassFish Server 3.x which is the current commercial release of GlassFish is not affected.</Recommendation>
+		<Reference database="Path Traversal in Oracle GlassFish Server Open Source Edition" URL="https://www.trustwave.com/Resources/Security-Advisories/Advisories/TWSL2015-016/?fid=6904"></Reference>
+	</TestDescription>
+</WebApplicationTest>

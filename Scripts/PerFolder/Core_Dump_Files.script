@@ -1,0 +1,42 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(fname, uri, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname;	
+    if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+var variants = [
+        "core"
+    ]
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory();
+if (dir.isMarkedAs(MARKED_AS_RealDir)) {
+    var dirName = dir.fullPath;
+    if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+    for (var i=0; i<variants.length; i++) {
+        var testURI = dirName + variants[i];
+        var http = new THTTPJob();
+        http.url = dir.url;
+        http.verb = 'GET';
+        http.request.addHeader("Range", "bytes=0-99", true);
+        http.URI = testURI;
+        http.execute();
+        if (!http.wasError && !http.notFound && http.response.msg2 == 206 && http.response.body.length == 100)
+        {
+            var coreDumpPattern = strFromRawData(0x7F, 0x45, 0x4C, 0x46);
+            var body = http.response.body;
+            if (body.startsWith(coreDumpPattern)) {
+                var memoryDump = "First 100 bytes of data: [pre]" + body.toHexString16B() + "[/pre]";
+                alert("Core_Dump_File.xml", dir.fullPath, http, memoryDump);
+            }
+        }
+    }
+}

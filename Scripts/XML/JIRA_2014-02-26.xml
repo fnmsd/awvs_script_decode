@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="JIRA Security Advisory 2014-02-26" version="0.1" released="20080307" updated="20150303" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal" CVE="" CWE="CWE-22" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This advisory details critical security vulnerabilities that we have found in JIRA and fixed in recent versions of JIRA. These vulnerabilities affect all versions of JIRA up to and including [bold]6.1.3[/bold]. [break][break]
+[ul]
+[li]Issue 1: Path traversal in JIRA Issue Collector plugin (Windows only)[/li]
+[li]Issue 2: Path traversal in JIRA Importers plugin (Windows only)[/li]
+[li]Issue 3: Privilege escalation[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Consult web references to determine the impact of each particular vulnerability.</Impact>
+		<Recommendation>Customers who have downloaded and installed JIRA should upgrade their existing JIRA installations or apply the patches to fix these vulnerabilities.</Recommendation>
+		<Reference database="JIRA Security Advisory 2014-02-26" URL="https://confluence.atlassian.com/display/JIRA/JIRA+Security+Advisory+2014-02-26"></Reference>
+	</TestDescription>
+</WebApplicationTest>

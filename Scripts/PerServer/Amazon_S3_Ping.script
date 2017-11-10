@@ -1,0 +1,19 @@
+#include helpers.inc;
+/***********************************************************************************/
+/* main entry point */
+var lastJob = new THTTPJob();
+lastJob.verb 		= "GET";
+lastJob.url  		= new TURL('http://bxss.s3.amazonaws.com/ad.js');		
+lastJob.timeout 	= 15000;
+lastJob.retries 	= 3;
+lastJob.addCookies 	= false;
+lastJob.execute();
+if (lastJob.responseStatus==200 && lastJob.response.body.indexOf("// this is a third part script from an ad provider") !=-1)
+{
+	// everything is OK. Amazon S3 is accessible.
+}	
+else 
+{
+	// cannot connect to the Amazon S3 network. Disable Amazon related services.
+	SetGlobalValue("AmazonS3ScriptsDisabled", "1", true);
+}

@@ -1,0 +1,29 @@
+#include classMSSQL.inc;
+#include reporting_helpers.inc;
+var sql = new mySQLHandlerClass(ScanHost, ScanPort);
+var data = sql.ping(ScanHost, 1434);
+if(data != null)
+{
+	var info = "";
+	
+	trace("ServerName: " + data.ServerName);
+	info += "ServerName: " + data.ServerName + "\r\n";
+	
+	trace("Version: " + data.Version);
+	info += "Version: " + data.Version + "\r\n";
+	
+	trace("InstanceName: " + data.InstanceName);
+	info += "InstanceName: " + data.InstanceName + "\r\n";
+		
+	trace("IsClustered: " + data.IsClustered);
+	info += "IsClustered: " + data.IsClustered + "\r\n";
+	
+	trace("TCPPort: " + data.TCPPort);
+	info += "TCPPort: " + data.TCPPort + "\r\n";
+	KBase("Microsoft SQL Server running", "A Microsoft SQL server server is running on the remote host.[break]Information gathered from this server:[break][pre]" + info + "[/pre]");	
+	if(data.Version.match(/^[67]\..*/))
+	{
+		trace("mssql_lte_7");
+		ReportItem("Mssql_lower_or_equal7.xml", "Microsoft SQL Server version is [dark]" + data.Version + "[/dark].");
+	}
+}

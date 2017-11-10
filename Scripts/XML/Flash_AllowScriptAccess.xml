@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Insecure Flash embed parameter" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,configuration" CVE="" CWE="CWE-284" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.8" CVSSScoreEnv="4.8" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The AllowScriptAccess parameter in the HTML code that loads a SWF file controls the ability to perform outbound URL access from within the SWF file. Set this parameter inside the PARAM or EMBED tag. If no value is set for AllowScriptAccess, the SWF file and the HTML page can communicate only if both are from the same domain. [break][break]
+This HTML page embeds a SWF file with AllowScriptAccess parameter set to "always".  When AllowScriptAccess is "always," the SWF file can communicate with the HTML page in which it is embedded. This rule applies even when the SWF file is from a different domain than the HTML page. This represents a security issue and can result in attacks such as script injection and cross-domain privilege escalation.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious SWF file can perform attacks such as script injection and cross-domain privilege escalation.</Impact>
+		<Recommendation>Set AllowScriptAccess to 'never' or remove the AllowScriptAccess parameter.</Recommendation>
+		<Reference database="Adobe - Control access to scripts" URL="http://kb2.adobe.com/cps/164/tn_16494.html"></Reference>
+		<Reference database="Reviewing Flash Applications" URL="https://www.owasp.org/index.php/Reviewing_Flash_Applications"></Reference>
+		<Reference database="Flash attack vectors (and worms)" URL="http://isc.sans.org/diary/Flash+attack+vectors+%28and+worms%29/7015"></Reference>
+	</TestDescription>
+</WebApplicationTest>

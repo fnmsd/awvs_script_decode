@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Ektron CMS multiple vulnerabilities" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities" CVE="" CWE="CWE-434" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:H/RL:OF/RC:C" CVSSScoreTemp="6.6" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The web application is vulnerable to multiple security vulnerabilities, such as 
+unauthenticated file upload and XML eXternal Entities (XXE) injection.  [break][break]
+
+[bold]1. Unauthenticated File Upload: [/bold][break]
+The form /WorkArea/Upload.aspx does not require authentication to upload a file. By 
+issuing a POST request with a webshell embedded in a JPEG image and specifying 
+the ASPX extension it is possible to upload ASPX code to /uploadedimages/. The 
+ASPX code is placed in the comment section of the JPEG so that it survives image 
+resizing. 
+
+[break][break]
+[bold]2.  XXE Injection: [/bold][break]
+The XML parser at /WorkArea/Blogs/xmlrpc.aspx is vulnerable to XML external entity 
+attacks which can be used to scan behind perimeter firewalls or possibly include files 
+from the local file system e.g.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can upload and execute arbitrary code on the server.</Impact>
+		<Recommendation>Upgrade to version 8.6 and remove the /WorkArea/Blogs/xmlrpc.aspx file.</Recommendation>
+		<Reference database="Sense of Security - Security Advisory - SOS-12-009" URL="http://www.senseofsecurity.com.au/advisories/SOS-12-009.pdf"></Reference>
+	</TestDescription>
+</WebApplicationTest>

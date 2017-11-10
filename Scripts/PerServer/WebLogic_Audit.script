@@ -1,0 +1,283 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+var Passwords = Array(		
+  "weblogic",
+  "weblogic1",
+  "welcome1",
+  "trustno1",
+  "admin",
+  "password",
+  "12345",
+  "Passw0rd",
+  "qwerty"    
+);
+// **************************************************************************************							 
+function alert(fname, lastJob, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function try_credentials(username, password)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/console/j_security_check";	
+	lastJob.autoRedirect = false;
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);	
+	lastJob.request.body = "j_username=" + username + "&j_password=" + password + "&j_character_encoding=UTF-8";
+	
+	lastJob.execute();
+	
+	if (lastJob.responseStatus==302 && lastJob.response.headerValue('Location') && lastJob.response.headerValue('Location').endsWith("/console"))
+	{
+		return true;
+	}	
+	return false;
+}
+// **************************************************************************************							 
+function try_credentials_internalApp(username, password)
+{
+	// Deployment service servlet encountered an exception while handling the deployment service message for request id
+	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.addCookies = false;
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/bea_wls_deployment_internal/DeploymentService";	
+	lastJob.autoRedirect = false;
+	lastJob.request.addHeader('username', username, true);
+	lastJob.request.addHeader('password', password, true);
+	lastJob.request.addHeader('wl_request_type', 'deployment_svc_msg', true);
+	lastJob.execute();
+	
+	if (lastJob.responseStatus==500 && lastJob.response.body.indexOf("Deployment service servlet encountered an exception while handling the deployment service message for request id") != -1)
+	{
+		return true;
+	}	
+	return false;
+}
+// **************************************************************************************							 
+function detect_Version()
+{
+    lastJob = new THTTPJob();
+    lastJob.url  = scanURL;
+    lastJob.addCookies = false;
+    lastJob.verb = "GET";
+    lastJob.uri  = "/bea_wls_internal/classes/MANIFEST.MF";
+    lastJob.autoRedirect = false;
+    lastJob.execute();
+    if (lastJob.responseStatus==200 && lastJob.response.body.indexOf('Implementation-Version:') != -1)
+    {
+        var m = /Implementation-Version: ([\d\.]+)/.exec(lastJob.response.body);
+        if (m && m[1]) {
+            return m[1];
+        }
+    }
+    lastJob = new THTTPJob();
+	lastJob.url  = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = "GET";
+	lastJob.uri  = "/console/login/LoginForm.jsp";	
+	lastJob.autoRedirect = false;
+	
+	lastJob.execute();	
+	
+	if (lastJob.responseStatus==200 && lastJob.response.body.indexOf('WebLogic Server Version:') != -1)
+	{
+		var m = /WebLogic Server Version: ([\d\.]+)/.exec(lastJob.response.body);
+		if (m && m[1]) {
+			return m[1];
+		}
+	}
+	return false;
+}
+// **************************************************************************************							 
+function WebLogic_Common_Credentials()
+{
+	var found = false;
+	username = "weblogic";
+	
+	for (var i=0; i<Passwords.length; i++) 
+	{
+		password = Passwords[i];
+		if (try_credentials(username, password))
+		{
+			var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+			alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			found = true;
+			break;
+		}		
+	}
+	if (!found) {
+		username = "admin";
+		
+		for (var i=0; i<Passwords.length; i++) 
+		{
+			password = Passwords[i];
+			if (try_credentials(username, password))
+			{
+				var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			}		
+		}
+	}
+	
+	if (!found) {
+		username = "system";
+		
+		for (var i=0; i<Passwords.length; i++) 
+		{
+			password = Passwords[i];
+			if (try_credentials(username, password))
+			{
+				var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			}		
+		}
+	}	
+}
+// **************************************************************************************							 
+function WebLogic_Common_Credentials_InternalApp()
+{
+	lastJob = new THTTPJob();
+	//wl_request_type:deployment_svc_msg
+	lastJob.url  = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = "POST";
+	lastJob.request.addHeader('username', randStr(8), true);
+	lastJob.request.addHeader('password', randStr(8), true);
+	lastJob.request.addHeader('wl_request_type', 'deployment_svc_msg', true);
+	lastJob.uri  = "/bea_wls_deployment_internal/DeploymentService";	
+	lastJob.autoRedirect = false;
+	
+	lastJob.execute();	
+	
+	if (lastJob.responseStatus!=401 && lastJob.response.body.indexOf('/bea_wls_deployment_internal/DeploymentService') == -1)
+	{
+		return false;
+	}	
+	
+	var found = false;
+	username = "weblogic";
+	
+	for (var i=0; i<Passwords.length; i++) 
+	{
+		password = Passwords[i];
+		if (try_credentials_internalApp(username, password))
+		{
+			var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+			alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			found = true;
+			break;
+		}		
+	}
+	if (!found) {
+		username = "admin";
+		
+		for (var i=0; i<Passwords.length; i++) 
+		{
+			password = Passwords[i];
+			if (try_credentials_internalApp(username, password))
+			{
+				var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			}		
+		}
+	}
+	
+	if (!found) {
+		username = "system";
+		
+		for (var i=0; i<Passwords.length; i++) 
+		{
+			password = Passwords[i];
+			if (try_credentials_internalApp(username, password))
+			{
+				var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+				alert('WebLogic_Weak_Credentials.xml', lastJob, details);
+			}		
+		}
+	}	
+}
+// **************************************************************************************	
+function WebLogicIsDetected()
+{
+	lastJob = new THTTPJob();
+	
+	var newUrl = new TURL(scanURL.URL);
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/" + randStr(8);	
+	
+	lastJob.execute();
+	if (lastJob.responseStatus==404 && (lastJob.response.body.indexOf('CONTENT="WebLogic Server"') !=-1 || lastJob.response.body.indexOf('<H4>10.4.5 404 Not Found</H4>') != -1))
+	{
+		version = detect_Version();
+		if (version) {
+			KBase("Oracle WebLogic Server", "Oracle WebLogic Server version [bold]" + version + "[/bold] was detected.");
+		}
+		else {
+			KBase("Oracle WebLogic Server", "Oracle WebLogic Server was detected.");
+		}
+		return true;
+	}	
+	return false;
+}
+// **************************************************************************************
+function TestForWebLogicSSRF1()
+{
+    lastJob = new THTTPJob();
+    var newUrl = new TURL(scanURL.URL);
+    lastJob.verb = "GET";
+    lastJob.url  = newUrl;
+    lastJob.uri  = "/uddiexplorer/";
+    lastJob.execute();
+}
+// **************************************************************************************
+function TestForWebLogicSSRF2()
+{
+    lastJob = new THTTPJob();
+    var newUrl = new TURL(scanURL.URL);
+    lastJob.verb = "GET";
+    lastJob.addCookies = false;
+    lastJob.url  = newUrl;
+    lastJob.uri  = "/uddiexplorer/SearchPublicRegistries.jsp?operator=http://bxss.me:80&rdoSearch=name&txtSearchname=sdf&txtSearchkey=&txtSearchfor=&selfor=Business+location&btnSubmit=Search";
+    var matches = [
+        "weblogic.uddi.client.structures.exception.XML_SoapException: Received a response from url: http://bxss.me:80 which did not have a valid SOAP content-type: text/html.",
+        "weblogic.uddi.client.structures.exception.XML_SoapException: The server at http://bxss.me:80 returned a 403 error code",
+        "weblogic.uddi.client.structures.exception.XML_SoapException:"
+    ];
+    lastJob.execute();
+    if (lastJob.responseStatus==200)
+    {
+        for (var i=0; i<matches.length; i++) {
+            if (lastJob.response.body.indexOf(matches[i]) != -1) {
+                details = "Pattern found: [pre]" + matches[i] + "[/pre]";
+                alert("WebLogic_SSRF_XSS.xml", lastJob, details);
+                addHTTPJobToCrawler(lastJob, 1, 1);
+            }
+        }
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+TestForWebLogicSSRF1();
+if (WebLogicIsDetected())
+{
+	WebLogic_Common_Credentials_InternalApp();
+	WebLogic_Common_Credentials();	
+}
+TestForWebLogicSSRF2();

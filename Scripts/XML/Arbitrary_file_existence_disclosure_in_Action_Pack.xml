@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Arbitrary file existence disclosure in Action Pack" version="0.1" released="20080307" updated="20151103" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2014-7829" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>There is an information leak vulnerability in Action Pack.  Specially crafted requests can be used to determine whether a file exists on 
+the filesystem that is outside the Rails application's root directory.  The 
+files will not be served, but attackers can determine whether or not the file 
+exists. [break][break]
+This only impacts Rails applications that enable static file serving at 
+runtime.  For example, the application's production configuration will say: 
+
+[pre]
+  config.serve_static_assets = true 
+[/pre]
+
+This vulnerability applies to the following versions:
+[pre]
+Versions Affected:  &gt;= 3.0.0 
+Not affected:       &lt; 3.0.0, 4.2.0.beta4 
+Fixed Versions:     3.2.21, 4.0.12, 4.1.8 
+[/pre]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can determine whether a file exists on the filesystem.</Impact>
+		<Recommendation>To work around this issue, set config.serve_static_assets = false in an initializer.  This work around will not be possible in all hosting environments and upgrading is advised.  
+All users running an affected configuration should either upgrade or use one of the work arounds immediately.</Recommendation>
+		<Reference database="[AMENDED] [CVE-2014-7829] Arbitrary file existence disclosure in Action Pack" URL="https://groups.google.com/forum/#!topic/rubyonrails-security/23fiuwb1NBA"></Reference>
+	</TestDescription>
+</WebApplicationTest>

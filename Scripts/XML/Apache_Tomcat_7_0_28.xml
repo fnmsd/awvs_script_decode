@@ -1,0 +1,35 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 7.0.28" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,denial_of_service,missing_update" CVE="CVE-2012-2733,CVE-2012-4534" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:U/RL:OF/RC:C" CVSSScoreTemp="3.7" CVSSScoreEnv="3.8"/>
+		<Copyright></Copyright>
+		<Description>The following problems were fixed in Apache Tomcat version 7.0.28: [break][break]
+
+[ul]
+
+[li]
+[bold]Important: Denial of service CVE-2012-2733[/bold][break]
+The checks that limited the permitted size of request headers were implemented too late in the request parsing process for the HTTP NIO connector. This enabled a malicious user to trigger an OutOfMemoryError by sending a single request with very large headers.This was fixed in revision 1350301.
+[/li]
+
+[li]
+[bold]Important: Denial of service CVE-2012-4534[/bold][break]
+When using the NIO connector with sendfile and HTTPS enabled, if a client breaks the connection while reading the response an infinite loop is entered leading to a denial of service. This was originally reported as bug 52858. This was fixed in revision 1340218.
+[/li]
+
+[/ul]
+
+
+[break][break][navy]Affected Apache Tomcat versions (7.0.0 - 7.0.27).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache Tomcat.</Recommendation>
+		<Reference database="CVE-2012-2733" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-2733"/><Reference database="CVE-2012-4534" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-4534"/><Reference database="Apache Tomcat 7.x vulnerabilities" URL="http://tomcat.apache.org/security-7.html"/></TestDescription>
+</WebApplicationTest>

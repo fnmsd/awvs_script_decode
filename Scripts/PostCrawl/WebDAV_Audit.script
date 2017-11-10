@@ -1,0 +1,47 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include WebDAV_helpers.inc;
+var debug = false;
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{
+    for (var i=0;i<list.count; i++){
+        var sf = list.getFile(i);
+        if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir){
+            dirName = sf.fullPath;
+            if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+            if (dirName.toLowerCase().indexOf("webdav") != -1 || dirName.toLowerCase().indexOf("sling") != -1)
+                dirs.push(dirName);
+        }
+    }
+    // many people are using the webdav directory
+    // if it's not in the list we should add it
+    var tested_common_dirs = getGlobalValue("webdav_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+        SetGlobalValue("webdav_tested_common_dirs", 1, true);
+        dirs.push("/");
+        dirs.push("/webdav/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+if (webDAVIsEnabled()) {
+    if (debug) trace("webDAV Is enabled");
+    prepareDirectoriesToBeTested(list);
+    if (dirs.length > 0) {
+		for (var i=0; i<dirs.length; i++){
+			testPROPFIND(dirs[i]);
+			testPUT(dirs[i]);
+            // test for WebDAV XXE on various methods
+            if (allowedMethods.indexOf('PROPFIND') != -1 )
+                testXXE(dirs[i], "PROPFIND", '<propfind xmlns="DAV:"><allprop/></propfind>');
+            if (allowedMethods.indexOf('PROPPATCH') != -1 )
+                testXXE(dirs[i], "PROPPATCH", '<d:propertyupdate xmlns:d="DAV:" xmlns:o="urn:schemas-microsoft-com:office:office"><d:set><d:prop><o:Author>Douglas Groncki</o:Author></d:prop></d:set></d:propertyupdate>');
+            if (allowedMethods.indexOf('LOCK') != -1 )
+                testXXE(dirs[i], "LOCK", '<d:lockinfo xmlns:d="DAV:"><d:lockscope><d:exclusive/></d:lockscope><d:locktype><d:write/></d:locktype><d:owner><d:href>test</d:href></d:owner></d:lockinfo>');
+		}
+	}
+}
+else testXXE("/", "PROPFIND", '<propfind xmlns="DAV:"><allprop/></propfind>');

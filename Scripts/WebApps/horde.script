@@ -1,0 +1,66 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+		var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************
+function test_Horde_RCE(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.uri = path + '/docs/CHANGES';
+	http.verb = 'GET';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200){
+		var m = /\nv([\d\.]+)\n/.exec(http.response.body);
+		if (m && m[1]) {
+			var versionStr = m[1].replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "")
+			var version = parseInt(versionStr);
+			var vulnerable = false;
+			
+			if (versionStr) {
+				// version 3.1.x
+				if (versionStr.startsWith("3")) {
+					if (version < 320) {
+						vulnerable = true;
+					}
+				}
+				
+				else 
+				// version 5.1.x
+				if (versionStr.startsWith("5")) {
+					if (version < 510) {
+						vulnerable = true;
+					}
+				}
+			
+				//trace(version);
+				if (vulnerable) {
+					//trace('vuln');
+					vxml = "Horde_Remote_Code_Execution.xml";
+					details = "Current Horde version [bold][dark]" + m[1] + "[/dark][/bold]."
+					alert(http, path, vxml, details);
+				}
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppHorde");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppHorde", 1, true);           
+    KBase("Horde web application", "Horde web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_Horde_RCE(dir, dir.fullPath);

@@ -1,0 +1,58 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+var debug = false;
+var lastJob = false;
+var confirmJob = false;
+// **************************************************************************************
+function alert(dirName)
+{
+	var ri = new TReportItem();
+    var fname = "Arbitrary_file_existence_disclosure_in_Action_Pack.xml";
+	ri.LoadFromFile(fname);
+	ri.affects = dirName;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function testValidFileName(dirName)
+{
+	lastJob = new THTTPJob();
+	var newUrl = scanURL;
+	lastJob.url = newUrl;
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.uri  = dirName + "%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/hosts";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 404 && lastJob.response.body.indexOf("File not found: /../../../../../../../../../etc/hosts") != -1 && lastJob.response.headerValue("content-type") && lastJob.response.headerValue("content-type").trim().startsWith("text/plain"))
+	{
+		return true;
+	}
+	return false;
+}
+// **************************************************************************************
+function testInValidFileName(dirName)
+{
+    confirmJob = new THTTPJob();
+    var newUrl = scanURL;
+    confirmJob.url = newUrl;
+    confirmJob.verb = "GET";
+    confirmJob.addCookies = false;
+    confirmJob.uri  = dirName + "%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/zosts";
+    confirmJob.execute();
+    if (!confirmJob.wasError && confirmJob.response.msg2 == 404 && confirmJob.response.body.indexOf("File not found: /../../../../../../../../../etc/zosts") == -1 && confirmJob.response.headerValue("content-type") && confirmJob.response.headerValue("content-type").trim().startsWith("text/html"))
+    {
+        return true;
+    }
+    return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var dirName = getPathDirectory(scanURL.path);
+if (!dirName.endsWith("/")) dirName = dirName + "/";
+if (testValidFileName(dirName) && testInValidFileName(dirName)){
+	if (debug) trace("[+] alert");
+    alert(dirName);
+}

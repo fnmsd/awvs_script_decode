@@ -1,0 +1,237 @@
+#engine 3.2;
+#include helpers.inc;
+#include string_helpers.inc;
+#include ip_helpers.inc;
+#include reporting_helpers.inc;
+var debug = false;
+var lastJob = false;
+// **************************************************************************************
+function alert(fname, details)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(fname);
+    ri.affects = "Web Server";
+    ri.alertPath = "Scripts/" + fname;
+    if (details)
+        ri.details = details;
+    AddReportItem(ri);
+}
+/***********************************************************************************/
+/* main entry point */
+var providers =
+    [
+        {"name":"Heroku", "matches":["<title>Heroku | No such app</title>"]},
+        {"name":"Github", "matches":["<title>Page not found &middot; GitHub Pages</title>"]},
+        {"name":"Desk", "matches":["<title>Desk.com - Site Not Found (Subdomain Does Not Exist)</title>"]},
+        {"name":"Teamwork", "matches":["<title>Oops - We didn't find your site.</title>"]},
+        {"name":"CargoCollective", "matches":["Error: in order to configure your domain for Cargo, you'll need to modify your domain's <br>"]},
+        {"name":"Unbounce", "matches":["The requested URL / was not found on this server."], "headerMatch": ".unbounce.net"},
+        {"name":"Pingdom", "matches":["<title>Pingdom Website Monitoring</title>", "<h2>Sorry, couldn&rsquo;t find the status page</h2>"]},
+        {"name":"Shopify", "matches":["<h1 class=\"tc\">Sorry, this shop is currently unavailable.</h1>"]},
+        {"name":"Squarespace", "matches":["Squarespace - Claim This Domain", "<h2> You're Almost There...</h2>"]},
+        {"name":"Freshdesk", "matches":["<h2> We couldn't find <span id=\"domainname\"></span></h2>"]},
+        {"name":"StatusPage.io", "matches":["<title>StatusPage.io - Hosted Status Pages for Your Company</title>"]},
+        {"name":"Tumblr", "matches":["<title>Not found.</title>", "<h1 data-translation=\"heading\">There's nothing here.</h1>"]},
+        {"name":"Campaign Monitor", "matches":["<title>createsend.com | Email Newsletter Software</title>", "<p><strong>Trying to access your account?</strong><br>"]}
+    ]
+var subdomains =  Array(
+    randStr(8),
+    "unbounce",
+    "alpha",
+    "admin",
+    "beta",
+    "demo",
+    "svn",
+    "git",
+    "wiki",
+    "dev",
+    "new",
+    "clients",
+    "test",
+    "staging",
+    "prelive",
+    "mail",
+    "webmail",
+    "secure",
+    "www-test",
+    "www-staging",
+    "intranet",
+    "internal",
+    "development",
+    "services",
+    "console",
+    "apps",
+    "intra",
+    "spool",
+    "corporate",
+    "web",
+    "b",
+    "gamma",
+    "release",
+    "pre",
+    "prerelease",
+    "local",
+    "int",
+    "status",
+    "blog",
+    "newsletter",
+    "stats",
+    "m",
+    "ftp",
+    "imap",
+    "pop",
+    "smtp",
+    "support",
+    "kb",
+    "help",
+    "go",
+    "info",
+    "static ",
+    "f",
+    "api",
+    "events",
+    "feeds",
+    "forums",
+    "groups",
+    "img",
+    "media",
+    "news",
+    "sites",
+    "mysql",
+    "store",
+    "vpn",
+    "photos",
+    "files",
+    "resources",
+    "ssl",
+    "pic",
+    "pics",
+    "pictures",
+    "mobile",
+    "search",
+    "live",
+    "videos",
+    "lists",
+    "autoconfig",
+    "autodiscover",
+    "webdisk",
+    "home",
+    "homepage",
+    "my",
+    "blogs",
+    "members",
+    "app",
+    "server",
+    "corp",
+    "user",
+    "bookmarks",
+    "order",
+    "images",
+    "docs",
+    "code"
+);
+// **************************************************************************************							 
+function alert(fname, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;	
+  
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function testHost(host, index)
+{
+		if (debug) trace("testHost " + host);
+    // test subdomain
+    lastJob = new THTTPJob();
+    lastJob.verb 		= "GET";
+    lastJob.autoRedirect= true;
+    lastJob.url  		= new TURL('http://' + host);
+    lastJob.retries 	= 1;
+    lastJob.addCookies 	= false;
+    lastJob.execute();
+    if (!lastJob.wasError && lastJob.response.body)
+    {
+        var responseBody = lastJob.response.body;
+        for (var j=0; j<providers.length; j++) {
+            provider = providers[j];
+            var found = true;
+            for (var k=0;k<provider.matches.length;k++)
+                if (responseBody.indexOf(provider.matches[k]) == -1)
+                {
+                    found = false;
+                    break;
+                }
+            if (found) {
+                if (typeof provider.headerMatch !== 'undefined') {
+                    if (lastJob.response.headersString.indexOf(provider.headerMatch) == -1){
+                        found = false;
+                        break;
+                    }
+                }
+            }
+            if (found) {
+                if (debug) trace("found " + provider.name);
+                var alertDetails = "Subdomain: [dark][bold]" + host + "[/bold][/dark] points to the external provider [dark]" + provider.name + "[/dark][break]";
+                alertDetails = alertDetails + "Pattern found: [pre]" + provider.matches[0] + "[/pre]";
+                if (index > 0)
+                    alert("Hostile_Subdomain_Takeover.xml", alertDetails);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function isPrivateIP(ip) {
+    var parts = ip.split('.');
+    return parts[0] === '10' ||
+        (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) ||
+        (parts[0] === '192' && parts[1] === '168');
+}
+var baseHost = false;
+// don't run for ip addresses
+if (!IsStringIPAddress(scanHost)) {
+    testHost(scanHost);
+    // determine basehost
+    var m = /^www\d?\.(.*)$/.exec(scanHost);
+    if (m) {
+        baseHost = m[1];
+    }
+    else {
+        var m2 = /^([\w-]+\.)([\w-]+\.)(.*)$/.exec(scanHost);
+        if (m2 && m2.length >= 3) {
+            baseHost = m2[2] + m2[3];
+        }
+    }
+    if (!/^(tumblr.com|heroku.com|shopify.com|statuspage.io)/.test(baseHost)) {
+        // have a basehost, look for valid subdomains
+        if (baseHost && (baseHost.length > 2)) {
+            if (debug) trace("baseHost: " + baseHost);
+            for (var i = 0; i < subdomains.length; i++) {
+                var subdomain = subdomains[i];
+                var host = subdomain + "." + baseHost;
+                if (debug) trace("lookup subdomain " + host);
+								
+                var ip = getHostByName(host);
+                if (ip) {
+                    // test for Insecure DNS records (same site scripting)
+                    //if (isPrivateIP(ip)) {
+                    //    var alertDetails = "Host: [dark][bold]" + host + "[/bold][/dark] resolves to [dark]" + ip + "[/dark]";
+                    //    alert("Same_Site_Scripting.xml", alertDetails);
+                    //}
+                    // valid subdomain
+                    if (debug) trace("[+] " + host);
+                    if (testHost(host, i) && i == 0) {
+                        // false positive
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}

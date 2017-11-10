@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="UnrealIRCd 3.2.8.1 backdoor" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration,known_vulnerabilities,missing_update,network_alert" CVE="CVE-2010-2075" CWE="CWE-20" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.2"/>
+		<Copyright/>
+		<Description>This version of UnrealIRCd contains a backdoor. This backdoor allows a person to execute ANY command with the privileges of the user running the ircd. The backdoor can be executed regardless of any user restrictions. The file  Unreal3.2.8.1.tar.gz file has been replaced with a backdoor (trojan) around November 2009.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible remote command execution.</Impact>
+		<Recommendation>Download the fixed version from http://www.unrealircd.com/.</Recommendation>
+		<Reference database="Some versions of Unreal3.2.8.1.tar.gz contain a backdoor" URL="http://forums.unrealircd.com/viewtopic.php?t=6562"/>
+	</TestDescription>
+</WebApplicationTest>

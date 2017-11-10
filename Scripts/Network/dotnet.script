@@ -1,0 +1,31 @@
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+/* required by:
+[ASP-NET/version]
+*/
+var ext = new Array(".aspx", ".mspx", ".ashx");
+var http = new THTTPJob();
+for(var i in ext)
+{
+	http.url 	= ScanURL;
+  	http.URI	= "/" + Random(9999999) + ext[i];
+	http.verb 	= "GET";
+	http.execute();
+	
+	if (!http.wasError){
+		var headers = http.response.headersString;	
+		
+		if(headers.match(/X-Powered-By:\sASP\.NET/))
+		{
+			var version = headers.match(/X-AspNet-Version:\s([^\r\n]*)/);
+			if(version)
+			{
+				trace("ASP-NET Version: " + version[1]);
+				KBase("ASP-NET", "ASP-NET Version: " + version[1]);
+				SetGlobalValue("ASP-NET/version", version[1], true);
+				break;
+			}
+		}
+	
+	}
+}

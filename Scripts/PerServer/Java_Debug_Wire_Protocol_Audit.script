@@ -1,0 +1,58 @@
+#noretest;
+#include "string_helpers.inc";
+#include "debug_helpers.inc";
+#include "os_detection.inc";
+var handshake = "JDWP-Handshake";
+// **************************************************************************************							 
+function debug(strValue)
+{
+	//trace(strValue);
+}
+// **************************************************************************************							 
+function alert(fname, port)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+	
+	ri.Details = "Server responded on port [bold]" + port + "[/bold] with JDWP handshake magic string: [dark]" + handshake + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function testJDWP(port){
+	var socket = new TSocket('tcp');
+	
+	socket.host = scanIP;	
+	socket.port = port;
+	
+	socket.timeout = 10;
+	
+	if (!socket.Connect())
+		return false;
+	// send JDWP handshake
+	socket.Send(handshake);
+	// wait for response
+	tmp = socket.ReceiveBytes(handshake.length);
+	socket.Close();
+	
+	if (tmp == handshake) {
+		alert("Java_Debug_Wire_Protocol_Enabled.xml", port);
+		return true;
+	}
+	
+	return false;
+}
+// ***************************
+// main()
+// ***************************
+if (!testJDWP(8000)) {
+	// for Java servers test some additional ports.
+	if (isJava) {
+		if (!testJDWP(8787)) {
+			testJDWP(5005);
+		}
+	}	
+}

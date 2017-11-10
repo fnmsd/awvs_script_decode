@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="ASP.NET padding oracle vulnerability" version="0.1" released="20100921" updated="20140310" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Backup files" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="configuration,error_handling,information_disclosure,weak_crypto" CVE="CVE-2010-3332" CWE="CWE-310" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:F/RL:OF/RC:C" CVSSScoreTemp="4.2" CVSSScoreEnv="4.2" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Reference database="Understanding the ASP.NET Vulnerability" URL="http://blogs.technet.com/b/srd/archive/2010/09/17/understanding-the-asp-net-vulnerability.aspx"></Reference>
+		<Reference database="Important: ASP.NET Security Vulnerability" URL="http://weblogs.asp.net/scottgu/archive/2010/09/18/important-asp-net-security-vulnerability.aspx"></Reference>
+		<Reference database="Vulnerability in ASP.NET Could Allow Information Disclosure" URL="http://www.microsoft.com/technet/security/advisory/2416728.mspx"></Reference>
+		<Reference database="How to check if your application is vulnerable to the ASP.NET Padding Oracle Vulnerability" URL="http://www.acunetix.com/blog/news/check-application-vulnerable-asp-net-padding-oracle-vulnerability/"></Reference>
+		<Reference database="Vulnerability in ASP.NET Could Allow Information Disclosure (MS10-070)" URL="http://technet.microsoft.com/en-us/security/bulletin/MS10-070"></Reference>
+		<Copyright></Copyright>
+		<Description>ASP.Net uses encryption to hide sensitive data and protect it from tampering by the client. However, a vulnerability in the ASP.Net encryption implementation can allow an attacker to decrypt and tamper with this data. This vulnerability exists in all versions of ASP.NET.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS</WebServer>
+			<ApplicationServer>ASP.NET</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker who exploited this vulnerability could view data, such as the View State, which was encrypted by the target server, or read data from files on the target server, such as web.config. This would allow the attacker to tamper with the contents of the data. By sending back the altered contents to an affected server, the attacker could observe the error codes returned by the server.</Impact>
+		<Recommendation>You should apply the Microsoft patch [bold]MS10-070[/bold] linked in the Web references section. [break][break]
+
+Microsoft also released a workaround to prevent this vulnerability from being exploited. [break][break]
+
+[bold]Enabling the Workaround on ASP.NET V1.0 to V3.5[/bold][break]
+If you are using ASP.NET 1.0, ASP.NET 1.1, ASP.NET 2.0, or ASP.NET 3.5 then you should follow the below steps to enable &lt;customErrors&gt; and map all errors to a single error page:[break][break]
+
+1) Edit your ASP.NET Application's root Web.Config file.  If the file doesn't exist, then create one in the root directory of the application.[break]
+2) Create or modify the &lt;customErrors&gt; section of the web.config file to have the below settings:[break]
+
+[pre]
+&lt;configuration&gt;        
+   &lt;system.web&gt;
+      &lt;customErrors [dark]mode="On"[/dark] [dark]defaultRedirect="~/error.html"[/dark] /&gt;
+   &lt;/system.web&gt;        
+&lt;/configuration&gt;
+[/pre]
+
+3) You can then add an error.html file to your application that contains an appropriate error page of your choosing (containing whatever content you like).  This file will be displayed anytime an error occurs within the web application. [break]
+
+Notes: The important things to note above is that customErrors is set to "on", and that all errors are handled by the defaultRedirect error page.  There are not any per-status code error pages defined - which means that there are no &lt;error&gt; sub-elements within the &lt;customErrors&gt; section.  This avoids an attacker being able to differentiate why an error occurred on the server, and prevents information disclosure.[break][break]
+[bold]Enabling the Workaround on ASP.NET V3.5 SP1 and ASP.NET 4.0[/bold][break]
+
+If you are using ASP.NET 3.5 SP1 or ASP.NET 4.0 then you should follow the below steps to enable &lt;customErrors&gt; and map all errors to a single error page:[break][break]
+
+1) Edit your ASP.NET Application's root Web.Config file.  If the file doesn't exist, then create one in the root directory of the application.[break]
+
+2) Create or modify the &lt;customErrors&gt; section of the web.config file to have the below settings.  Note the use of redirectMode="ResponseRewrite" with .NET 3.5 SP1 and .NET 4.0: [break]
+[pre]
+&lt;configuration&gt;
+   &lt;system.web&gt;
+     &lt;customErrors [dark]mode="On"[/dark] [dark]redirectMode="ResponseRewrite"[/dark] [dark]defaultRedirect="~/error.aspx"[/dark] /&gt;
+   &lt;/system.web&gt;
+&lt;/configuration&gt;
+[/pre]
+
+3) You can then add an Error.aspx to your application that contains an appropriate error page of your choosing (containing whatever content you like).  This file will be displayed anytime an error occurs within the web application.[break]
+4) We recommend adding the below code to the Page_Load() server event handler within the Error.aspx file to add a random, small sleep delay. This will help to further obfuscate errors.[break]</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>DEBUG</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Command</Name>
+						<Value encoding="text">stop-debug</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="eq">
+							<Value>OK</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of complete tests</Description>
+		<Item encoding="Text">${file}${test}</Item>
+	</Variable>
+</WebApplicationTest>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="IBM Tivoli Access Manager directory traversal" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal,known_vulnerabilities" CVE="CVE-2010-4622,CVE-2011-0494" CWE="CWE-22" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="3.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Directory traversal vulnerability in WebSEAL in IBM Tivoli Access Manager for e-business 5.1 before 5.1.0.39-TIV-AWS-IF0040, 6.0 before 6.0.0.25-TIV-AWS-IF0026, 6.1.0 before 6.1.0.5-TIV-AWS-IF0006, and 6.1.1 before 6.1.1-TIV-AWS-FP0001 has unspecified impact and attack vectors.[break][break]
+Directory traversal vulnerability in WebSEAL in IBM Tivoli Access Manager for e-business 6.1.1 before 6.1.1-TIV-AWS-FP0001 on AIX allows remote attackers to read arbitrary files via a %uff0e%uff0e (encoded dot dot) in a URI.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read arbitrary files.</Impact>
+		<Recommendation>Update to the latest version of IBM Tivoli Access Manager.</Recommendation>
+		<Reference database="CVE-2011-0494" URL="http://www.cvedetails.com/cve/CVE-2011-0494/"></Reference>
+		<Reference database="CVE-2010-4622" URL="http://www.cvedetails.com/cve/CVE-2010-4622/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

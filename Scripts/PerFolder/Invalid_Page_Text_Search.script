@@ -1,0 +1,92 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include dir_listing_helpers.inc;
+#include text_search_helpers.inc;
+// **************************************************************************************
+function alert(dirName, testURI, matchedText, xml)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(xml);
+	ri.affects = dirName;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = http.request.headersString;
+	ri.response = http.response.headersString;
+	ri.fullResponse = http.response.body;
+	ri.Details = "Tested on URI: [blue]" + testURI + "[/blue][break]";
+	ri.Details = ri.Details + "[break]Pattern found in response: [blue]" + matchedText + "[/blue]";
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function validResponse()
+{
+	if (http.response.headerValue('content-type').indexOf('text') == -1) return false;
+	if (http.response.msg2 == 403) return false;
+	if (http.response.body.length == 0) return false;
+	return true;
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+// don't test directories that have directory listing (waste of time)
+var matches = new classMatches();
+var matchesDir = new classDirListingMatches();	
+if (!matchesDir.searchOnText(dir.response.body))
+{
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	// generate a random file	
+	var testURI = dirName + randStr(10) + ".jsp";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+	if (!http.wasError && validResponse())
+	{
+		matchedText = TestForApplicationErrorMessages(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Application_error_message_on_page.xml");
+		
+		matchedText = TestForASPNETPathDisclosure(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "ASP.NET_path_disclosure.xml");
+		
+		matchedText = TestForColdFusionPathDisclosure(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "ColdFusion_path_disclosure.xml");
+		
+		matchedText = TestForEmailAddresses(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Email_address_found.xml");
+			
+		matchedText = TestForInternalIP(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Possible_internal_IP_address_disclosure.xml");
+			
+		matchedText = TestForMicrosoftOfficeInfo(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Microsoft_Office_possible_sensitive_information.xml");
+		
+		//matchedText = TestForServerPathDisclosureWindows(matches, http.response.body);
+		//if (matchedText) alert(dirName, testURI, matchedText, "Possible_server_path_disclosure_(Windows).xml");
+		//matchedText = TestForServerPathDisclosureUnix(matches, http.response.body);
+		//if (matchedText) alert(dirName, testURI, matchedText, "Possible_server_path_disclosure_(Unix).xml");	
+		
+		matchedText = TestForSourceCodeDisclosure(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Source_Code_Disclosure.xml");
+		
+		matchedText = TestForUsernameOrPasswordDisclosure(matches, http.response.body);
+		if (matchedText) alert(dirName, testURI, matchedText, "Possible_username_or_password_disclosure.xml");
+        var DjangoDebugModeAlerted = getGlobalValue("DjangoDebugMode");
+        if (!DjangoDebugModeAlerted)
+        {
+            matchedText = TestDjangoDebugMode(matches, http.response.body);
+            if (matchedText) {
+                alert(dirName, testURI, matchedText, "Django_Debug_Mode.xml");
+                SetGlobalValue("DjangoDebugMode", 1, true);
+            }
+        }
+		var RailsDevModeAlerted = getGlobalValue("RailsDevModeAlerted");
+		if (!RailsDevModeAlerted)
+		{
+			matchedText = TestRailsDevMode(matches, http.response.body);
+			if (matchedText) {
+				alert(dirName, testURI, matchedText, "Rails_Development_Mode.xml");
+				SetGlobalValue("RailsDevModeAlerted", 1, true);
+			}
+		}
+	}
+}

@@ -1,0 +1,37 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("CoreDumpCheck.xml");
+	ri.affects = job.uri;
+	ri.alertPath = "Scripts/CoreDumpCheck";	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+function testDir(dirName) {		
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.uri = dirName + "coredumpcheck.php";
+	http.addCookies = false;
+	http.execute();	
+	var patternStr = "<title>Core Dump Checker</title>";
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		if (http.response.body.indexOf(patternStr) != -1)	
+			{
+				alert(http, patternStr);
+			}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var dirName = root.path + root.Name;
+testDir(dirName);

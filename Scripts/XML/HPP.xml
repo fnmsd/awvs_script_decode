@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="HTTP parameter pollution" version="0.1" released="20080307" updated="20160122" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="http_parameter_pollution" CVE="" CWE="CWE-88" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to HTTP Parameter Pollution attacks.[break][break]
+
+HPP attacks consist of injecting encoded query string delimiters into other existing parameters. If the web application does not properly sanitize the user input, a malicious user can compromise the logic of the application to perform either clientside or server-side attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact depends on the affected web application. An attacker could [break]
+[ul]
+[li]Override existing hardcoded HTTP parameters[/li]
+[li]Modify the application behaviors[/li]
+[li]Access and, potentially exploit, uncontrollable variables[/li]
+[li]Bypass input validation checkpoints and WAFs rules[/li]
+[/ul]</Impact>
+		<Recommendation>The application should properly sanitize user input (URL encode) to protect against this vulnerability.</Recommendation>
+		<Reference database="HTTP Parameter Pollution" URL="https://www.owasp.org/images/b/ba/AppsecEU09_CarettoniDiPaola_v0.8.pdf"></Reference>
+	</TestDescription>
+</WebApplicationTest>

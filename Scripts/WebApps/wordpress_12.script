@@ -1,0 +1,47 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, path, version)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = path;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	if (version) 
+		ri.Details =  "Current Jetpack version: [dark]" + version + "[/dark]";
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function audit_jetpack_292_bug(dir, path){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + "/wp-content/plugins/jetpack/readme.txt";	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200 && http.response.body.indexOf("Stable tag:") != -1){	
+		var vulnRegex = /Stable tag:\s+([\d\.]+)/;
+		var m = vulnRegex.exec(http.response.body);            
+		if (m && m.length > 1) {
+			var versionText = m[1];
+			var versionTextFull = versionText.trim();
+			// add ".0" to make it a 3 digits version
+			if (versionTextFull.length == 3) versionTextFull = versionTextFull + ".0";
+			// convert it to number
+			var versionNumber = versionTextFull.replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+			// check version number
+			if (versionNumber>=190 && versionNumber<=292) {
+				alert("JetPack_293.xml", http, path + "/wp-content/plugins/jetpack/", versionText);
+			}
+		}	
+	}
+}
+var dir = getCurrentDirectory();
+audit_jetpack_292_bug(dir, dir.fullPath);

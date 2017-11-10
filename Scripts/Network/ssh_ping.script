@@ -1,0 +1,31 @@
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+#include classSSH.inc;
+if (IsPortOpen(22)) {
+	ssh = new classSSH(ScanHost, 22, 6);
+	var retval = ssh.getInfo();
+	if(retval != null)
+	{
+		if(retval.ServerKeyFingerprint.length > 0)
+		{
+			traceObject(retval);
+			var info = "";
+			info += "Server key fingerprint: " + retval.ServerKeyFingerprint + "\r\n";
+			info += "SSH version: " + retval.SshVersion + "\r\n";
+			info += "Encryption algorithm client to server: " + retval.EncryptionAlgorithmClientToServer + "\r\n";
+			info += "Encryption algorithm server to client: " + retval.EncryptionAlgorithmServerToClient + "\r\n";
+			info += "Mac algorithm client to server: " + retval.MacAlgorithmClientToServer + "\r\n";
+			info += "Mac algorithm server to client: " + retval.MacAlgorithmServerToClient + "\r\n";
+			info += "Public key algorithm: " + retval.PublicKeyAlgorithm + "\r\n";
+			trace(info);
+		
+			KBase("SSH server running", "A SSH server is running on TCP port 22.[break]SSH server information: [pre]" + info + "[/pre]");	
+		}
+		else
+		{
+			trace("Not SSH");
+		}
+	}
+	else
+		trace("Test failed");
+}

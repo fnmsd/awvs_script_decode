@@ -1,0 +1,132 @@
+#include helpers.inc;
+#include string_helpers.inc;
+var acceptedExt	=	["php", "php3", "php4", "php5", "asp", "aspx", "jsp", "cfm", "pl", "shtml"];
+var variants = [
+					"${file83}",
+					"${fileName}/%3f.jsp",
+					"${fileName}.${UPPERfileExt}",
+					"${fileName}.${fileExt}%70",
+					"${fileName}.${fileExt}%252ejsp",
+					"${fileName}.${fileExt}.%E2%73%70",
+					"${fileName}.${fileExt}%2easp",
+					"${fileName}.${fileExt}%2e",
+					"${fileName}.${fileExt}\\",
+					"${fileName}.${fileExt}?*",
+					"${fileName}.${fileExt}+",
+					"${fileName}.${fileExt}%20",
+					"${fileName}.${fileExt}%00",
+					"${fileName}.${fileExt}" + strFromRawData(0x00),
+					"${fileName}.${fileExt}%00.txt",
+					"${fileName}.${fileExt}" + strFromRawData(0x00) + ".txt",
+					"${fileName}.${fileExt}%2f",
+					"${fileName}.${fileExt}%5c",
+					"${fileName}.${fileExt}+.htr",
+					"${fileName}.${fileExt}::$DATA"
+				];
+var regexArray = 	[
+					/(\<%[\s\S]*Response\.Write[\s\S]*%\>)/i,
+					/(\<\?php[\x20-\x80\x0d\x0a\x09]+)/i,
+					/(^#\!\\\/[\s\S]*\\\/perl)/i,
+					/(^#\!\/[\s\S]*?\/python)/i,
+					/(^#\!\/usr\/bin\/env\spython)/i,
+					/(^#\!\/[\s\S]*?\/perl)/i,
+					/using\sSystem;\n[\s\S]*?class\s[\s\S]*?\s?{[\s\S]*}/i													
+					];								 
+var foundFile = false;					
+					
+// **************************************************************************************							 
+function alert(uri, job, variant, origFname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Source_Code_Disclosure.xml");
+	ri.name = "Source Code Disclosure";
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Source Code Disclosure";	
+	ri.details = "This file was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original filename: [dark][bold]" + origFname + "[/bold][/dark]";
+	
+	ri.setHttpInfo(job);
+	
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Source disclosure pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}	
+	
+	AddReportItem(ri);	
+}							 
+			
+// **************************************************************************************							 
+function matchRegex(text)
+{	
+	for (var i=0;i<regexArray.length;i++) {
+		var m = regexArray[i].exec(text);
+		if (m) return m[0];
+	}
+	return false;
+}				
+			
+// **************************************************************************************
+function testFile(filePath, fileName, fileExt, variant, origFName) {
+	var fname = variant.replace("${fileName}", fileName);
+    
+	fname = fname.replace("${UPPERfileName}", fileName.toUpperCase());
+	fname = fname.replace("${fileExt}", fileExt);
+	fname = fname.replace("${UPPERfileExt}", fileExt.toUpperCase());	
+	fname = fname.replace("${file83}", getFileName83(fileName + "." + fileExt));	
+	
+	if (fname != origFName) {
+		var uri = filePath + fname;
+		var http = new THTTPJob();
+		
+		http.url = scanURL;
+		http.verb = 'GET';
+		http.URI = uri;
+		http.execute();	
+		
+		if ((!http.wasError && !http.notFound && http.responseStatus == 200))
+		{
+			match = matchRegex(http.response.body);
+			if (match) alert(uri, http, variant, fileName + "." + fileExt, match);
+		}
+	}
+}
+/***********************************************************************************/
+function FindAndTestDynamicFile(list){
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile){
+			var fileExt = getFileExt(sf.name);
+			if (fileExt && fileShouldBeTested(fileExt)) {
+				testForSourceCodeDisclosure(sf);
+				return true;
+			}	
+    }
+  }
+}
+/***********************************************************************************/
+function fileShouldBeTested(ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+				if (ext.toLowerCase() == acceptedExt[i]) 
+					return true;
+      }	
+	
+	return false;
+}
+/***********************************************************************************/
+function testForSourceCodeDisclosure(sf) {
+	//trace("testing " + sf.name + " ... ");
+	
+	var fileName = getFileName(sf.name);
+	var fileExt  = getFileExt(sf.name);
+	
+		// test it with all backup variants	
+		for (var i=0; i<variants.length; i++)
+		{
+			testFile(sf.path, fileName, fileExt, variants[i], sf.name);	
+			ScriptProgress(ComputeProgress(i, variants[i]));
+		}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+FindAndTestDynamicFile(list);

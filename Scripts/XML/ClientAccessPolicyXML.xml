@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Insecure clientaccesspolicy.xml file" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The browser security model normally prevents web content from one domain from accessing data from another domain. This is commonly known as the "same origin policy".  URL policy files grant cross-domain permissions for reading data. They permit operations that are not permitted by default. The URL policy file for Silverlight is located, by default, in the root directory of the target server, with the name ClientAccessPolicy.xml (for example, at www.example.com/ClientAccessPolicy.xml). [break][break] When a domain is specified in ClientAccessPolicy.xml, the site declares that it is willing to allow the operators of any servers in that domain to obtain any document on the server where the policy file resides. The ClientAccessPolicy.xml file deployed on this website opens the server to all domains (use of a single asterisk "*" as a pure wildcard is supported) like so:
+[pre]
+&lt;allow-from http-request-headers="*"&gt;
+   &lt;domain uri="*"/&gt;
+&lt;/allow-from&gt;
+[/pre]
+
+This practice is suitable for public servers, but should not be used for sites located behind a firewall because it could permit access to protected areas. It should not be used for sites that require authentication in the form of passwords or cookies. Sites that use the common practice of authentication based on cookies to access private or user-specific data should be especially careful when using cross-domain policy files.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Using an insecure client access policy file could expose your site to various attacks.</Impact>
+		<Recommendation>Carefully evaluate which sites will be allowed to make cross-domain calls. Consider network topology and any authentication mechanisms that will be affected by the configuration or implementation of the cross-domain policy.</Recommendation>
+		<Reference database="Making a Service Available Across Domain Boundaries" URL="http://msdn.microsoft.com/en-us/library/cc197955(v=vs.95).aspx"/><Reference database="Network Security Access Restrictions in Silverlight" URL="http://msdn.microsoft.com/en-us/library/cc645032(v=vs.95).aspx"/></TestDescription>
+</WebApplicationTest>

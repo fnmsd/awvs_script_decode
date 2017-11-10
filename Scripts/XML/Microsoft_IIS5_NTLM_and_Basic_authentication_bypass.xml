@@ -1,0 +1,90 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Microsoft IIS5 NTLM and Basic authentication bypass" version="0.1" released="20070604" updated="20140305" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="authentication_bypass,configuration,information_disclosure,missing_update" CVE="CVE-2007-2815" CWE="CWE-264" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C/E:POC/RL:W/RC:C" CVSSScoreTemp="8.6" CVSSScoreEnv="8.5"/>
+		<Copyright/>
+		<Description>IISv5 has a "Hit-highlighting" functionality that opens some site
+object and highlights some part of it, that has had a transversal
+vulnerability in the past. Now it can be used to bypass the IIS
+authentication.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS 5.0</WebServer>
+			<WebServer>IIS 5.1</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>A remote attacker can bypass IIS authentication.</Impact>
+		<Recommendation>Protect the files from the NTFS filesystem instead of relying on the
+IIS protection.
+[break]
+Microsoft recommends not to use IISv5 and update to IISv6.
+</Recommendation>
+		<Reference database="Microsoft KB 328832" URL="http://support.microsoft.com/kb/328832"/>
+		<Reference database="SecurityFocus BID 24105" URL="http://www.securityfocus.com/bid/24105/info"/>
+		<Reference database="Microsoft IIS5 NTLM and Basic authentication bypass" URL="http://www.securityfocus.com/archive/1/469238"/>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}/${file}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="errortext" type="string">
+					<Description>ScriptInside</Description>
+					<Source source="body">(&lt;HTML&gt;\s*&lt;BODY&gt;\s*&lt;p&gt;&lt;h3&gt;&lt;center&gt;The filename, directory name, or volume label syntax is incorrect.&lt;BR&gt;&lt;/center&gt;&lt;/h3&gt;&lt;BR&gt;&lt;/BODY&gt;\s*&lt;/HTML&gt;)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${errortext}" test="neq">
+							<Value/>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

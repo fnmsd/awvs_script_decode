@@ -1,0 +1,99 @@
+#include constants.inc;
+#include classSQLInjection.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(path, value, job, matchedText, sourceFile, sourceLine, additionalInfo, acuSensor)
+{	
+	var ri = new TReportItem();	
+	
+	ri.LoadFromFile("SQL_injection_in_the_authentication_header.xml");	
+	if (acuSensor) ri.name = ri.name + " (verified)";
+		
+	ri.affects = path;
+	ri.alertPath = "Scripts/SQL injection in the authentication header";	
+	ri.setHttpInfo(job);	
+	
+	ri.sensorSourceFile = sourceFile;
+	ri.sensorSourceLine = sourceLine;
+	ri.sensorAdditional = additionalInfo;
+	
+	ri.details = "Authorization header was set to [bold][dark]" + value + "[/dark][/bold]";
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+function request(dir, withAop, path, value)
+{	
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.uri = path;		
+	
+	lastJob.autoAuthenticate = false;
+	lastJob.request.addHeader("Authorization", value, true);	
+	if (withAop) lastJob.addAspectHeaders();		
+	
+	lastJob.execute();
+	
+	return (!lastJob.wasError); 
+}	
+//--------------------------------------------------------------------------------------------------------
+function testInjection(dir, withAop, path, value, tester)
+{
+	//trace("testInjection: " + value);
+	if (!request(dir, withAop, path, value)) return false;
+	
+	var job = lastJob;
+	// if AcuSensor is enabled
+	if (job.hasAspectData) {
+		// get aspect data information
+		var ad = job.getAspectData();
+		var injRes = tester.isSQLInjection(ad);
+		
+		if (injRes && injRes.adItem) {				
+			var additional = "SQL query: " + injRes.data + "\r\n" + injRes.adItem.additional;
+			alert(path, value, job, "", injRes.adItem.FileName, injRes.adItem.lineNumber, additional, 1);
+			return false;
+		}
+	}		
+	
+	else {
+			// AcuSensor is NOT enabled
+			var matchedText = errorMessages.searchOnText(job.response.body);		
+			if (matchedText) {
+				alert(path, value, job, matchedText);
+				return false;
+			}
+	}
+		
+	return true;
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+// only test directories that are returning 401
+// only check if basic authentication is available
+if (dir.response.msg2 == 401 && dir.response.headerValue('WWW-Authenticate').indexOf("Basic") != -1)
+{
+	var lastJob = null;
+	var errorMessages = new classSQLErrorMessages();
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';	
+	
+	var tester = new classSQLInjection(scanURL, errorMessages, null, 0);	
+	
+	if (dir.hasAcuSensor) {	
+		// test username
+		if (testInjection(dir, true, dirName, "Basic MUFDVVNUQVJUJ1wiKi9cclxuIFx0QUNVRU5EOmFhYWE=", tester))
+			// test password
+			testInjection(dir, true, dirName, "Basic YWFhYToxQUNVU1RBUlQnXCIqL1xyXG4gXHRBQ1VFTkQ=", tester);
+	}
+	
+	else {
+		
+		// single quote user, double quote password
+		if (testInjection(dir, false, dirName, "Basic Jzoi"))
+		// double quote	user, single quote password
+		testInjection(dir, false, dirName, 'Basic Ijon');
+	}
+}

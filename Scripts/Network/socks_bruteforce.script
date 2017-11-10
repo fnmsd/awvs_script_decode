@@ -1,0 +1,74 @@
+#include classSocks.inc;
+#include credentials_small.inc;
+#include reporting_helpers.inc;
+var testIP = "87.230.63.11";
+function bruteforceSocks5(socks)
+{
+	var i, j;
+	for(i = 0; i < Usernames.length; i++)
+	{
+		for(j = 0; j < Passwords.length; j++)
+		{
+			var strUser = Usernames[i];
+			var strPass = Passwords[j];
+			socks.intAutentType = 2;
+			socks.strUserName = strUser;
+			socks.strPassword = strPass;
+			var retval = socks.Connect(testIP, 80);
+			
+			ScriptProgress(ComputeProgress(i*Passwords.length + j, Usernames.length*Passwords.length));
+			if(retval == 1)
+				return({"username" : strUser, "password": strPass});
+		}
+	}
+	return(null);
+}
+if (IsPortOpen(1080)) {
+	var socks = new classSocks(ScanHost, 1080, '5');
+	socks.intAutentType = 0; //no autentification required
+	retval = socks.Connect(testIP, 80);
+	if (retval >= 0) 
+	{
+		if ((retval == 1) || (socks.intConnectionStatus != 0x0b)) 
+		{
+			trace("Open autentification, no bruteforce needed.");
+			KBase("SOCKS server doesn't require authentication", "The SOCKS server doesn't require authentication!");
+		}
+		else 
+		{
+			//try if username password autent is suported
+			socks.intAutentType = 2;
+			socks.strUserName = "";
+			socks.strPassword = "";
+			retval = socks.Connect(testIP, 80);
+			if(retval == 1)
+			{
+				trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+				ReportItem("Socks_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.username + "[/dark]");				
+			}
+			else
+			if(retval == 0)
+			{
+				if(socks.intConnectionStatus == 0x0b)
+				{
+					trace("Username Password autentification is not supported by the server.")			
+				}
+				else
+				{
+					var obj =	bruteforceSocks5(socks);
+					if(obj)
+					{
+						trace("LOGIN SUCCESS! username: " + obj.username + " password: " + obj.password);
+						ReportItem("Socks_bruteforce.xml", "Username: [dark]" + obj.username + "[/dark], Password: [dark]" + obj.username + "[/dark]");	
+					}
+					else 
+					{
+						trace ("Can not guess login credentials.");
+					}
+				}
+			}
+		}
+	}
+	else	
+		trace("There is no socks server");
+}

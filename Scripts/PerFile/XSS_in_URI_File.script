@@ -1,0 +1,68 @@
+#include constants.inc;
+#include classXSSinURI.inc;
+var acceptedExt	=	[
+						"bak",									// bakup files
+						"html", "htm", "xhtml", 				// html files
+						"php", "php3", "php4", "php5", "phtml", // php
+						"asp", "aspx", "ascx", "asmx",			// asp
+						"chm", "cfc", "cfmx", "cfml",			// cold fusion
+						"js",									// javascript
+						"py", 									// python
+						"rb", 									// ruby
+						"pl",									// perl
+						"cgi",									// cgi
+						"exe",	"dll", 							// exe
+						"jsp", "jhtml", "jhtm", "jws", "jspa", "action", "do" // java
+					];
+// **************************************************************************************
+function fileShouldBeTested(file, ext) {
+	// returns true if the file has an accepted extension
+	for (var i=0; i<acceptedExt.length; i++) 
+      {
+				if (ext.toLowerCase() == acceptedExt[i]) 
+					return true;
+      }	
+	
+	// or if it has some inputs
+	if (file.schemeCount > 0) return true;
+		
+	return false;
+}
+function testForXSS() {
+    var file = getCurrentFile(); // this is the sitefile
+    var targetUrl = file.url;
+    targetUrl.getVar = "";
+    var fileName = getFileName(file.name);
+    var fileExt  = getFileExt(file.name);
+		
+    // verify if the file should be tested
+    if (file.isFile && fileShouldBeTested(file, fileExt)) {
+        // test with various separators
+    	var tester = new classXSSinURI(targetUrl, file, '/');
+    	tester.startTesting();
+        // don't continue if found one vuln
+        if (tester.foundXSS) {tester = null; return;}
+    	var tester = new classXSSinURI(targetUrl, file, '?');
+    	tester.startTesting();
+        if (tester.foundXSS) {tester = null; return;}
+    	var tester = new classXSSinURI(targetUrl, file, '?=');
+    	tester.startTesting();
+        if (tester.foundXSS) {tester = null; return;}
+    	var tester = new classXSSinURI(targetUrl, file, '"');
+    	tester.startTesting();
+        if (tester.foundXSS) {tester = null; return;}
+		//for jsp try the path parameters trick
+        if (fileExt.toLowerCase()=='jsp') {
+      		var tester = new classXSSinURI(targetUrl, file, ';');
+    		tester.startTesting();
+        	if (tester.foundXSS) {tester = null; return;}
+        }
+		var tester = new classXSSinURI(targetUrl, file, '?id=');
+		tester.startTesting();
+		if (tester.foundXSS) {tester = null; return;}
+        tester = null;    
+    }
+}
+// main entry point
+// **************************************************************************************
+testForXSS();

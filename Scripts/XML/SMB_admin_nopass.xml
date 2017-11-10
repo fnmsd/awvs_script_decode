@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="SMB Administrator account without password" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,abuse_of_functionality,arbitrary_file_creation,insecure_admin_access,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/RL:W/RC:C" CVSSScoreTemp="7.2" CVSSScoreEnv="7.1"/>
+		<Copyright/>
+		<Description>It was possible to establish a SMB session using the Administrator account with a blank password. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible system compromise.</Impact>
+		<Recommendation>You need to limit local account use of blank passwords to console login only. [break][break]
+[ul]
+[li][Start] [Run] and type [bold]gpedit.msc[/bold] and click [OK][/li]
+[li]Navigate to Computer Configuration / Windows Settings / Security Settings / Local Policies / Security Options[/li]
+[li]Double click on Accounts: Limit local account use of blank passwords to console login only.[/li]
+[li]Select the radio button next to [bold]Enabled[/bold] and click [OK][/li]
+[/ul]</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

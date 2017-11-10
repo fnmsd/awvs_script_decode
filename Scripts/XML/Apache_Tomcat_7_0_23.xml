@@ -1,0 +1,30 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 7.0.23" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,denial_of_service,missing_update" CVE="CVE-2012-0022" CWE="CWE-189" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:P/E:H/RL:OF/RC:C" CVSSScoreTemp="4.4" CVSSScoreEnv="4.3"/>
+		<Copyright></Copyright>
+		<Description>The following problems were fixed in Apache Tomcat version 7.0.23: [break][break]
+
+[ul]
+
+[li]
+[bold]Important: Denial of service CVE-2012-0022[/bold][break]
+Analysis of the recent hash collision vulnerability identified unrelated inefficiencies with Apache Tomcat's handling of large numbers of parameters and parameter values. These inefficiencies could allow an attacker, via a specially crafted request, to cause large amounts of CPU to be used which in turn could create a denial of service. The issue was addressed by modifying the Tomcat parameter handling code to efficiently process large numbers of parameters and parameter values.
+[/li]
+
+[/ul]
+
+
+[break][break][navy]Affected Apache Tomcat versions (7.0.0 - 7.0.22).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Denial of service.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache Tomcat.</Recommendation>
+		<Reference database="CVE-2012-0022" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0022"/><Reference database="Apache Tomcat 7.x vulnerabilities" URL="http://tomcat.apache.org/security-7.html"/></TestDescription>
+</WebApplicationTest>

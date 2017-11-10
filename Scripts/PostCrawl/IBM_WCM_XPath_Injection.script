@@ -1,0 +1,53 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("IBM_WCM_XPath_Injection.xml");
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/IBM_WCM_XPath_Injection";	
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+function testXPathInjection(testTrue){
+    http = new THTTPJob();
+    var randomStr = randStr(5);
+    
+    http.url = scanURL;
+    http.verb = 'GET';
+    
+    http.URI = "/wps/wcm/connect/'+or+'" + randomStr + "'='" + randomStr;
+    if (!testTrue) 
+        http.URI = http.URI + "false";
+        
+    http.execute();
+    
+    if (testTrue) {
+        // TRUE returns status code of 302 and login.jsp in location
+        if (!http.wasError && http.responseStatus == 302)
+        {
+            var locationStr = http.response.headerValue('location');
+        	if (locationStr && locationStr.indexOf("/wps/wcm/webinterface/login/login.jsp") != -1)
+        		{
+                    //trace("true");
+        		    return true;
+        		}
+        }
+        
+    } else {
+        // FALSE returns 404
+        if (!http.wasError && http.responseStatus == 404)
+        {
+            //trace("false");
+        	return true;
+        }
+    }    
+    return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var http = false;
+if (testXPathInjection(true) && testXPathInjection(false) && testXPathInjection(true)) {
+    alert(http);
+}

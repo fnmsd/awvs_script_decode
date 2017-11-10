@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL Server weak password" version="0.1" released="20080307" updated="20150311" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="bruteforce_possible,configuration,information_disclosure,network_alert,weak_credentials" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright/>
+		<Description>The MySQL Server is using a weak password. Acunetix WVS was able to guess the credentials required to access this resource. [break]A weak password is short, common, a system default, or something that could be rapidly guessed by executing a brute force attack using a subset of all possible passwords, such as words in the dictionary, proper names, words based on the user name or common variations on these themes.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may access the contents of the password-protected resource.</Impact>
+		<Recommendation>Enforce a strong password policy. Don't permit weak passwords or passwords based on dictionary words.</Recommendation>
+		<Reference database="Wikipedia - Password strength" URL="http://en.wikipedia.org/wiki/Password_strength"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Same site scripting" version="0.1" released="20080307" updated="20151105" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Tavis Ormandy reported a common DNS misconfiguration that can result in a minor security issue with web
+applications. [break][break]
+
+[coolbox]
+"It's a common and sensible practice to install records of the form
+"localhost. IN A 127.0.0.1" into nameserver configurations, bizarrely
+however, administrators often mistakenly drop the trailing dot,
+introducing an interesting variation of Cross-Site Scripting (XSS) I
+call Same-Site Scripting. The missing dot indicates that the record is
+not fully qualified, and thus queries of the form
+"localhost.example.com" are resolved. While superficially this may
+appear to be harmless, it does in fact allow an attacker to cheat the
+RFC2109 (HTTP State Management Mechanism) same origin restrictions, and
+therefore hijack state management data."
+[/coolbox]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can cheat the RFC2109 (HTTP State Management Mechanism) same origin restrictions, and
+therefore hijack state management data.</Impact>
+		<Recommendation>It is advised that non-FQ localhost entries be removed from nameserver
+configurations for domains that host websites that rely on HTTP state
+management.</Recommendation>
+		<Reference database='Common dns misconfiguration can lead to "same site" scripting' URL="http://seclists.org/bugtraq/2008/Jan/270"></Reference>
+		<Reference database="Insecure DNS records in top web projects" URL="http://lab.onsec.ru/2013/07/insecure-dns-records-in-top-web-projects.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

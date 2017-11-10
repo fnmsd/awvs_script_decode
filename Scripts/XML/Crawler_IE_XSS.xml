@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Internet Explorer XSS Protection disabled on this page" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="info" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Internet Explorer includes a feature that makes "Type-1" Cross-Site Scripting (XSS) vulnerabilities much more difficult to exploit from within Internet Explorer. [break]Web developers may wish to disable the filter for their content.They can do so by setting a HTTP header: [pre]X-XSS-Protection: 0[/pre]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>None</Impact>
+		<Recommendation>Investigate if it's necessary to disable the XSS protection on this page.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

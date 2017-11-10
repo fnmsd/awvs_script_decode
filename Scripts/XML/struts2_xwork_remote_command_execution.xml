@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Struts2/Xwork remote command execution" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2010-1870" CWE="CWE-264" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.1" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>Struts2, Java web framework, is vulnerable to remote commands execution due
+to a vulnerability in XWork's ParametersInterceptor, which is enabled by
+default in Struts2 and WebWork applications. The OGNL extensive expression evaluation capability in XWork in Struts 2.0.0 through 2.1.8.1, as used in Atlassian Fisheye, Crucible, and possibly other products, uses a permissive whitelist, which allows remote attackers to modify server-side context objects and bypass the "#" protection mechanism in ParameterInterceptors via the (1) #context, (2) #_memberAccess, (3) #root, (4) #this, (5) #_typeResolver, (6) #_classResolver, (7) #_traceEvaluations, (8) #_lastEvaluation, (9) #_keepLastEvaluation, and possibly other OGNL context variables.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote attacker can send custom OGNL statements and execute arbitrary Java code on the vulnerable server.</Impact>
+		<Recommendation>Upgrade to Struts version 2.2.</Recommendation>
+		<Reference database="CVE-2010-1870" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2010-1870"/></TestDescription>
+</WebApplicationTest>

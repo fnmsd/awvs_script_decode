@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="NSS Library SSL v.2.0 remote command execution" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Overflows">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="missing_update,network_alert" CVE="CVE-2007-0009" CWE="CWE-119" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:U/RL:W/RC:C" CVSSScoreTemp="5.5" CVSSScoreEnv="5.5"/>
+		<Copyright/>
+		<Description>The remote host seems to be using a vulnerable version of the Mozilla Network Security Services (NSS) Library, the SSL v.2.0 handling code may allow an attacker to cause a heap overflow and therefore execute arbitrary commands on the remote host.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The remote attacker may execute arbitrary code on the remote host.</Impact>
+		<Recommendation>Upgrade the remote service to use NSS 3.9.2 or newer.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

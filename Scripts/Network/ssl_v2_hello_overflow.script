@@ -1,0 +1,29 @@
+#include "string_helpers.inc";
+#include reporting_helpers.inc;
+if(IsPortOpen(443))
+{
+	var socket = new TSocket("TCP");
+	socket.host = Scanhost;
+	socket.port = 443;
+	socket.timeout = 4;
+	if(socket.connect())
+	{
+		var dataToSend = strFromRawData(
+					0x80, 0x44, 0x01, 0x00, 
+          0x02, 0x00, 0x03, 0x00,
+					0x00, 0x00, 0x38, 0x07,
+					0x00, 0xc0) 
+					+ "1234567890123456"
+					+ "VULNVULNVULNVULNVULNVULNVULNVULNVULNVULN";
+		socket.Send(dataToSend);
+		socket.timeout = 1;
+		receive = socket.Receive(true);
+		
+		socket.close();
+		
+		if((receive != "") && (receive.match(/VULN/)))
+		{
+			ReportItem("ssl_v2_hello_overflow.xml", "The remote host seems to be using a vulnerable version of the Mozilla Network Security Services (NSS) Library, the SSL v.2.0 handling code may allow an attacker to cause a heap overflow and therefore execute arbitrary commands on the remote host.");
+		}
+	}
+}

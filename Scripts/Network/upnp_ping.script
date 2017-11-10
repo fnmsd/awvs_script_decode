@@ -1,0 +1,102 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test for upnp
+// prepare upnp request
+function upnp_request()
+{
+	var res = "";
+	
+	res = "M-SEARCH * HTTP/1.1\r\n" +
+				"Host:239.255.255.250:1900\r\n" +
+				"ST:upnp:rootdevice\r\n" +
+				"Man:\"ssdp:discover\"\r\n" + 
+				"MX:3\r\n\r\n";
+	
+	return res;
+}
+// extract interesting info from UPNP response
+function extract_upnp_info(location){
+	var res = "";
+	// request the location URL
+	var req 	= new THTTPJob();
+	var up 		= new TURL(location);
+	req.url		= up;
+	req.verb 	= "GET";
+	req.execute();
+	if(!req.wasError){
+			//trace(req.response.body);
+		var upnp_info = req.response.body;
+		// extract intresting info
+		// friendlyname
+		var friendlyName = upnp_info.match(/<friendlyName>(.*)<\/friendlyName>/i);
+		if (friendlyName && friendlyName.length>0){
+			//trace("friendlyName: " + friendlyName[1]); 
+			res+="friendlyName: " + friendlyName[1] + "\r\n";
+		}	
+		// manufacturer
+		var manufacturer = upnp_info.match(/<manufacturer>(.*)<\/manufacturer>/i);
+		if (manufacturer && manufacturer.length>0){
+			//trace("manufacturer: " + manufacturer[1]); 
+			res+="manufacturer: " + manufacturer[1] + "\r\n";
+		}
+		// modelDescription
+		var modelDescription = upnp_info.match(/<modelDescription>(.*)<\/modelDescription>/i);
+		if (modelDescription && modelDescription.length>0){
+			//trace("modelDescription: " + modelDescription[1]); 
+			res+="modelDescription: " + modelDescription[1] + "\r\n";
+		}
+		// modelName
+		var modelName = upnp_info.match(/<modelName>(.*)<\/modelName>/i);
+		if (upnp_info && modelName.length>0){
+			//trace("modelName: " + modelNumber[1]); 
+			res+="modelName: " + modelName[1] + "\r\n";
+		}
+		// modelNumber
+		var modelNumber = upnp_info.match(/<modelNumber>(.*)<\/modelNumber>/i);
+		if (modelNumber && modelNumber.length>0){
+			//trace("modelNumber: " + modelNumber[1]); 
+			res+="modelNumber: " + modelNumber[1] + "\r\n";
+		}
+	}
+	return res;
+}
+// parse upnp response, extract location from it
+function parse_upnp_response(response)
+{
+	var res = "";		
+	if (response.match(/^HTTP\/1/)){
+		//trace("matched");
+		var locationMatch = response.match(/Location:\s*(.*?)[\r\n]/);
+		//traceObject(locationMatch);
+		if (locationMatch && locationMatch.length>0){
+			var location = locationMatch[1];
+			//trace(location);
+			//trace("UPNP is enabled!");
+			res = location;
+			}			
+		}
+ 
+	return res;	
+}
+	// start
+	var s = new TSocket('udp');
+	s.host = ScanHost;
+	s.port = 1900;
+	s.timeout = 3;
+	s.connect();
+	data_to_send = upnp_request();
+	//trace(data_to_send);
+	s.Send(data_to_send);
+	response = s.Receive(true);
+	if (response.length > 0) {
+		//trace(response);
+		var location = parse_upnp_response(response);
+		if (location.length > 0){
+			var info = extract_upnp_info(location);
+			//trace("UPNP is enabled!");
+			//trace(info);
+			ReportItem("UPNP.xml", "An UPNP server is running on UDP port 1900. [break]Information gathered from this service: [break][pre]" + info + "[/pre]");	
+		}
+	}
+	s.Close();

@@ -1,0 +1,107 @@
+#include constants.inc;
+#include helpers.inc;
+#include error_messages_helpers.inc;
+#include os_detection.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for Ruby on Rails Where SQL Injection
+	function classRailsWhereSQLInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.lastJob = null;
+	}	
+	
+	classRailsWhereSQLInjection.prototype.request = function(inputName, value)
+	{	
+		this.scheme.setTempInputName(this.inputIndex, inputName);
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}
+	
+	classRailsWhereSQLInjection.prototype.alert = function(origInputName, newInputName)
+	{	
+		var ri = new TReportItem();
+		ri.LoadFromFile("Rails_Where_SQL_Injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Rails_Where_SQL_Injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = '1';
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + origInputName + "[/dark][/bold] was set to [bold][dark]" + newInputName + "=1[/dark][/bold]";
+		AddReportItem(ri);	
+	}		
+	
+	classRailsWhereSQLInjection.prototype.startTesting = function()
+	{
+		var inputName = scheme.getInputName(this.inputIndex);
+        
+		// don't test some parameters
+		if (inputName == 'authenticity_token') return;
+		if (inputName == 'commit') return;
+		if (inputName == 'utf8') return;        
+        
+        if (inputName.indexOf("%5d") != -1) return;
+        if (inputName.indexOf("%5b") != -1) return;
+        
+        // don't test session cookies
+        var inputType = this.scheme.getInputTypeStr(this.inputIndex)
+        if (inputType == 'Cookie') return;
+		trace('testing ' + scheme.getInputName(i));		
+        // first, issue a request to sleep some time		
+		var shortSleep = inputName + '[mysql%20where%20sleep(1/10)%20%3b%20--%20.user][1]';
+		if (this.request(shortSleep, "1")) {
+            var shortSleepDuration = this.lastJob.responseDuration;            
+            if (shortSleepDuration > 2000) {
+                trace('pass shortsleep');
+                var noSleep = inputName + '[mysql%20where%20sleep(0/10)%20%3b%20--%20.user][1]';				
+    		    if (this.request(noSleep, "1")) {
+                    var noSleepDuration = this.lastJob.responseDuration;
+                    if (noSleepDuration < 1000) {
+                        trace('pass nosleep');
+                        var longSleep = inputName + '[mysql%20where%20sleep(2/10)%20%3b%20--%20.user][1]';
+                        if (this.request(longSleep, "1")) {
+                            var longSleepDuration = this.lastJob.responseDuration;
+                            if (longSleepDuration > 4000) {
+                                trace('pass longSleepDuration');
+                                // let's try again short sleep just to be sure
+                                if (this.request(shortSleep, "1")) {
+                                    var shortSleepDuration2 = this.lastJob.responseDuration;           
+                                    if (shortSleepDuration2 > 2000 && (shortSleepDuration2 > shortSleepDuration2-500 && shortSleepDuration2 < shortSleepDuration2+500)) {
+                                        trace('pass confirmation');
+                                        this.alert(inputName, shortSleep);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }            
+            }
+        }		
+	}	
+}
+// main entry point 
+// first, let's check if it's a rails application (only test in that case)
+if (isRails) {
+    for (var i=0;i<scheme.inputCount; i++)
+    {
+        if ( scheme.inputHasFlag(i, INPUT_FLAG_CAN_BE_ARRAY) ) 
+        {
+        	var tester = new classRailsWhereSQLInjection(scheme, i);
+        	tester.startTesting();
+        	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+        	tester = null;
+        }
+    }
+}

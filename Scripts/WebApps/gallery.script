@@ -1,0 +1,45 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+		var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************
+function test_g3_304_RCE(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.uri = path + '/README';
+	http.verb = 'GET';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200){
+		var m = /Gallery ([\d\.]+) \(/.exec(http.response.body);
+		if (m && m[1]) {
+			var version = parseInt(m[1].replace(".", "").replace(".", "").replace(".", ""));
+			if (version && version <= 303) {
+				//trace('vuln');
+				vxml = "gallery3_304_rce.xml";
+				details = "Current Gallery version [bold][dark]" + m[1] + "[/dark][/bold]."
+				alert(http, path, vxml, details);
+			}
+		}	    
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppGallery");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppGallery", 1, true);           
+    KBase("Gallery web application", "Gallery web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+test_g3_304_RCE(dir, dir.fullPath);

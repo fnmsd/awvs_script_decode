@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla 1.5 end of life" version="0.1" released="20080307" updated="20150417" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>Joomla 1.5 reached its end-of-life on 30 April 2012, and should be replaced with version 3. If you are running Joomla 1.5 it's strongly recommend to migrate to Joomla 3.x.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Joomla only supports the most recent versions of the software with patches and updates.</Impact>
+		<Recommendation>It's recommended to migrate to Joomla version 3.</Recommendation>
+		<Reference database="Joomla 1.5 End of Life" URL="http://www.hostaway.net.au/news/joomla-1-5-end-of-life/"/><Reference database="Planning Migration - Joomla 1.5 to 3" URL="https://docs.joomla.org/Planning_Migration_-_Joomla_1.5_to_3"/></TestDescription>
+</WebApplicationTest>

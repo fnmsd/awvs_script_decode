@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Clickjacking: X-Frame-Options header missing" version="0.1" released="20080307" updated="20160107" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-693" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>Clickjacking (User Interface redress attack, UI redress attack, UI redressing) is a malicious technique of tricking a Web user into clicking on something different from what the user perceives they are clicking on, thus potentially revealing confidential information or taking control of their computer while clicking on seemingly innocuous web pages. [break][break]
+The server didn't return an [bold]X-Frame-Options[/bold] header which means that this website could be at risk of a clickjacking attack. The X-Frame-Options HTTP response header can be used to indicate whether or not a browser should be allowed to render a page inside a frame or iframe. Sites can use this to avoid clickjacking attacks, by ensuring that their content is not embedded into other sites.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact depends on the affected web application. </Impact>
+		<Recommendation>Configure your web server to include an  X-Frame-Options header. Consult Web references for more information about the possible values for this header.</Recommendation>
+		<Reference database="The X-Frame-Options response header" URL="https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options"/><Reference database="Clickjacking" URL="http://en.wikipedia.org/wiki/Clickjacking"/><Reference database="OWASP Clickjacking" URL="https://www.owasp.org/index.php/Clickjacking"/><Reference database="Defending with Content Security Policy frame-ancestors directive" URL="https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet#Defending_with_Content_Security_Policy_frame-ancestors_directive"/><Reference database="Frame Buster Buster" URL="http://stackoverflow.com/questions/958997/frame-buster-buster-buster-code-needed"/><Reference database="Clickjacking Protection for Java EE" URL="https://www.owasp.org/index.php/Clickjacking_Protection_for_Java_EE"/></TestDescription>
+</WebApplicationTest>

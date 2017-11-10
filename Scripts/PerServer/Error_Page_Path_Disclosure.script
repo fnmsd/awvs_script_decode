@@ -1,0 +1,87 @@
+#include helpers.inc;
+#include text_search_helpers.inc;
+// **************************************************************************************							 
+function alert(job, error, fname)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/Error_page_path_disclosure";	
+		
+	ri.setHttpInfo(job);
+	
+	if (error)
+		ri.Details =  ri.Details + "Information disclosure pattern found: [dark]" + error + "[/dark]";
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function TestForVersionDisclosure(job)
+{
+	if (foundVersionDisclosure != 0) return;
+	
+	var m = /<address>.*?(Apache.*?\/\d+\.\d+\.\d+.*)<\/address>|<b>Version Information:<\/b>&nbsp;(.*?)\s+<\/font>/.exec(job.response.body);
+	if (m) 
+	{ 
+		msg = m[2];
+		if (msg == '' && m[1] != '') msg = m[1];		
+		
+		alert(job, msg, "Error_page_web_server_version_disclosure.xml"); 
+		foundVersionDisclosure = 1;
+	}	
+}
+// **************************************************************************************
+function TestForPathDisclosure(matches, job)
+{
+	var res = null;
+	matchedText = TestForServerPathDisclosureWindows(matches, job.response.body);
+	if (matchedText) { alert(job, matchedText, "Error_page_path_disclosure.xml"); res = 1; }
+	if (res == null) {
+		matchedText = TestForServerPathDisclosureUnix(matches, job.response.body);
+		if (matchedText) { alert(job, matchedText, "Error_page_path_disclosure.xml"); res = 1; }
+	}
+	
+	return res;
+}
+// **************************************************************************************							 
+function request(fname)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = '/' + fname;
+	http.addCookies = false;
+	http.execute();	
+	if (!http.wasError)
+	{
+		TestForVersionDisclosure(http);
+		return TestForPathDisclosure(matches, http);		
+	}	
+}
+// **************************************************************************************							 
+function startTesting()
+{
+	var rndStr = randStr(10);
+	if (request(rndStr)) return;	
+	if (request(rndStr + '.php')) return;
+	if (request(rndStr + '.cgi')) return;
+	if (request(rndStr + '.pl')) return;
+	if (request(rndStr + '.plx')) return;
+	if (request(rndStr + '.exe')) return;
+	if (request(rndStr + '.asp')) return;
+	if (request(rndStr + '.aspx')) return;
+	if (request(rndStr + '.phtml')) return;
+	if (request(rndStr + '.jhtml')) return;
+	if (request(rndStr + '.shtml')) return;
+	if (request(rndStr + '.nsf')) return;
+	if (request(rndStr + '.cfm')) return;
+	if (request(rndStr + '.jsp')) return;
+	if (request(rndStr + '.jspa')) return;
+	if (request(rndStr + '.stm')) return;
+}	
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var foundVersionDisclosure = 0;
+startTesting();

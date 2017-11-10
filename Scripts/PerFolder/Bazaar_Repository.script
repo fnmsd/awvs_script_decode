@@ -1,0 +1,36 @@
+#include helpers.inc;
+#include constants.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText, vxml)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;	
+	
+	ri.Details =  "Bazaar files found at : [dark]" + newUri + "[/dark]";		
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+			
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200)  {
+	var dirName = dir.fullPath;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	
+	var testURI = dirName + ".bzr/README";
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = testURI;
+	http.execute();
+	if (!http.wasError && !http.notFound){
+		var m = /^This\sis\sa\sBazaar[\s\S]*/.exec(http.response.body);
+		if (m) alert(dir.fullPath, testURI, http, m[0], "Bazaar_repository_found.xml");
+	}
+}

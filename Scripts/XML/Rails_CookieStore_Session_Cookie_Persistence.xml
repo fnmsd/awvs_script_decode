@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Ruby on Rails CookieStore session cookie persistence" version="0.1" released="20080307" updated="20151006" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-284" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:N/A:N/E:POC/RL:W" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Ruby on Rails contains a flaw in its design that may allow attackers to more easily access applications. The issue is due to the CookieStore mechanism storing cookies on the client side, while not maintaining a corresponding entry on the server side. When an application terminates a session, Ruby on Rails has no method to track this and truly invalidate the cookie with the default configuration. This means that cookies persist "for life" and can be used to access an application even after it is thought to be terminated in many cases.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious user could use the stolen cookie from any authenticated request by the user to log in as them at any point in the future.</Impact>
+		<Recommendation>Currently, there are no known upgrades or patches to correct this vulnerability. It is possible to temporarily mitigate the flaw by implementing the following workaround: switch to a more secure authentication management systems (e.g. ActiveRecordStore).</Recommendation>
+		<Reference database="Logout is broken by default in ruby on rails web applications" URL="http://maverickblogging.com/logout-is-broken-by-default-ruby-on-rails-web-applications/"></Reference>
+		<Reference database="Ruby on Rails CookieStore Session Cookie Persistence " URL="http://osvdb.org/show/osvdb/97726"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Insecure CORS configuration" version="0.1" released="20080307" updated="20151102" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="" CVE="" CWE="" CVSSVer="2.0" CVSSScore="" CVSSDescr="" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>CORS (Cross-Origin Resource Sharing) defines a mechanism to enable client-side cross-origin requests. This application is using CORS in an insecure way.  The web application returns the following headers: 
+[ul]
+[li] [bold]Access-Control-Allow-Credentials: [dark]true[/dark][/bold][/li]
+[li] [bold]Access-Control-Allow-Origin: [dark]copy of the Origin header from request[/dark][/bold] [/li]  
+[/ul]
+
+[break]
+In this configuration any website can issue requests made with [bold]user credentials[/bold] and read the responses to these requests.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Any website can issue requests made with user credentials and read the responses to these requests.</Impact>
+		<Recommendation>Allow only selected, trusted domains in the Access-Control-Allow-Origin header. </Recommendation>
+		<Reference database="CORS Security Considerations" URL="http://www.w3.org/TR/cors/#security"/></TestDescription>
+</WebApplicationTest>

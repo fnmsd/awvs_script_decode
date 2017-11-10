@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Directory listing" version="0.1" released="20040327" updated="20140307" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Information">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="[subtitle]How to disable directory listings[/subtitle] [ul] [li]The easiest way to disable directory listing is to create an index file. The name of the index file depends on the web server configuration. On Apache is called index.htm, index.html. On IIS is named default.asp, default.aspx, default.htm.[/li] [li]On IIS directory listings are disabled by default.[/li] [li]For Apache you need to edit the Apache configuration file (usually named httpd.conf) or create an .htaccess file. In the configuration file you will have the definition of the directory. Something like   [pre][code]&lt;Directory  /directoryname/subdirectory&gt; Options Indexes FollowSymLinks ... &lt;/Directory&gt;[/code][/pre] To disable directory listing for that directory you need to remove the 'Indexes' option. [/li] [/ul]" AlertTags="configuration,directory_listing,information_disclosure" SendCookies="true" HasPrecondition="false" SendAuth="true" ValidateSession="false" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Reference database="Directory Listing and Information Disclosure" URL="http://www.acunetix.com/blog/web-security-zone/directory-listing-information-disclosure/"></Reference>
+		<Copyright></Copyright>
+		<Description>The web server is configured to display the list of files contained in this directory. This is not recommended because the directory may contain files that are not normally exposed through links on the web site.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>A user can view a list of all files from this directory possibly exposing sensitive information.</Impact>
+		<Recommendation>You should make sure the directory does not contain sensitive information or you may want to restrict directory listings from the web server configuration.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

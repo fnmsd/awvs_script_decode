@@ -1,0 +1,63 @@
+#include helpers.inc;
+//--------------------------------------------------------------------------------------------------------
+function isHighRisk(location, body) {
+	var res = false;
+	
+	// redirect to the login page
+	if (location.search(/(login|auth)/i)!=-1) res = true;
+	// administration page
+	if (body.search(/<title>[\s\S]*?(admin|manage|dashboard|panel)[\s\S]*?<\/title>/i)!=-1) res = true;
+	// logout link
+	if (body.search(/<a[\s\S]*?href[^>]+>[\s\S]*(logout|signout|sign out|log off)[\s\S]*<\/a>/i)!=-1) res = true;
+	
+	return res;
+}
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, details, fi, highRisk)
+{	
+	var ri = new TReportItem();	
+	ri.LoadFromFile("HTML_Form_In_Redirect_Page.xml");		
+	ri.affects = uri;
+	if (details != "") ri.details = details;
+	ri.alertPath = "Scripts/" + ri.Name;
+	
+	if (highRisk){
+        ri.name = 'HTML Form found in redirect page [high severity]';
+        ri.severity = 'high';
+    }
+    	
+	ri.request = fi.request.toString();
+	ri.response = fi.response.headersString;
+	ri.fullResponse = fi.response.body;
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is a sitefile
+// only test directories that are returning 301 or 302
+if (dir.response.msg2 == 301 || dir.response.msg2 == 302)  
+{
+	var testURI = dir.fullPath;
+	var shouldReport = false;
+	
+	var pd = getParserData(dir.response.body, dir.response.headerValue('content-type'));
+    if (pd) {
+    	var forms = pd.getForms();
+    	if (forms.count > 0) shouldReport = true;
+			
+			if (shouldReport) {	
+				var falsePositive = false;
+				var location = dir.response.headerValue('location');
+				
+				if (location.indexOf(dir.name)!=-1 && location.search(/(login|auth)/i)==-1) falsePositive = true;			
+				
+				if (dir.response.body.indexOf("The document has moved") != -1) falsePositive = true;
+				
+				// only report if it's high risk (don't report for anything else)
+				if (!falsePositive && isHighRisk(location, dir.response.body))	
+				{			
+					details = "Form action=[bold][navy]'" + forms.item(0).action + "'[/navy][/bold]";
+					alert(testURI, details, dir, true);
+				}
+			}
+    }
+}

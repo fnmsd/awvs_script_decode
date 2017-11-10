@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+  <TestDescription name="TLS1/SSLv3 Renegotiation Vulnerability" version="0.1" released="20080416" updated="20080416" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+    <WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="true" HasPrecondition="false" AlertTags="csrf" SendCookies="true"/>
+    <Copyright/>
+    <Description>A vulnerability in the way SSL and TLS protocols allow renegotiation requests may allow an attacker to inject plaintext into an application protocol stream. This could result in a situation where the attacker may be able to issue commands to the server that appear to be coming from a legitimate source. This issue affects SSL version 3.0 and newer and TLS version 1.0 and newer.</Description>
+    <ApplicableTo>
+      <Platform>
+        <OS>All</OS>
+        <Arch>i386</Arch>
+      </Platform>
+      <WebServer>All</WebServer>
+      <ApplicationServer>All</ApplicationServer>
+    </ApplicableTo>
+    <TriggerOn event="scheme_host_port">
+      <Match type="regex">.*</Match>
+    </TriggerOn>
+    <Impact>A remote, unauthenticated attacker may be able to inject an arbitrary amount of chosen plaintext into the beginning of the application protocol stream. This could allow an attacker to issue HTTP requests, or take action impersonating the user, among other consequences.</Impact>
+    <Recommendation>Users should contact vendors for specific patch information.</Recommendation>
+    <Reference database="TLS1/SSLv3 Renegotiation Vulnerability" URL="http://www.g-sec.lu/practicaltls.pdf"/>
+    <Reference database="CVE-2009-3555" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3555"/>
+    <Reference database="VU#120541" URL="http://www.kb.cert.org/vuls/id/120541"/>    
+  </TestDescription>
+</WebApplicationTest>

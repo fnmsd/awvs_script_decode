@@ -1,0 +1,83 @@
+#include dir_listing_helpers.inc;
+#include constants.inc;
+#include helpers.inc;
+#include perFolder_helpers.inc;
+#noretest;
+var variants = [
+                "users.sqlite",
+                "clients.sqlite",
+                "private.sqlite",
+                "password.sqlite",
+                "passwords.sqlite",
+                "personal.sqlite",
+                "customers.sqlite",
+                "members.sqlite",
+                "test.sqlite",
+                "database.sqlite",
+                "log.sqlite",
+                "logs.sqlite",
+                "data.sqlite",
+                "db.sqlite",
+                "db1.sqlite",
+                "private.sqlite"
+			   ];
+			   
+// **************************************************************************************							 
+function alert(uri, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("SQLite_Database_Found.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/SQLite Database Found";	
+	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 
+							 
+// **************************************************************************************
+function testFile(file, variant) {
+	var fname = variant.replace("${dirName}", dirName);
+	var dirName = file.path + file.name;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/'; 		
+	
+	var http = new THTTPJob();
+	
+	http.url = file.url;
+	http.verb = 'GET';
+	http.URI = dirName + variant;
+	http.execute();	
+	
+	if (!http.wasError && !http.notFound && (http.responseStatus == 200))
+    {
+		// escape of some false positives
+        if (http.response.body.indexOf('SQLite format') != -1) 
+		{		
+			alert(dirName + fname, http);
+			addLinkToCrawler(dirName + fname, file);
+		}
+	}
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+if (file.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{ 
+	if (file.response.msg2 == 200 || file.response.msg2 == 403) 
+	{
+		// don't scan if acusensor is enabled
+		if (!file.hasAcuSensor)
+		{
+			// first let's test the precondition
+			if (canIScanThisFolder(file)) 
+			{
+				var total = variants.length;
+				// test it with all backup variants	
+				for (var i=0; i<variants.length; i++) 
+				{	
+					testFile(file, variants[i]);
+					ScriptProgress(ComputeProgress(i, total));
+				}
+			}
+		}
+	}
+}

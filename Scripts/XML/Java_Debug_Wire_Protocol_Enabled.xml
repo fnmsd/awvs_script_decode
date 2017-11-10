@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Java Debug Wire Protocol remote code execution" version="0.1" released="20080307" updated="20140804" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9"/>
+		<Copyright></Copyright>
+		<Description>The Java Debug Wire Protocol (JDWP) is the protocol used for communication between a debugger and the Java virtual machine (VM) which it debugs (hereafter called the target VM). JDWP is one layer within the Java Platform Debugger Architecture (JPDA). JDWP does not use any authentication and could be abused by an attacker to execute arbitrary code on the affected server. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Java Debug Wire Protocol (JDWP) should be disabled in production systems.</Recommendation>
+		<Reference database="Hacking the Java Debug Wire Protocol" URL="http://blog.ioactive.com/2014/04/hacking-java-debug-wire-protocol-or-how.html"/></TestDescription>
+</WebApplicationTest>

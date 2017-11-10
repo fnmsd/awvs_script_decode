@@ -1,0 +1,81 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for xdmcp server
+function extract_xdmcp_data(data){
+	var res = "";
+	var len = data.getWordAt(4);
+	
+	var status = "";
+	var auth_name = "";
+	var hostname = "";
+	var offset = 6;
+	if (data.length > len) {
+			// get auth_name
+			len = data.getWordAt(offset);
+			if (len > 0 && offset+2+len <= data.length) {
+				auth_name = data.slice(offset+2, offset+2+len);
+				if (auth_name.length) {
+					res += "Authentication name: " + auth_name + "\r\n";
+				}
+			}
+			offset += len;
+			offset += 2;
+			// get hostname
+			len = data.getWordAt(offset);
+			if (len > 0 && offset+2+len <= data.length) {
+				hostname = data.slice(offset+2, offset+2+len);
+				if (hostname.length) {
+					res += "Hostname: " + hostname + "\r\n";
+					//trace(hostname);
+				}
+			}
+			offset += len;
+			offset += 2;
+			// get status
+			len = data.getWordAt(offset);
+			if (len > 0 && offset+2+len <= data.length) {
+				status = data.slice(offset+2, offset+2+len);
+				if (status.length) {
+					res += "Status : " + status + "\r\n";
+					//trace(status);
+				}
+			}
+	}
+	return res;
+}
+// start
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port	= 177;
+socket.Timeout = 5;
+socket.Connect();
+if (socket.IsConnected) {
+	// xdmcp query
+	req = strFromRawData(0x00, 0x01, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00);
+	socket.send(req);
+	data = socket.Receive(true);
+  if (data && data.length) {
+		//trace(data);
+		version = data.getWordAt(0);
+		opcode  = data.getWordAt(2);
+		if (version ==1 && opcode == 5) { // willing
+			trace("XDMCP enabled - alert here!");
+			var info = "";
+			var alertstr = "";
+			// try to get some info from here.
+			xdmcp_info = extract_xdmcp_data(data);
+			if (xdmcp_info.length) {
+				info += "Information gathered from this service: [pre]"  + xdmcp_info + "[/pre]";
+				trace(xdmcp_info);
+			}
+			if (info.length > 0) {
+				alertstr = "The XDMCP server is running on UDP port 177. [break]" + info;
+			} else 
+			{
+				alertstr = "The XDMCP server is running on UDP port 177.";
+			}
+			ReportItem("XDMCP.xml", alertstr);
+		}
+	}
+	socket.Close();
+}

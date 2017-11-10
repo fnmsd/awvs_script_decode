@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Amazon S3 public bucket" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-264" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>Amazon S3 provides a simple web services interface that can be used to store and retrieve any amount of data, at any time, from anywhere on the web.
+Files within S3 are organized into "buckets", which are named logical containers accessible at a predictable URL. Access controls can be applied to both the bucket itself and to individual objects (files and directories) stored within that bucket. 
+A bucket is considered [dark]public[/dark] if any user can list the contents of the bucket, and [dark]private[/dark] if the bucket's contents can only be listed or written by certain S3 users.
+
+[break][break]
+This web application is using a [dark]public[/dark] Amazon S3 bucket. This is not recommended, as a public bucket will list all of its files and directories to an any user that asks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A public bucket will list all of its files and directories to an any user that asks.</Impact>
+		<Recommendation>Make sure all the Amazon S3 buckets you are using are marked as private. </Recommendation>
+		<Reference database="Open S3 buckets" URL="https://community.rapid7.com/community/infosec/blog/2013/03/27/1951-open-s3-buckets"/><Reference database="Amazon S3 Bucket Public Access Considerations" URL="http://aws.amazon.com/articles/5050"/></TestDescription>
+</WebApplicationTest>

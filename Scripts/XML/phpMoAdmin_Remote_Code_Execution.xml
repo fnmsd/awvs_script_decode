@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="phpMoAdmin remote code execution" version="0.1" released="20080307" updated="20150304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="" CWE="CWE-95" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>phpMoAdmin is a MongoDB administration tool for PHP. A remote code execution vulnerability was reported in this web application. Also, this application is not designed to be publicly accessible and doesn't have any type of authorization so anybody can remotely view and modify your MongoDB databases.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the affected server.</Impact>
+		<Recommendation>Restrict access to the moadmin.php file. This application is not designed to be publicly accessible.</Recommendation>
+		<Reference database="PHPMoAdmin Unauthorized Remote Code Execution" URL="http://www.exploit-db.com/exploits/36251/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

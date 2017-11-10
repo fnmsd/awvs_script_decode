@@ -1,0 +1,150 @@
+#include constants.inc;
+#include helpers.inc;
+var variants = [
+				"${dirName}/",
+				"${dirName}/\x3f.jsp",
+				"${dirName}/?M=D",
+				"${dirName}/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////",
+				"${dirName}/cgi-bin/test-cgi?/*",
+				"${dirName}/cgi-bin/test-cgi?*",
+				"${dirName}/%00/",
+				"${dirName}%00/",
+				"${dirName}:$I30:$INDEX_ALLOCATION/",
+				"${dirName}%2e/",
+				"${dirName}/%2e/",
+				"${dirName}/%2f/",
+				"${dirName}/%5c/"
+			   ];
+				 
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+							"<TITLE>Index of",
+							"Directory Listing for",
+							"Last modified</a>",
+							"<TITLE>Folder Listing.",
+							"<table summary=\"Directory Listing",
+							"Directory Listing"
+						  ];
+							
+		this.regexArray = [
+							/<TITLE>Index of/i,
+							/<A\s+HREF="[^"]*">\[To\sParent\sDirectory]<\/A>/i,
+							/<body><h1>Directory\sListing\sFor\s.*<\/h1>/i,
+							/<HTML><HEAD><TITLE>Directory:.*?<\/TITLE><\/HEAD><BODY>/i,
+							/<a href="\?C=N;O=D">Name<\/a>/i
+						  ];											
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			var result= text.search(new RegExp(this.plainArray[i], "i"));			
+			if (result != -1) {
+					return this.plainArray[i];				
+			}
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}						 
+// **************************************************************************************							 
+function alert(uri, job, variant, origFname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Directory_Listing.xml");
+	ri.name = "Directory Listing";
+	ri.affects = origFname;
+	ri.alertPath = "Scripts/Directory Listing";	
+	ri.details = "This listing was found using the pattern [dark][bold]" + variant + "[/bold][/dark].[break]Original directory: [dark][bold]" + origFname + "[/bold][/dark]";
+	
+	ri.setHttpInfo(job);
+	
+	if (matchedText) {
+		ri.Details =  ri.Details + "[break]Directory listing pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";
+	}	
+	
+	AddReportItem(ri);	
+}							 
+			
+// **************************************************************************************
+function testDir(dirPath, variant, sf) {
+	trace(variant);
+	var dir = variant.replace("${dirName}", dirPath);
+	var uri = dir;
+	var http = new THTTPJob();
+	
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	
+	if ((!http.wasError && !http.notFound && http.responseStatus == 200))
+	{
+		var matchedText = injectionPatterns.searchOnText(http.response.body);		
+		if (matchedText) {
+			alert(uri, http, variant, dirPath, matchedText);
+			
+			// check if the dir is not already in the structure
+			var newLinks =  new TStringList();
+			newLinks.Add(uri);
+			eliminateExistingLinks(sf.url, newLinks);
+			// the link is not yet in structure
+			if (newLinks.count > 0 ) 
+			{
+				addLinkToCrawler(uri, sf);
+			}
+			
+		}
+	}
+}
+/***********************************************************************************/
+function testForDirListing(sf) 
+{
+	var dirName = sf.path + sf.Name;
+	if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+	//trace("testing " + dirName);
+	
+	// test it with all backup variants	
+	for (var i=0; i<variants.length; i++) 
+	{
+		testDir(dirName, variants[i], sf);	
+		ScriptProgress(ComputeProgress(i, variants[i]));
+	}
+}
+/***********************************************************************************/
+function FindAndTestDirectory(list){
+	var testOn = null;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir && injectionPatterns.searchOnText(sf.response.body) == -1){
+			testOn = sf;
+			if(testOn.name != ''){
+				break;
+			}
+		}	
+	}
+	
+	if(testOn!=null){
+		testForDirListing(testOn);
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var injectionPatterns = new classInjectionPatterns();
+var list = getNewFiles(loadHttp);
+FindAndTestDirectory(list);

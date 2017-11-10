@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="phpMyAdmin v3.5.2.2 backdoor" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution" CVE="CVE-2012-5159" CWE="CWE-95" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:H/RL:OF/RC:C" CVSSScoreTemp="6.6" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>One server from the SourceForge.net mirror system was distributing a phpMyAdmin kit containing a backdoor. One of the SourceForge.net mirrors, namely cdnetworks-kr-1, was being used to distribute a modified archive of phpMyAdmin, which includes a backdoor. This backdoor is located in file server_sync.php and allows an attacker to remotely execute PHP code. Another file, js/cross_framing_protection.js, has also been modified. We currently know only about phpMyAdmin-3.5.2.2-all-languages.zip being affected, check if your download contains a file named server_sync.php.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote unauthenticated attacker could execute arbitrary code with the privileges of the web server.</Impact>
+		<Recommendation>Check your phpMyAdmin distribution and download it again from a trusted mirror if your copy contains a file named server_sync.php.</Recommendation>
+		<Reference database="PMASA-2012-5" URL="http://www.phpmyadmin.net/home_page/security/PMASA-2012-5.php"></Reference>
+	</TestDescription>
+</WebApplicationTest>

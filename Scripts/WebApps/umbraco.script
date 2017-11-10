@@ -1,0 +1,82 @@
+#include helpers.inc;
+#include classMatches.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, uri, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);	
+	
+	if (matchedText) {
+		ri.details = "Pattern: [dark][bold]" + matchedText + "[/dark][/bold]";
+	}
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function TestRCE(dir, fullPath)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.addCookies = false;
+	lastJob.verb = 'POST';
+	lastJob.URI = fullPath + 'umbraco/webservices/codeEditorSave.asmx';
+    
+	lastJob.request.addHeader("SOAPAction", '"http://tempuri.org/SaveDLRScript"', true);
+    lastJob.request.addHeader("Content-Type", "text/xml", true);
+	
+	lastJob.request.body = '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"  xmlns:xsd="http://www.w3.org/1999/XMLSchema"  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"  xmlns:m0="http://tempuri.org/"  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:urn="http://tempuri.org/">     <SOAP-ENV:Header/>     <SOAP-ENV:Body>        <urn:SaveDLRScript>           <urn:fileName>testAcunetix.test</urn:fileName>           <urn:oldName>acunetix</urn:oldName>           <urn:fileContents>acunetix</urn:fileContents>           <urn:ignoreDebugging>true</urn:ignoreDebugging>        </urn:SaveDLRScript>     </SOAP-ENV:Body></SOAP-ENV:Envelope>';
+    
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf('<SaveDLRScriptResult>true</SaveDLRScriptResult>') != -1)
+	{
+		alert('Umbraco_CMS_remote_code_execution.xml', lastJob.URI, false);
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestRCE_v604(dir, fullPath)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.addCookies = false;
+	lastJob.verb = 'POST';
+	lastJob.URI = fullPath + 'umbraco/webservices/api/TemplateService.asmx';
+    
+	lastJob.request.addHeader("SOAPAction", '"http://umbraco.org/webservices/update"', true);
+    lastJob.request.addHeader("Content-Type", "text/xml", true);
+	
+	lastJob.request.body = '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"  xmlns:xsd="http://www.w3.org/1999/XMLSchema"  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"  xmlns:m0="http://tempuri.org/"  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:urn="http://umbraco.org/webservices/">     <SOAP-ENV:Header/>     <SOAP-ENV:Body>        <urn:update>           <urn:carrier>             <urn:Id>1048</urn:Id>             <urn:MastertemplateId>1047</urn:MastertemplateId>             <urn:MasterPageFile>test</urn:MasterPageFile>             <urn:Name>test</urn:Name>             <urn:Alias>test</urn:Alias>             <urn:Design>test</urn:Design>           </urn:carrier>           <urn:username>test</urn:username>           <urn:password>test</urn:password>        </urn:update>     </SOAP-ENV:Body></SOAP-ENV:Envelope>';
+    
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 500 && lastJob.response.body.indexOf('Item has already been added. Key in dictionary:') != -1)
+	{
+		alert('Umbraco_CMS_TemplateService_RCE.xml', lastJob.URI, 'Item has already been added. Key in dictionary:');
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var lastJob = null;
+var dir = getCurrentDirectory();
+if (dir) {
+    var alreadyReportedWebApplication = getGlobalValue("detectedAppUMBRACO");
+    if (!alreadyReportedWebApplication)
+    {
+        setGlobalValue("detectedAppUMBRACO", 1, true);
+        var kbaseText = "Umbraco CMS web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].";
+        KBase("Umbraco CMS web application", kbaseText);
+    }
+    var fullPath = dir.fullPath;
+    if (!fullPath.endsWith("/")) fullPath = fullPath + "/";
+    TestRCE(dir, fullPath);
+    TestRCE_v604(dir, fullPath);
+}

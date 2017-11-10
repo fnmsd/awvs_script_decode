@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="User controllable charset" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3"/>
+		<Copyright></Copyright>
+		<Description>The character encoding (charset) of this page is dirrectly controlled by user input. The charset can be specified in the Content-Type header or in a meta tag declaration. If an attacker can control the response charset, they could manipulate the HTML to perform XSS or other attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can control the charset and possibly perform XSS attacks.</Impact>
+		<Recommendation>It's recommended to force UTF-8 in charset declarations. If the user must control the charset, make sure you are using a whitelist of accepted charsets.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

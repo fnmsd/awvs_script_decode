@@ -1,0 +1,29 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+function checkPort(port){
+    var jmx_ping_1 = String.fromCharCode(0x4a, 0x52, 0x4d, 0x49, 0x00, 0x02, 0x4b);
+	var jmx_pong_1 = String.fromCharCode(0x4e, 0x00, 0x0c);
+    soc = new TSocket('tcp');
+    soc.host = ScanHost;
+    soc.port = port;
+    soc.timeout = 7;
+    soc.connect();
+    if(soc.IsConnected)
+    {
+        soc.send(jmx_ping_1);
+        var data = soc.receive(true);
+        soc.Close();
+        if((data.length > 0) && data.startsWith(jmx_pong_1))
+        {
+            ReportItem("JMX_RMI_service.xml", "The JMX/RMI service is running on TCP port [bold][dark]" + port + "[/dark][/bold].");
+        }
+    }
+}
+//*************************************************************************************
+//main()
+//*************************************************************************************
+var JMX_PORTS = [7199, 1099, 9999]
+for (var i=0;i <JMX_PORTS.length; i++) {
+    checkPort(JMX_PORTS[i]);
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Zabbix SQL injection" version="0.1" released="20080307" updated="20140225" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="sql_injection" CVE="CVE-2013-5743" CWE="CWE-89" CVSSVer="2.0" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScore="6.8" CVSSScoreTemp="5.4" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Zabbix is the ultimate open source availability and performance monitoring
+solution. SEC Consult Vulnerability Lab reported an SQL injection vulnerability in Zabbix versions &lt;= 2.0.8. [break][break]
+
+By exploiting this SQL injection vulnerability, an authenticated attacker (or
+guest user) is able to gain full access to the database. This causes a
+privilege escalation to power users as well as a possible compromise of the
+database and operating system the database is running on.[break][break]
+
+Because of the functionalities Zabbix offers, an attacker with admin
+privileges could be able (depending on the actual configuration) to execute
+arbitrary OS commands on the configured Zabbix hosts. This results in a severe
+impact to the monitored infrastructure.[break][break]
+
+Although the attacker needs to be authenticated in general, the system could
+also be at risk if the adversary has no user account.  Zabbix offers a guest
+mode which provides a low privileged default account for users without
+password. If this guest mode is enabled, the SQL injection vulnerability can
+be exploited unauthenticated.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The vulnerabilities allow an attacker to gain access to the database and execute arbitrary SQL statements.</Impact>
+		<Recommendation>Upgrade to the latest version or apply the patches provided by vendor.</Recommendation>
+		<Reference database="SEC Consult Vulnerability Lab Security Advisory 20131004-0" URL="https://www.sec-consult.com/fxdata/seccons/prod/temedia/advisories_txt/20131004-0_Zabbix_SQL_injection_v10.txt"></Reference>
+		<Reference database="SQL injection vulnerabilities in the API and frontend" URL="https://support.zabbix.com/browse/ZBX-7091"></Reference>
+		<Reference database="CVE-2013-5743" URL="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-5743"></Reference>
+	</TestDescription>
+</WebApplicationTest>

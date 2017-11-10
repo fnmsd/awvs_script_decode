@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Genericons DOM-based XSS vulnerability" version="0.1" released="20080307" updated="20150507" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-80" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>"Genericons are vector icons embedded in a webfont designed to be clean and simple keeping with a generic aesthetic." [break][break]
+The Genericons package includes a file called [dark][bold]example.html[/bold][/dark] which has been found to be vulnerable to a DOM-based XSS vulnerability. This package is included  in various WordPress plugins and themes. For example is included in the TwentyFifteen theme (installed by default) and the very popular JetPack plugin.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Remove the [dark][bold]example.html[/bold][/dark]  file located in the genericons directory.</Recommendation>
+		<Reference database="WordPress 4.2.2 Security and Maintenance Release" URL="https://wordpress.org/news/2015/05/wordpress-4-2-2/"></Reference>
+		<Reference database="JetPack and TwentyFifteen Vulnerable to DOM-based XSS" URL="https://blog.sucuri.net/2015/05/jetpack-and-twentyfifteen-vulnerable-to-dom-based-xss.html"></Reference>
+		<Reference database="Genericons" URL="http://genericons.com/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

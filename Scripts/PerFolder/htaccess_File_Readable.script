@@ -1,0 +1,29 @@
+#include helpers.inc;
+#include constants.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, job, fname)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + fname;	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir)) {
+    var dirName = dir.fullPath;
+    if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+    var testURI = dirName + '.htaccess';
+    var http = new THTTPJob();
+    http.url = dir.url;
+    http.verb = 'GET';
+    http.URI = testURI;
+    http.execute();
+    if (!http.wasError && !http.notFound && http.response.msg2 == 200)
+    {
+        if (http.response.body.match(/(RewriteEngine|RewriteCond|RewriteRule|AuthType|AuthName|AuthUserFile|ErrorDocument|deny from|AddType|AddHandler|IndexIgnore|ContentDigest|AddOutputFilterByType|php_flag|php_value)\s/) != null)
+            alert(dir.fullPath, http, "htaccess_File_Readable.xml");
+    }
+}

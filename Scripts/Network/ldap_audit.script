@@ -1,0 +1,37 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for ldap server
+// start
+if (IsPortOpen(389)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 389;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {		
+		// prepare ldap bind request
+		ldap_bind = strFromRawData(
+		0x30, 0x0c, 0x02, 0x01, 
+		0x01,  // msg id
+		0x60, 0x07, 0x02, 0x01, 
+		0x03,  // version
+		0x04, 0x00, 0x80, 0x00);
+		socket.send(ldap_bind);
+		data = socket.ReceiveBytes(14);
+		if (data.length == 14) {
+			check1 = data.getByteAt(4); // msgid
+			check2 = data.getByteAt(5); // proto 1 - bind response
+			check3 = data.getByteAt(6); // proto 2 - bind response
+			if (check1 == 1 && check2 == 0x61 && check3 == 0x07) {
+				trace("ldap server detected ! - kbase here");
+				KBase("LDAP server running", "A LDAP server is running on TCP port 389.");				
+				resultCode = data.getByteAt(9); // result code 
+				if (resultCode == 0x00) {
+						trace("anonymous ldap server null bind ! - alert here");
+						ReportItem("Ldap_anonymous.xml", "The LDAP server is running on TCP port 389.");	
+				}
+			}
+		}
+		socket.Close();
+	}
+}

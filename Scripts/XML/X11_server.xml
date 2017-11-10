@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Open X11 server" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>The remote X11 server accepts connections from any host. Any client that can connect to your server is able to monitor your keystrokes and perform other (possibly malicious) actions. This means that, if you do not enforce any type of access control for such clients, anyone on the internet can potentially see what you are typing at xterms or other X clients.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure and/or server compromise.</Impact>
+		<Recommendation>If you don't connect remotely to this X11 server, it's recommended to disable this service. [break]
+Use [bold]xhost[/bold] command to restrict access only to valid hosts.</Recommendation>
+		<Reference database="xhost manual page" URL="http://www.xfree86.org/current/xhost.1.html"/>
+	</TestDescription>
+</WebApplicationTest>

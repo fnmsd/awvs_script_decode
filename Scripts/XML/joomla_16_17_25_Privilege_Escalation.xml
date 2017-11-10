@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Joomla! 1.6/1.7/2.5 privilege escalation vulnerability" version="0.1" released="20080307" updated="20150311" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="privilege_escalation,sql_injection" CVE="CVE-2012-1563" CWE="CWE-264" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="" CVSSScoreEnv=""/>
+		<Copyright></Copyright>
+		<Description>Joomla! 1.6.x/1.7.x/2.5.0-2.5.2 suffers from a privilege escalation vulnerability that allows users to be registered into any group not having 'core.admin' privileges.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The attacker will have a valid account with permissions to log in to the administrator/ interface, edit one of the templates, and inject php code (assuming the stock permissions/user groups are still in effect). Joomla! versions 1.6.x and 1.7.x also allow users in the "Administrator" group to install extensions, thus opening another avenue for code injection.</Impact>
+		<Recommendation>Joomla! versions 1.0.x, 1.5.x, and 2.5.3+ are not vulnerable. No patch has been issued for 1.6.x or 1.7.x and users of these versions are strongly urged to upgrade to 2.5.3 immediately.</Recommendation>
+		<Reference database="Joomla! 1.6/1.7/2.5 Privilege Escalation Vulnerability" URL="http://jeffchannell.com/Joomla/joomla-161725-privilege-escalation-vulnerability.html"/></TestDescription>
+</WebApplicationTest>

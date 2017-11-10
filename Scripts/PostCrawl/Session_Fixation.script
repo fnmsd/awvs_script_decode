@@ -1,0 +1,122 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include debug_helpers.inc;
+// files to be tested
+var targets = new Array();
+var lastJob = null;
+var sessIDs = new Array(
+	"PHPSESSID", "PHPSESSIONID", "JSESSIONID", "SESSION", "SESSID", "SESSIONID", "ASPSESSIONID", "CFTOKEN", "CFID", "MSCSSID", "JWSESSIONID");
+// **************************************************************************************							 
+function alert(vxml, affects, sessName, sessValue)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	if (sessName && sessValue) 
+		ri.details = "Session cookie [dark]" + sessName + "[/dark] was fixed to [dark]" + sessValue + "[/dark].";
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function prepareTargetList(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		//trace(i);
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{
+			if (sf.response.headerExists('Set-Cookie')) {
+				cookieStr = sf.response.headerValue('Set-Cookie').toUpperCase();
+				for (var j=0;j<sessIDs.length; j++){
+					if (cookieStr.startsWith(sessIDs[j] + '=')) {
+						// don't test more than 10 files
+						if (targets.length < 10)
+							targets.push(sf);
+					}
+				}
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+function request(uri) 
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = ScanURL;	
+	lastJob.uri  = uri;		
+	lastJob.addCookies = false;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		return true;
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+function testTarget(sf)
+{
+	// wordpress xmlrpc false positive
+	if (sf.fullPath == '/xmlrpc.php') return;
+	
+	var uri = sf.fullPath;
+	
+	var sessIDCookie = "";
+	var vulnerable = false;
+	
+	if (request(uri)) {
+		// check if it sets the set-cookie header
+		if (lastJob.response.headerExists('Set-Cookie')) {
+			cookieStr = lastJob.response.headerValue('Set-Cookie').toUpperCase();;
+			for (var j=0;j<sessIDs.length; j++){
+				if (cookieStr.startsWith(sessIDs[j] + '=')) {
+					sessIDCookie = sessIDs[j];
+					break;
+				}
+			}	
+		}
+	}
+	
+	if (sessIDCookie) {
+		// make a requests with fixed session id value
+		//trace(sessIDCookie);
+		
+		if (request(uri + "?" + sessIDCookie + "=acunetixsessionfixation")) {
+			if (!lastJob.response.headerExists('Set-Cookie')) {				
+				alert("Session_Fixation.xml", uri, sessIDCookie, "acunetixsessionfixation");
+				vulnerable = true;
+			}	
+		}
+		
+		if (!vulnerable && request(uri + ";" + sessIDCookie + "=acunetixsessionfixation")) {
+			if (!lastJob.response.headerExists('Set-Cookie')) {				
+				alert("Session_Fixation.xml", uri, sessIDCookie, "acunetixsessionfixation");
+				vulnerable = true;
+			}	
+		}		
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+// don't test this vulnerability twice
+var tested = getGlobalValue("session_fixation");
+if (!tested)
+{	
+	var list = getNewFiles(loadHttp);
+	prepareTargetList(list);
+	if (targets.length > 0) 
+	{
+		SetGlobalValue("session_fixation", 1, true);
+		// test targets
+		for (var i=0; i<targets.length; i++){
+			if (!targets[i].isVariation)
+				testTarget(targets[i]);
+		}
+	}
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress username enumeration" version="0.1" released="20080307" updated="20140527" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>If permalinks are enabled, in many WordPress installations it is possible to enumerate all the WordPress usernames iterating through the author archives. Whenever a post is published, the username or alias is shown as the author. For example, the URL http://site.com/?author=1 will show all the posts from user id 1.  Attackers can abuse this functionality to figure out which usernames are available on the site.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can enumerate the WordPress usernames and use this information to conduct brute-force attacks against passwords for these known usernames.</Impact>
+		<Recommendation>You can use an .htaccess rewrite rule to prevent this disclosure but you should also be sure to use nicknames to avoid disclosing usernames. [break]
+[pre]
+# Stop WordPress username enumeration vulnerability
+RewriteCond %{REQUEST_URI}  ^/$
+RewriteCond %{QUERY_STRING} ^/?author=([0-9]*)
+RewriteRule ^(.*)$ http://yoursite.com/somepage/? [L,R=301]
+[/pre]</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,59 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+		var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************
+function test_Joomla_JCE_attack(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.uri = path + 'index.php?option=com_jce&task=plugin&plugin=imgmanager&file=imgmanager&version=1576&cid=20';
+	http.verb = 'GET';
+	
+	http.execute();	
+	
+	if (!http.wasError && http.responseStatus == 200){
+		var m = /\s:\s([\d\.]+)<\/title>/.exec(http.response.body);
+		if (m && m[1]) {
+			var versionStr = m[1].replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "")
+			var version = parseInt(versionStr);
+			var vulnerable = false;
+			
+			if (versionStr) {
+				// version 1.x
+				if (versionStr.startsWith("1")) {
+					if (version <= 1579) {
+						vulnerable = true;
+					}
+				}
+				
+				else 
+				// version 2.x
+				if (versionStr.startsWith("2")) {
+					if (version <= 2010) {
+						vulnerable = true;
+					}
+				}
+			
+				//trace(version);
+				if (vulnerable) {
+					//trace('vuln');
+					vxml = "Joomla_JCE_file_upload.xml";
+					details = "Current JCE version [bold][dark]" + m[1] + "[/dark][/bold]."
+					alert(http, path, vxml, details);
+				}
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+test_Joomla_JCE_attack(dir, dir.fullPath);

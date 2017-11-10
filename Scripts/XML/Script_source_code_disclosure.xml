@@ -1,0 +1,132 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Script source code disclosure" version="0.1" released="20040327" updated="20140228" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="source_code_disclosure,information_disclosure" HasPrecondition="true" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Reference database="Source Code Disclosure Can Be Exploited On Your Website" URL="http://www.websitedefender.com/web-security/website-source-code-disclosure/"/>
+		<Copyright/>
+		<Description>It is possible to read the source code of this script by using script filename as a parameter. It seems that this script includes a file which name is determined using user-supplied data. This data is not properly validated before being passed to the include function. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch></Platform>
+			<WebServer>All</WebServer><ApplicationServer>All</ApplicationServer></ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker can gather sensitive information (database connection strings, application logic) by analyzing the source code. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Analyze the source code of this script and solve the problem.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item></MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="ASP_SCD" type="string">
+					<Description>ASP source code disclosure</Description>
+					<Source source="body">(?i)(\&lt;%[\x20-\x80\x0d\x0a\x09]*?%\&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="PHP_SCD" type="string">
+					<Description>PHP source code disclosure</Description>
+					<Source source="body">(?i)(\&lt;\?php[\x20-\x80\x0d\x0a\x09]*?\?\&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="PERL_SCD" type="string">
+					<Description>Perl source code disclosure</Description>
+					<Source source="body">(^#\!\/.*\/perl)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<!-- /etc/password contents -->
+						<Compare variable="${ResponseCode}" test="eq">
+							<Value>200</Value>
+							<Compare variable="${ASP_SCD}" test="neq">
+								<Value></Value>
+							</Compare>
+							<Compare variable="${PHP_SCD}" test="neq">
+								<Value></Value>
+							</Compare>
+							<Compare variable="${PERL_SCD}" test="neq">
+								<Value></Value>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This test was redirected to '${redir302}'. The program that generated this test does not know how to handle 302 responses. Unfortunately, they are quite common in the Microsoft arena. Please update the generator, and rebuild these tests</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<ErrorMessage>This message indicates a failure to properly execute the test, or an unhandled HTTP response. Please investigate further, and modify this test before re-executing it. The server returned ${ResponseCode}</ErrorMessage>
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="precondition">
+				<Compare variable="${ASP_SCD}" test="eq">
+					<Value></Value>
+					<Compare variable="${PHP_SCD}" test="eq">
+						<Value></Value>
+						<Compare variable="${PERL_SCD}" test="eq">
+							<Value></Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item></Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="cookie" type="string">
+		<Description>List of cookie combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+	<Variable name="headers" type="string">
+		<Description>List of header combinations</Description>
+		<Item encoding="Text">test</Item></Variable>
+</WebApplicationTest>

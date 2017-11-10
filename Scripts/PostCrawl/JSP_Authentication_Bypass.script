@@ -1,0 +1,70 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;	
+	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile && sf.name.endsWith(".jsp") && sf.response.msg2 == 401){
+			fileName = sf.fullPath;
+			files.push(fileName);			
+		}
+	}
+}
+/***********************************************************************************/
+function testJSPAuthBypass(fileName){		
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = fileName + ";.css";
+	lastJob.autoAuthenticate = false;
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && (lastJob.responseStatus == 200 || lastJob.responseStatus == 301 || lastJob.responseStatus == 302  || lastJob.responseStatus == 303 || lastJob.responseStatus == 500 ))
+	{
+		// need to confirm the upload
+		confirmJob = new THTTPJob();
+		confirmJob.verb = "GET";
+		confirmJob.url  = scanURL;	
+		confirmJob.uri  = fileName + ";.xss";;	
+		
+		confirmJob.autoAuthenticate = false;
+		confirmJob.execute();		
+		
+		var falsePositive = false; 
+		if (!confirmJob.wasError && (confirmJob.responseStatus == 200 || confirmJob.responseStatus == 301 || confirmJob.responseStatus == 302  || confirmJob.responseStatus == 303 || confirmJob.responseStatus == 500 ))
+		{
+			falsePositive = true;
+		}
+		
+		if (!falsePositive) {
+			alert(fileName, "JSP_Authentication_Bypass.xml", lastJob);
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(loadHttp);
+prepareFilesToBeTested(list);
+if (files.length > 0) {
+	for (var i=0; i<files.length; i++){
+		testJSPAuthBypass(files[i]);
+	}
+}

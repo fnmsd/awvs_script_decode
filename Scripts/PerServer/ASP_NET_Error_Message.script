@@ -1,0 +1,89 @@
+#include helpers.inc;
+#noretest;
+// **************************************************************************************							 
+function alert(job, error, versionInfo)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("ASP.NET_error_message.xml");
+	ri.name = "ASP.NET error message";
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/ASP.NET error message";	
+	
+	ri.setHttpInfo(job);
+	
+	if (error)
+		ri.Details =  ri.Details + "Error message pattern found: [dark]" + error + "[/dark]";
+		
+	if (versionInfo)
+		ri.Details =  ri.Details + "[break]Version information found: [dark]" + versionInfo + "[/dark]";
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function alert2(job, xml, versionInfo)
+{	
+	var ri = new TReportItem();
+	
+	ri.LoadFromFile(xml);
+	ri.setHttpInfo(job);	
+		
+	if (versionInfo)
+		ri.Details =  ri.Details + "[break]Version information found: [dark]" + versionInfo + "[/dark]";
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+/* main entry point */
+var root = getSiteRoot(0);
+var http = new THTTPJob();
+var dirName = root.path + root.Name;
+	
+http.url = scanURL;
+http.verb = 'GET';
+http.URI = dirName + "|~.aspx";
+http.addCookies = false;
+http.execute();	
+if (!http.wasError && http.responseStatus == 500)
+{
+	if (http.response.body.indexOf("<title>Illegal characters in path.</title>") != -1)	
+		{
+			var m = /<b>Version Information:<\/b>&nbsp;(.*?)\n/.exec(http.response.body);
+			var versionInfo = "";
+			if (m) versionInfo = m[1];
+			
+			alert(http, "<title>Illegal characters in path.</title>", versionInfo);
+		}
+}
+if (!http.wasError) {
+	// look for asp.net version information
+	if (http.response.headerExists('X-AspNet-Version')) {	
+		var m = /([\d\.]+)/.exec(http.response.headerValue('X-AspNet-Version'));
+		var versionInfo = "";
+		if (m) {
+			versionInfo = m[1];			
+			//trace(versionInfo);	
+			alert2(http, "ASP_NET_version_disclosure.xml", versionInfo);	
+		}
+	}
+	// look for asp.net MVC version information
+	if (http.response.headerExists('X-AspNetMvc-Version')) {	
+		var m = /([\d\.]+)/.exec(http.response.headerValue('X-AspNetMvc-Version'));
+		var versionInfo = "";
+		if (m) {
+			versionInfo = m[1];			
+			//trace(versionInfo);	
+			alert2(http, "ASP_NET_MVC_version_disclosure.xml", versionInfo);	
+		}
+	}	
+	
+	// look for Microsoft IIS version information
+	if (http.response.headerExists('Server')) {	
+		var m = /Microsoft\-IIS\/([\d\.]+)/.exec(http.response.headerValue('Server'));
+		var versionInfo = "";
+		if (m) {
+			versionInfo = "Microsoft-IIS/" + m[1];			
+			//trace(versionInfo);	
+			alert2(http, "Microsoft_IIS_version_disclosure.xml", versionInfo);	
+		}
+	}
+}

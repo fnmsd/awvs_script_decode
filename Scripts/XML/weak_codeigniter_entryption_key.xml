@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="CodeIgniter weak encryption key" version="0.1" released="20080307" updated="20140515" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,configuration" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="6.2" CVSSScoreEnv="6.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>CodeIgniter is a powerful PHP framework with a very small footprint, built for PHP coders who need a simple and elegant toolkit to create full-featured web applications. [break][break]
+If you use the Encryption class or the Session class you must set an encryption key. It's very important that an attacker doesn't know the value of this encryption key. Your application is using a weak/known encryption key and Acunetix WVS managed to guess this key. Knowing the encryption key allows an attacker to impersonate any user in the application and even achive remote code execution.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can execute arbitrary PHP code on the affected server.</Impact>
+		<Recommendation>Change the value of the [bold]$config['encryption_key'][/bold] (application/config/config.php) to a random string.</Recommendation>
+		<Reference database="Codeigniter Object Injection Vulnerability via Encryption Key" URL="http://www.mehmetince.net/codeigniter-object-injection-vulnerability-via-encryption-key/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

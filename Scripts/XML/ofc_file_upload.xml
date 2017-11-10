@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Unrestricted file upload vulnerability in ofc_upload_image.php" version="0.1" released="20080307" updated="20140507" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,arbitrary_file_creation" CVE="CVE-2009-4140" CWE="CWE-434" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:POC/RL:W/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Unrestricted file upload vulnerability in ofc_upload_image.php in Open Flash Chart v2 Beta 1 through v2 Lug Wyrm Charmer, as used in Piwik 0.2.35 through 0.4.3, Woopra Analytics Plugin before 1.4.3.2, and possibly other products, when register_globals is enabled, allows remote authenticated users to execute arbitrary code by uploading a file with an executable extension through the name parameter with the code in the HTTP_RAW_POST_DATA parameter, then accessing it via a direct request to the file in tmp-upload-images/.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can upload arbitrary scripts on the web server and execute them. This can lead to a full system compromise.</Impact>
+		<Recommendation>Delete the file ofc_upload_image.php or apply the patch provided by the vendor.</Recommendation>
+		<Reference database="CVE-2009-4140" URL="http://www.cvedetails.com/cve/CVE-2009-4140/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

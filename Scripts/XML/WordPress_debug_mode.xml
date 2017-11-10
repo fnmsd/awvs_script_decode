@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress debug mode" version="0.1" released="20080307" updated="20150210" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>During development of plugins or themes, as well as during deployment of a WordPress site, developers or system administrators may enable debug logs to log any PHP errors that occur. [break][break]
+
+WordPress makes use of the WP_DEBUG constant which is defined in wp-config.php. The constant is used to trigger the debug mode throughout WordPress. The constant is set to be false by default. [break][break]
+
+On this website, WordPress debug mode is enabled. When debug mode is enabled all PHP notices, warnings, errors and other debugging information are logged in a file named [bold][dark]./wp-content/debug.log[/dark][/bold]. This file is readable by anybody who has access to this website. An attacker can use the debugging information from this file to conduct further attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>Disable WordPress debug mode in production or restrict access to ./wp-content/debug.log file. [break]
+To disable WordPress debug mode make the following change in wp-config.php:
+[pre]
+define('WP_DEBUG', false);
+[/pre]</Recommendation>
+		<Reference database="Debugging in WordPress" URL="http://codex.wordpress.org/Debugging_in_WordPress"></Reference>
+		<Reference database="WordPress Security Tips Part 10 | Secure Your Debug Logs" URL="http://www.acunetix.com/blog/articles/wordpress-security-tips-secure-debug-logs/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

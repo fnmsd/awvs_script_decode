@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Drupal Views module information disclosure vulnerability" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,known_vulnerabilities" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The Views module contains an information disclosure vulnerability due to the fact that it allows access to user profile data. This vulnerability exposes actual user names, so defensive strategies to protect usernams (such as using aliases, or the RealName (http://drupal.org/project/realname) module) cannot protect against this exposure. This method is particularly useful for finding the Drupal super user account (id 1) and other accounts that might not be exposed anywhere on the public facing site.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A malicious attacker can harvest username data in order to launch a targeted brute force attack against site users.</Impact>
+		<Recommendation>Apply the patch provided in the web reference section.</Recommendation>
+		<Reference database="Patch" URL="http://www.madirish.net/node/465"></Reference>
+	</TestDescription>
+</WebApplicationTest>

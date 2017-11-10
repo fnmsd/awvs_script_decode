@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Roller OGNL injection" version="0.1" released="20080307" updated="20140514" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="CVE-2013-4212" CWE="CWE-20" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.7" CVSSScoreEnv="5.7"/>
+		<Copyright></Copyright>
+		<Description>Apache Roller is a full-featured, multi-user and group-blog server suitable for blog sites large and small. It runs as a Java web application that should be able to run on most any Java EE server and relational database. [break][break]
+Roller version 5 earlier than 5.0.2 and all of version 4 are vulnerable to a pre-authenticated OGNL injection that can result in remote code execution (RCE). 
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Remote OGNL injection leads to arbitrary Java method execution on the target server.</Impact>
+		<Recommendation>Upgrade to the latest version of Apache Roller (the problem was fixed in version 5.0.2).</Recommendation>
+		<Reference database="Remote Code Execution in Apache Roller via OGNL Injection" URL="http://security.coverity.com/advisory/2013/Oct/remote-code-execution-in-apache-roller-via-ognl-injection.html"/></TestDescription>
+</WebApplicationTest>

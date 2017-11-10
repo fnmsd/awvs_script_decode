@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Windows Terminal Services server running" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="info" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,needless_service,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright/>
+		<Description>A Windows Terminal Services server is running on this host. Terminal Services is one of the components of Microsoft Windows (both server and client versions) that allows a user to access applications and data on a remote computer. Microsoft's RDP implementation of Terminal Services doesn't verify the server's identity when setting up the encryption keys for the RDP session. This vulnerability can result in a potential man-in-the-middle (MITM) attack.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible information disclosure.</Impact>
+		<Recommendation>It's recommended to restrict access to valid users and/or hosts.</Recommendation>
+		<Reference database="How Secure are Windows Terminal Services?" URL="http://www.windowsecurity.com/articles/Windows_Terminal_Services.html"/>
+		<Reference database="Configuring authentication and encryption" URL="http://technet.microsoft.com/en-us/library/cc782610(v=ws.10).aspx"/>
+		<Reference database="Man-in-the-Middle Attack on Microsoft Terminal Services" URL="http://windowsitpro.com/WindowsSecurity/article/articleid/38589/man-in-the-middle-attack-on-microsoft-terminal-services.html"/>
+	</TestDescription>
+</WebApplicationTest>

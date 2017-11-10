@@ -1,0 +1,63 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include versioning_helpers.inc;
+var lastJob = false;
+// **************************************************************************************							 
+function alert(uri, vxml, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+    if (matchedText) 
+        ri.Details =  "Installed version: [dark][bold]" + matchedText + "[/bold][/dark]";
+	
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function checkVersion(dir, path){
+	if (!path.endsWith('/')) path = path + '/';
+	
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.verb = 'GET';
+	lastJob.uri = path + 'lib/MT.pm';
+	
+	lastJob.execute();	
+	
+	if ((!lastJob.wasError && lastJob.responseStatus == 200 && lastJob.response.body.indexOf("$SCHEMA_VERSION") != -1)){
+        var regex = /\s+=\s+\(\s+'Movable Type',\s+'MT',\s+'([\d\.+]+)',/;
+        var m = regex.exec(lastJob.response.body);
+        if (m && m[1]) {
+            version = m[1];
+            //trace(version);
+            var vulnerable_CVE20151592 = false;
+            // need to check versions based on branch
+            // 6.x
+            if (version.startsWith("6.0.") && (version_compare(version, "6.0.7", '<=')) ) {
+                vulnerable_CVE20151592 = true;
+            }
+            // 5.1.x, 5.0.x
+            if (version.startsWith("5.1") ||  version.startsWith("5.0") ) {
+                vulnerable_CVE20151592 = true;
+            }
+            // 5.2.
+            if (version.startsWith("5.2.") && (version_compare(version, "5.2.11", '<=')) ) {
+                vulnerable_CVE20151592 = true;
+            }
+            if (vulnerable_CVE20151592) {
+                alert(path, "Movable_Type_RCE_CVE-2015-1592.xml", version);
+            }
+        }
+    }
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppMovableType");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppMovableType", 1, true);           
+    KBase("Movable Type web application", "Movable Type web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+checkVersion(dir, dir.fullPath);

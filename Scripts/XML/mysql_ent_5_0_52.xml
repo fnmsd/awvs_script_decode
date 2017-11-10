@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MySQL Enterprise Server v.5.0.52 multiple vulnerabilities" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,missing_update,network_alert" CVE="CVE-2007-5969,CVE-2007-6303,CVE-2007-6304" CWE="CWE-264" CVSSVer="2.0" CVSSScore="7.2" CVSSDescr="AV:N/AC:H/Au:S/C:C/I:C/A:C/E:H/RL:OF/RC:C" CVSSScoreTemp="6.3" CVSSScoreEnv="6.2"/>
+		<Copyright></Copyright>
+		<Description>The MySQL Enterprise Server is affected by multiple vulnerabilities.
+[break]
+1. Using RENAME TABLE against a table with explicit DATA DIRECTORY and INDEX DIRECTORY options can be used to overwrite system table information. 
+[break]
+2. ALTER VIEW retained the original DEFINER value, even when altered by another user, which could allow that user to gain the access rights of the view. 
+[break]
+3. When using a FEDERATED table, the local server can be forced to crash if the remote server returns a result with fewer columns than expected.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Abuse of functionality: an attacker uses server's features and functionality to consume, defraud, or circumvents access controls mechanisms. </Impact>
+		<Recommendation>Upgrade the MySQL Enterprise Server tot the latest version.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

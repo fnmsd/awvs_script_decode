@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="MoinMoin CVE-2012-6081 multiple arbitrary code execution vulnerabilities" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2012-6081" CWE="CWE-434" CVSSVer="2.0" CVSSScore="6.0" CVSSDescr="AV:N/AC:M/Au:S/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Multiple unrestricted file upload vulnerabilities in the (1) twikidraw (action/twikidraw.py) and (2) anywikidraw (action/anywikidraw.py) actions in MoinMoin before 1.9.6 allow remote authenticated users with write permissions to execute arbitrary code by uploading a file with an executable extension, then accessing it via a direct request to the file in an unspecified directory, as exploited in the wild in July 2012.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Upgrade to MoinMoin version 1.9.6.</Recommendation>
+		<Reference database="Vulnerability Summary for CVE-2012-6081" URL="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2012-6081"></Reference>
+		<Reference database="Security Fix Announcements" URL="http://moinmo.in/SecurityFixes"></Reference>
+	</TestDescription>
+</WebApplicationTest>

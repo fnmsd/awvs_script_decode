@@ -1,0 +1,33 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, vxml, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + vxml; 
+    ri.details = "Methods allowed: [dark][bold]" + details + "[/bold][/dark]";	
+		
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(method, vxml)
+{
+	var http = new THTTPJob();
+		
+	http.url = scanURL;
+	http.addCookies = false;
+	http.verb = method;
+	http.URI = '/';
+	http.execute();	
+	if (!http.wasError && http.responseStatus == 200)
+	{
+		if (http.response.headerValue('Allow') != '')
+		alert(http, vxml, http.response.headerValue('Allow'));
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+request('OPTIONS', 'OPTIONS_Method_Enabled.xml');

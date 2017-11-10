@@ -1,0 +1,13 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include wordpress_timthumb.inc;
+#include wordpress_uploadify.inc;
+#include wordpress_helpers.inc;
+#include backup_file_variants.inc;
+#include webapp_config_backup.inc;
+    
+var dir = getCurrentDirectory();
+// test for vulnerable plugins and themes
+testForVulnPluginsAndThemes(dir);

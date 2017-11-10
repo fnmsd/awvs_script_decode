@@ -1,0 +1,124 @@
+#include helpers.inc;
+#include string_helpers.inc;
+var dirs    = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, job)
+{	
+	var ri 		= new TReportItem();
+	var vxml 	= 'ofc_file_upload.xml';
+	
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function test_OFC_upload_image(dir)
+{
+	var uri = "";
+	
+	if (dir.charAt(dir.length-1) == '/') uri = dir + "ofc_upload_image.php";
+	else uri = dir + "/ofc_upload_image.php";
+	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + '?name=acunetix_test';		
+	lastJob.request.addHeader("Content-Type", "acunetix/wvs", true);
+	
+	lastJob.request.body = 'acunetix test';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('Saving your image to: ..') != -1)
+		{
+				// upload was successful
+				alert(uri, lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+function addDir(dirName) {
+	if (dirs.indexOf(dirName) == -1) dirs.push(dirName);
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		//trace(sf.name);
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name.indexOf("php-ofc-library")!=-1) 
+			{
+                if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}				
+		}	        
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;			
+			if (sf.Name == "ofc_upload_image.php") 
+			{
+			    dirName = dirName.replace("ofc_upload_image.php", "");
+				if (dirs.indexOf(dirName) == -1)
+				    dirs.push(dirName);
+			}
+		}		
+	}	
+    
+    var tested_common_dirs = getGlobalValue("ofc_upload_tested_common_dirs");
+    if (!tested_common_dirs)
+    {
+	    SetGlobalValue("ofc_upload_tested_common_dirs", 1, true);    
+		addDir("/includes/ofc/php/");
+		addDir("/html/includes/ofc/php/");
+		addDir("/core/lib/php-ofc-library/");
+		addDir("/libs/open-flash-chart/php-ofc-library/");
+		addDir("/application/libraries/ofc-library/");
+		addDir("/piwik/libs/open-flash-chart/php-ofc-library/");
+		addDir("/scripts/openflashchart/open-flash-chart/php-ofc-library/");      
+		addDir("/public/scripts/openflashchart/open-flash-chart/php-ofc-library/");
+		addDir("/components/com_jnews/includes/openflashchart/php-ofc-library/");
+		addDir("/components/com_tipster/open-flash-chart/php-ofc-library/php-ofc-library/");
+		addDir("/admin_area/charts/php-ofc-library/");
+		addDir("/admin/components/com_jnews/includes/openflashchart/php-ofc-library/");
+		addDir("/administrator/components/com_acymailing/inc/openflash/php-ofc-library/");
+		addDir("/administrator/components/com_civicrm/civicrm/packages/OpenFlashChart/php-ofc-library/");
+		addDir("/administrator/components/com_jnewsletter/includes/openflashchart/php-ofc-library/");
+		addDir("/administrator/components/com_maianmedia/utilities/charts/php-ofc-library/");
+		addDir("/administrator/components/com_jinc/classes/graphics/php-ofc-library/");
+		addDir("/administrator/components/com_jnews/includes/openflashchart/php-ofc-library/");
+		addDir("/administrator/components/com_jnewsletter/includes/php-ofc-library/");
+		addDir("/administrator/components/com_joomleague/assets/classes/php-ofc-library/");
+		addDir("/administrator/components/com_maian15/charts/php-ofc-library/");
+		addDir("/administrator/components/com_redmystic/chart/php-ofc-library/");
+		addDir("/wp-content/plugins/invit0r/lib/php-ofc-library/php-ofc-library/");
+		addDir("/wp-content/plugins/woopra/inc/php-ofc-library/php-ofc-library/");
+		addDir("/wp-content/plugins/seo-watcher/ofc/php-ofc-library/");
+		addDir("/wp-content/plugins/wp-slimstat-ex/lib/ofc/php-ofc-library/");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0) 
+{
+	for (var i=0; i<dirs.length; i++)
+		test_OFC_upload_image(dirs[i]);
+}

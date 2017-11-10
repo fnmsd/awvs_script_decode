@@ -1,0 +1,113 @@
+#include helpers.inc;
+#include constants.inc;
+#include backup_file_variants.inc;
+#include webapp_config_backup.inc;
+var configFiles = 
+[
+	"db.php",
+    "conf.php",
+    "settings.php",
+    "config.php",
+    "config.inc.php",
+    "localconfig.php",
+    "configuration.php",
+    "settings.inc.php",
+    "global.inc.php",
+    "database.php",
+    "database.inc.php"
+];
+var configDirs = 
+[
+    "inc",
+    "includes",
+	"conf",
+    "config",
+    "admin",
+    "db",
+    "database",
+    "configuration"
+];
+function fileExists(dir, fname)
+{
+	var http = new THTTPJob();
+	lastJob  = http;
+	
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.URI = fname;
+	http.execute();	
+	
+	if (!http.wasError && !http.notFound && http.responseStatus == 200){
+			return true;
+	}
+    
+	return false;
+}
+/***********************************************************************************/
+function testDirectory(dirName)
+{
+	//trace("check dir " + dirName);
+	// check for false positives
+	if (fileExists(dir, dirName + "/" + randStr(8) + ".php")) return false;
+	for (var i=0; i<configFiles.length; i++) {
+		var fname = dirName + "/" + configFiles[i];		
+		
+		//trace(fname);
+		
+		if (fileExists(dir, fname)) {
+				// trace(fname + " exists");
+							
+				var fileName = getFileName(configFiles[i]);
+				var fileExt  = getFileExt(configFiles[i]);
+										
+				testConfigFileBackupFile(dir, dirName, fileName, fileExt);
+		}
+	}
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isDir && sf.isMarkedAs(MARKED_AS_RealDir))
+		{
+			dirName = sf.fullPath;			
+			if (dirName.charAt(dirName.length-1) == '/') dirName = dirName.substring(0, dirName.length-1);
+			
+			var lcName = sf.Name.toLowerCase();
+			
+			for (var j=0; j<configDirs.length; j++) 
+			{
+				if (lcName == configDirs[j]) 
+				{
+					// don't add too many directories	
+					if (dirs.length > 5) break;
+					
+					dirs.push(dirName);
+				}
+			}
+		}	
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var dirs = new Array();
+var lastJob = null;
+var siteRoot = getSiteFileWithPath(scanURL.path, 0);
+var dir = siteRoot;
+var addedRootDir = getGlobalValue("cfdrd");
+if (!addedRootDir)
+{
+	SetGlobalValue("cfdrd", 1, true);
+	// add site root directory by default
+	var dirName = getPathDirectory(scanURL.path);	
+	dirs.push(dirName);
+}
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length) 
+for (var i=0; i<dirs.length; i++)
+{
+	testDirectory(dirs[i]);
+}

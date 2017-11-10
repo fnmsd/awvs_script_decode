@@ -1,0 +1,81 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+function alert(fname, lastJob, msg)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	if (msg) 
+		ri.Details =  msg;	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}
+function VulnerableXML(xmlbody) {
+	var vuln = false;
+	var xDoc = new ActiveXObject("MSXML2.DOMDocument");
+	if (xDoc) {
+		//trace('xDoc');
+		xDoc.async = false;
+		var loaded = xDoc.loadXML(xmlbody);
+		if (loaded) {
+			//trace('loaded');
+		
+			var allow = xDoc.getElementsByTagName("allow-access-from");					
+			for (i=0;i<allow.length;i++)
+			{
+				var domain = allow[i].getAttribute("domain");
+				//trace(domain);
+				if (domain == '*') {
+					vuln = true;
+					break;
+				}
+			}
+		}
+		else {
+			//var myErr = xDoc.parseError;
+   		//trace("You have error " + myErr.reason);		
+		}
+	}
+	
+	return vuln;
+}
+function TestCrossDomainXML(path){
+	var req 	= new THTTPJob();
+	req.url 	= scanURL;
+	req.uri 	= path;
+	req.addCookies = false;	
+	req.verb  = "GET";
+	req.execute();
+	if(!req.wasError && !req.notFound){
+			if (req.response.body.match(/<cross-domain-policy/i)) {			
+				if (req.response.body.match(/allow-access-from/i)) {
+					vuln = VulnerableXML(req.response.body);					
+					//trace(vuln);
+					if (vuln)				
+						alert("CrossDomainXML.xml", req, "The crossdomain.xml file is located at [bold]" + path + "[/bold]");	
+				}
+			}
+		}
+}
+// start
+var tested = getGlobalValue("crossdomain_xml");
+if (!tested)
+{	
+	SetGlobalValue("crossdomain_xml", 1, true);
+	// test the root of the website
+	TestCrossDomainXML("/crossdomain.xml");
+	// test in the current directory
+	var url = ScanURL;	
+	if (url.path != '/') {
+		if (url.path.substr(url.path.length-1, 1) != "/") {url.path += "/";}		
+		url.path += "crossdomain.xml";
+		url2 = url.url;	
+		TestCrossDomainXML(url2);
+	}
+}

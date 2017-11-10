@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Gallery 3.0.4 remote code execution" version="0.1" released="20080307" updated="20140513" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.1" CVSSDescr="AV:N/AC:H/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9"/>
+		<Copyright></Copyright>
+		<Description>"During the installation process it is possible to inject arbitrary PHP code into the database config file, leading to Remote Code Execution (RCE) on the target web server. For successful exploitation by an remote attacker it is required that the installation routine has not yet been completed on the web server. [break][break]
+However, another vulnerability in the administrator interface allows to delete arbitrary files. Thus, it is possible for an administrator to delete the database.php file with this second vulnerability, redo the installation, and inject a PHP backdoor with the first vulnerability. An XSS vulnerability (also reported in this release) can be used to gain admin privileges."</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthenticated attacker can execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of Gallery.</Recommendation>
+		<Reference database="Gallery Project 3.0.4 BugBounty: Remote Code Execution (admin)" URL="http://websec.wordpress.com/2013/03/06/gallery-project-3-0-4-bugbounty-remote-code-execution-admin/"/></TestDescription>
+</WebApplicationTest>

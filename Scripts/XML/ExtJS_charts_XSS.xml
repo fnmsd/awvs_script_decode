@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="ExtJS charts.swf cross site scripting" version="0.1" released="20080307" updated="20140527" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-80" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N/E:F/RL:U/RC:C" CVSSScoreTemp="5.6" CVSSScoreEnv="5.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The ExtJS JavaScript framework that is shipped with TYPO3 also delivers a flash file to show charts. This file is susceptible to cross site scripting (XSS). This vulnerability can be exploited without any authentication.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Update to TYPO3 versions 4.5.34, 4.7.19, 6.0.14, 6.1.9 or 6.2.3 that fix the problem described or delete the file typo3/contrib/extjs/resources/charts.swf as it is not used by TYPO3 at all.</Recommendation>
+		<Reference database="TYPO3-CORE-SA-2014-001: Multiple Vulnerabilities in TYPO3 CMS" URL="http://typo3.org/teams/security/security-bulletins/typo3-core/typo3-core-sa-2014-001/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,70 @@
+#include helpers.inc;
+#include constants.inc;
+var variants = [
+					"/WS_FTP.LOG",
+					"/ws_ftp.log"
+				];
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+						  ];
+		this.regexArray = [
+							/(\d{1,4}\.\d{1,3}\.\d{1,3}\s\d{2}\:\d{2}\s)/
+						  ];											
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("WS_FTP_log_file.xml");
+	ri.affects = newUri;
+	ri.alertPath = "Scripts/WS_FTP log file found";	
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+			
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir) && dir.response.msg2 == 200)  {
+	var injectionPatterns = new classInjectionPatterns();
+	for (var i=0; i<variants.length; i++) {
+		var dirName = dir.fullPath;
+		if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+		
+		var testURI = dirName + variants[i];
+		var http = new THTTPJob();
+		http.url = dir.url;
+		http.verb = 'GET';
+		http.URI = testURI;
+		http.execute();
+		if (!http.wasError && !http.notFound){	
+			var matchedText = injectionPatterns.searchOnText(http.response.body);		
+			if (matchedText) alert(dir.fullPath, testURI, http, matchedText);
+		}
+	}	
+}

@@ -1,0 +1,88 @@
+#include helpers.inc;
+{
+	// *********************************************************************************************
+	// look for web.xml file contents
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.regexArray = [
+							/(<web-app[\s\S]+<\/web-app>)/
+						  ];
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) {				
+				var matchedText = m[0];
+				if (matchedText && matchedText.length > 1024)  return matchedText.substring(0, 1024) + ' ...'; 
+				else return matchedText;
+			}
+		}			
+		return false;	
+	}
+}
+var injectionPatterns = new classInjectionPatterns();
+// **************************************************************************************							 
+function alert(job, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("WebInfWebXML_Audit.xml");
+	ri.affects = job.uri;
+	ri.alertPath = "Scripts/WebInfWebXML_Audit";	
+	
+	ri.setHttpInfo(job);
+	
+	if (pattern)
+		ri.Details =  ri.Details + "Pattern found: [pre]" + pattern + "[/pre]";
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function testURI(uri)
+{
+	var lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+    lastJob.autoRedirect = false;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		var matchedText = injectionPatterns.searchOnText(lastJob.response.body);		
+		if (matchedText) {
+				alert(lastJob, matchedText);
+		}
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+var siteRoot = getPathDirectory(scanURL.path);
+// test various combinations of a copied WEB-INF directory
+testURI(siteRoot + "/WEB-INF/web.xml");
+testURI(siteRoot + "/WEB-INF/web.xml~");
+testURI(siteRoot + "/WEB-INF/web.xml_");
+testURI(siteRoot + "/WEB-INF/web.xml.bak");
+testURI(siteRoot + "/WEB-INF/web.xml%20(copy)");
+testURI(siteRoot + "/WEB-INF/web.xml%20-%20Copy");
+testURI(siteRoot + "/WEB-INF/Copy%20of%20web.xml");
+testURI(siteRoot + "/WEB-INF%20(copy)/web.xml");
+testURI(siteRoot + "/WEB-INF%20-%20Copy/web.xml");
+testURI(siteRoot + "/Copy%20of%20WEB-INF/web.xml");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml~");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml_");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml.bak");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml%20(copy)");
+testURI(siteRoot + "/WEB-INF/jboss-web.xml%20-%20Copy");
+testURI(siteRoot + "/WEB-INF/Copy%20of%20jboss-web.xml");
+testURI(siteRoot + "/WEB-INF%20(copy)/jboss-web.xml");
+testURI(siteRoot + "/WEB-INF%20-%20Copy/jboss-web.xml");
+testURI(siteRoot + "/Copy%20of%20WEB-INF/jboss-web.xml");

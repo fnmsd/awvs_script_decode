@@ -1,0 +1,18 @@
+#include reporting_helpers.inc;
+// test for pcAnywhere
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port	= 5632;
+socket.Timeout = 5;
+socket.Connect();
+if (socket.IsConnected) {
+	socket.send("ST");
+	data = socket.ReceiveBytes(2);
+	//trace(data);
+	if (data == "ST")
+	{
+		trace("pcAnywhere server detected!");
+		KBase("pcAnywhere server running", "A pcAnywhere server is running on the remote host.");
+	}
+	socket.Close();
+}

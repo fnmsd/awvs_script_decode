@@ -1,0 +1,103 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for RemoteXSS Injection
+	function classRemoteXSSInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+	}
+	
+    /**************************************************************************************************************/
+    classRemoteXSSInjection.prototype.getOrigValue = function()
+    {   
+        var value = "";
+        
+        for (var i=0; i<this.variations.count; i++){
+            var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+            
+            // if the value is not yet set      
+            if(value == "" && varValue != "") {
+                value = varValue;                       
+                break;
+            }   
+        }
+        return value;
+    }	
+    
+	classRemoteXSSInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	classRemoteXSSInjection.prototype.alert = function(testValue)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("XSS.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/XSS";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		AddReportItem(ri);	
+	}		
+	
+	classRemoteXSSInjection.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+        
+		var hq = new THTMLQuery(this.lastJob.response.body);
+		if (hq.executeHtmlQuery("tag=script|textwithin=prompt(98589956)")) {			
+			this.alert(value);
+			return false;
+		}		
+		
+		return true;
+	}
+	
+	classRemoteXSSInjection.prototype.startTesting = function()
+	{
+        
+        var origValue = this.getOrigValue();
+        var extension = "";
+        if (origValue && origValue.indexOf(".") != -1) extension = origValue.split('.').pop();
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;				
+			this.currentVariation = i;
+                        
+			// our test site
+            var url = "http://testasp.vulnweb.com/t/xss.html";
+            if (extension) url = url + "?%00." + extension
+            else url = url + "?%00.jpg";
+                
+			if (!this.testInjection(url)) continue;
+		}
+	}	
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classRemoteXSSInjection(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

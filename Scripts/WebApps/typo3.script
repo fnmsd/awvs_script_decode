@@ -1,0 +1,95 @@
+#include constants.inc;
+#include helpers.inc;
+#include debug_helpers.inc;
+#include string_helpers.inc;
+#include dir_listing_helpers.inc;
+#include json_helpers.inc;
+#include reporting_helpers.inc;
+#include versioning_helpers.inc;
+var versionStr = false;
+var versionInt = false;
+var regexChgLog = /TYPO3\s([\d\.]+)/;
+var lastJob = null;
+var lastJob2 = null;
+var typo3json = "https://get.typo3.org/json";
+//var typo3json = "http://dev/typo3_src-6.2.2/json.txt";
+// **************************************************************************************							 
+function extractVersionFromString(strVer) 
+{
+	strVer = strVer.replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+	
+	if (strVer.length == 1) strVer = strVer + "000";
+	else if (strVer.length == 2) strVer = strVer + "00";
+	else if (strVer.length == 3) strVer = strVer + "0";
+		
+	return parseInt(strVer);			
+}
+// **************************************************************************************							 
+function request(dir, uri)
+{	
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = dir.url;
+	lastJob.uri  = uri;
+    
+	lastJob.execute(); 
+	return (!lastJob.wasError); 
+}
+// **************************************************************************************							 
+function alert(uri, vxml, details, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml;	
+	ri.details = details;
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}	
+// **************************************************************************************
+function versionAuditChangeLog(dir) {
+	if (request(dir, dir.fullPath + "/ChangeLog") && !lastJob.notFound)  {
+	    m = regexChgLog.exec(lastJob.response.body);
+	    if (m && m[1]) {
+	    	var tpVersionOrig = m[1];
+				
+	    	versionStr = tpVersionOrig;
+	    	versionInt = extractVersionFromString(tpVersionOrig);
+	    	
+	    	return true;
+	    }
+	}
+	return false;	    
+}
+// main()
+var dir = getCurrentDirectory();
+if (versionAuditChangeLog(dir)) {
+	//trace(versionStr);
+	//trace(versionInt);
+    var alreadyReportedWebApplication = getGlobalValue("detectedTypo3");
+    if (!alreadyReportedWebApplication)
+    {
+        setGlobalValue("detectedTypo3", 1, true);
+        KBase("Typo3 web application", "Typo3 web application version [bold]" + versionStr + "[/bold] was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+    }
+    // ********************************************************************************************************
+    // * other vulnerabilities
+    // ********************************************************************************************************
+    // look for Typo3 Core sanitizeLocalUrl
+    var vulnCVE20155956 = false;
+    if (versionStr.startsWith("4.")) {
+        if (version_compare(versionStr, '4.0.0', '>=') && version_compare(versionStr, '4.5.40', '<=')) {
+            vulnCVE20155956 = true;
+        }
+    }
+    else
+    if (versionStr.startsWith("6.")) {
+    }
+    else
+    if (versionStr.startsWith("7.")) {
+    }
+    if (vulnCVE20155956) {
+        var details = "Your version: [dark][bold]" + versionStr + "[/bold][/dark]";
+        alert(dir.fullPath + "/ChangeLog", "typo3_CVE-2015-5956.xml", details, lastJob);
+    }
+}

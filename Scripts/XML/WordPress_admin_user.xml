@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WordPress default administrator account" version="0.1" released="20080307" updated="20150211" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>By default WordPress creates an administrator user account named [dark][bold]admin[/bold][/dark]. Using the default Admin WordPress Account, hackers can easily launch a brute force attack against it. In order to help deter this type of attack, you should change your default WordPress administrator username to something more difficult to guess.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>No impact is associated with this vulnerability.</Impact>
+		<Recommendation>Change the default WordPress administrator username to something more difficult to guess. Consult web references for more information.</Recommendation>
+		<Reference database="OWASP Wordpress Security Implementation Guideline" URL="https://www.owasp.org/index.php/OWASP_Wordpress_Security_Implementation_Guideline#Remove_or_change_the_default_administrator_account"/><Reference database="Your WordPress Installation Is Using the Default Admin Account" URL="http://www.acunetix.com/blog/wordpress-security/wordpress-default-admin-account/"/><Reference database="Change WordPress admin username for security" URL="http://www.inmotionhosting.com/support/website/wordpress/change-wordpress-admin-username-for-security"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Ektron CMS unauthenticated code execution and Local File Read" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2012-5357,CVE-2012-5358" CWE="CWE-20" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P/E:F/RL:OF/RC:C" CVSSScoreTemp="5.7" CVSSScoreEnv="5.7"/>
+		<Copyright></Copyright>
+		<Description>The version of Ektron CMS is vulnerable to multiple security vulnerabilities, such as 
+Unauthenticated code execution and Local File Read.  [break][break]
+
+[bold]1. CVE-5357 - Unauthenticated code execution in the context of web server[/bold][break]
+The root cause of this is that Ektron processed user-controlled XSL from a page that required no auth. They used the XslCompiledTransform class with enablescript set to true. This scripting allows the user to execute code.[break][break]
+
+[bold]2. CVE-5358 Local File Read[/bold][break]
+Ektron had configured the xsl with enableDocumentFunction set to true. This vulnerability allows an unauthenticated attacker to read arbitrary files, such as web.config and machine.config. This would allow an attacker to perform several attacks, like bypassing authentication, modifying viewstate, bringing down the server, etc.[break][break]
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Unauthenticated code execution and Local File Read.</Impact>
+		<Recommendation>Upgrade to latest version of Ektron CMS.</Recommendation>
+		<Reference database="CVE-2012-5357,CVE-1012-5358 Cool Ektron XSLT RCE Bugs" URL="http://webstersprodigy.net/2012/10/25/cve-2012-5357cve-1012-5358-cool-ektron-xslt-rce-bugs/"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+  <TestDescription name="Crawler" version="0.1" released="20040327" updated="20040327" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Validation">
+    <WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo=""/>
+    <Reference database="Acunetix" URL="http://www.acunetix.com"/>
+    <Copyright/>
+    <Description>Something from crawler</Description>
+    <ApplicableTo>
+      <Platform>
+        <OS>*</OS>
+        <Arch>*</Arch>
+      </Platform>
+      <WebServer>*</WebServer>
+      <ApplicationServer>*</ApplicationServer>
+    </ApplicableTo>
+    <TriggerOn event="scheme_host_port">
+      <Match type="regex">.*</Match>
+    </TriggerOn>
+    <Impact/>
+    <Recommendation/>
+  </TestDescription>
+</WebApplicationTest>

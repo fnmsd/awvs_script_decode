@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="phpMyAdmin SQL dump" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-538" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright></Copyright>
+		<Description>phpMyAdmin is a free software tool written in PHP, intended to handle the administration of MySQL over the World Wide Web. It can be used to dump a database or a collection of databases for backup or transfer to another SQL server (not necessarily a MySQL server). The dump typically contains SQL statements to create the table, populate it, or both. [break]This file contains an phpMyAdmin SQL dump. This information is highly sensitive and should not be found on a production system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>This file may disclose sensitive information. This information can be used to launch further attacks.</Impact>
+		<Recommendation>Restrict access to this file or remove it from the system.</Recommendation>
+		<Reference database="phpMyAdmin homepage" URL="http://www.phpmyadmin.net/"/></TestDescription>
+</WebApplicationTest>

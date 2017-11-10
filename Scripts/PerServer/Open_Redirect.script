@@ -1,0 +1,53 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+var lastJob = false;
+var marker = "vulnweb.com";
+// **************************************************************************************							 
+function alert(fname, payload)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+    ri.details = "URI was set to [dark][bold]" + payload + "[/bold][/dark].";
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function markerReflectedInLocationStr(locationStr, markerValue) {
+    if (locationStr.startsWith(markerValue)) return true;
+    if (locationStr.startsWith("//" + markerValue)) return true;
+    if (locationStr.startsWith("http://" + markerValue)) return true;
+    if (locationStr.startsWith("https://" + markerValue)) return true;
+    return false;
+}
+// **************************************************************************************	
+function testForOpenRedirect(payload)
+{
+	lastJob = new THTTPJob();
+	
+	lastJob.verb        = "GET";
+	lastJob.url         = scanURL;
+	lastJob.addCookies  = false;
+	lastJob.uri         = payload;
+	
+	lastJob.execute();
+	if (lastJob.responseStatus == 301 || lastJob.responseStatus == 302)
+	{
+        var locationStr = lastJob.response.headerValue('location');
+        if (locationStr && markerReflectedInLocationStr(locationStr.toLowerCase(), marker.toLowerCase())) {
+            alert('URL_redirection.xml', payload);
+			return true;
+        }
+	}
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+if (!testForOpenRedirect("//" + marker)) {
+	if (!testForOpenRedirect("//" + marker + "/%2e%2e")) {
+		if (!testForOpenRedirect("////" + marker + "/%2e%2e")) {
+		}
+	}
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="YUI uploader.swf cross site scripting" version="0.1" released="20080307" updated="20140226" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="CVE-2013-6780" CWE="CWE-79" CVSSVer="2.0" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:W/RC:C" CVSSScore="4.4" CVSSScoreTemp="3.8" CVSSScoreEnv="3.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>YUI is a free, open source JavaScript and CSS library for building richly interactive web applications. [break][break]
+
+A security vulnerability was discovered by @soiaxx in YUI 2 involving self-hosted uploader.swf files. This vulnerability impacts YUI 2 versions 2.5.0 through 2.9.0 and allows arbitrary JavaScript to be run by passing in a query string parameter such as this one: [break][break]
+
+[code]
+uploader.swf?allowedDomain=\%22}%29%29%29}catch%28e%29{alert%28document.domain%29;}// 
+[/code]
+
+[break]
+[break]
+
+This problem is not reproducible in YUI 3.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>If you are using or even merely hosting any YUI 2 .swf file, please take steps to remove these files immediately from your hosts. [break]
+
+YUI 2 is an end-of-lifed project and is no longer supported. All YUI 2 .swf files have been removed from the Yahoo CDN. If your site was taking advantage of the presence of these files on the Yahoo CDN they will no longer be available.</Recommendation>
+		<Reference database="Security Bulletin: Addressing a Vulnerability in YUI 2.5.0 through YUI 2.9.0" URL="http://yuilibrary.com/support/20131111-vulnerability/"></Reference>
+		<Reference database="YUI 'uploader.swf' Cross Site Scripting Vulnerability" URL="http://www.securityfocus.com/bid/63660/info"></Reference>
+		<Reference database="YUI Security Issue found in uploader.swf" URL="http://www.vbulletin.com/forum/forum/vbulletin-announcements/vbulletin-announcements_aa/4014388-yui-security-issue-found-in-uploader-swf"></Reference>
+	</TestDescription>
+</WebApplicationTest>

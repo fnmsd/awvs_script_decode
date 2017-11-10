@@ -1,0 +1,10 @@
+#include classOracle.inc;
+#include reporting_helpers.inc;
+if (IsPortOpen(1521)) {
+	var db = new classOracle(ScanHost , 1521);
+	if(db.isTNSSecurityOff())
+	{
+		trace("TNS security off");	
+		ReportItem("Oracle_tnslsnr_nopassword.xml", "The Oracle tnslsnr server is running on TCP port 1521.");
+	}
+}

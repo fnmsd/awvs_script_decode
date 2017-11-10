@@ -1,0 +1,56 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "Current version: [blue]" + matchedText + "[/blue]";	
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************
+function check_zabbix_version(dir, path){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path;
+	http.execute();	
+	
+	if ((!http.wasError && http.responseStatus == 200)){
+		var match = http.response.body.match(/<span class="bold textwhite".*?>\s+Zabbix\s([\d\.]+)\sCopyright /);
+		
+		if (match && match.length>1 && match[1]) {
+			var versionStr = match[1];
+			
+			KBase("Zabbix version", "Zabbix version: [dark][bold]" + versionStr + "[/bold][/dark].");
+			
+			var version = versionStr.replace(".", "").replace(".", "");
+			if (version <= 208)
+			{
+				alert("Zabbix_208_SQL_Injection.xml", http, versionStr);
+			}
+			if (version <= 223)
+			{
+				alert("Zabbix_18_22_LFI_XXE.xml", http, versionStr);
+			}
+		}
+	}
+}
+var dir = getCurrentDirectory();
+var alreadyReportedWebApplication = getGlobalValue("detectedAppZabbix");
+if (!alreadyReportedWebApplication)
+{
+    setGlobalValue("detectedAppZabbix", 1, true);           
+    KBase("Zabbix web application", "Zabbix web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+}
+check_zabbix_version(dir, dir.fullPath);

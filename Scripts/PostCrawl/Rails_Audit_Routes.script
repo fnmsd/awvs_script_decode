@@ -1,0 +1,185 @@
+#engine 3.0;
+#include constants.inc;
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+var routes          = new Array();
+var lastJob         = false
+var staticRoutes    = ["static", "js", "css", "img", "images"]
+var debug           = false;
+// **************************************************************************************
+function pathAlreadyAdded(path){
+    for (var i=0; i<routes.length; i++){
+        if (routes[i] == path) return true;
+    }
+    return false;
+}
+// **************************************************************************************
+function staticRoute(name){
+    for (var i=0; i<staticRoutes.length; i++){
+        if (staticRoutes[i] == name) return true;
+    }
+    return false;
+}
+// **************************************************************************************
+function railsCookies(cookieString){
+    var cookies = cookieString.split(";");
+    for (var i = 0; i< cookies.length; i++) {
+        var cookieData = cookies[i].trim().split("=");
+        if (cookieData.length == 2) {
+            var name = cookieData[0].trim();
+            var value = cookieData[1].trim();
+            var m = /([0-9A-Za-z%]+)--([A-Za-z0-9]{40})/.exec(value);
+            if (m && m[1] && m[2] && m[2].length == 40) {
+                return true;
+            }
+        }
+    }
+}
+// **************************************************************************************
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+    if (matchedText)
+        ri.Details =  ri.Details + "[break]Possible sensitive information: [pre][dark]" + matchedText + "[/dark][/pre]";
+    AddReportItem(ri);
+}
+/***********************************************************************************/
+function confirmReq(uri)
+{
+    var http = new THTTPJob();
+    http.verb = "GET";
+    http.url  = scanURL;
+    http.uri  = uri + randStr(4);
+    http.execute();
+    return (!http.wasError && (http.responseStatus != 200 || http.notFound));
+}
+/***********************************************************************************/
+function req(uri)
+{
+    lastJob = new THTTPJob();
+    lastJob.verb = "GET";
+    lastJob.url  = scanURL;
+    lastJob.uri  = uri;
+    lastJob.execute();
+    return (!lastJob.wasError && !lastJob.notFound && lastJob.responseStatus == 200);
+}
+/***********************************************************************************/
+function testRouteForHiddenActions(data)
+{
+    parts = data.split("{*}");
+    if (parts.length == 2) {
+        var path        = parts[0];
+        var childPath   = parts[1];
+        //first, look for something like /users/2/edit
+        var uri = path + "/" + childPath + "/edit";
+        if (req(uri) && confirmReq(uri)) {
+            if (debug) trace("found new URI: " + uri);
+            addLinkToCrawler(uri, root);
+        }
+        //second, look for something like /users/new
+        var uri = path + "/new";
+        if (req(uri) && confirmReq(uri)) {
+            if (debug) trace("found new URI: " + uri);
+            addLinkToCrawler(uri, root);
+        }
+        // test /posts and the others for /posts.json and other variants
+        partsPath = path.split("/");
+        if (partsPath.length <= 2) {
+            // third, look for stuff like users.json, users.atom, users.js, users.xml
+            var extensions   = [".json", ".js", ".xml", ".atom"]
+            var extensionsCT = ["application/json", "text/javascript", "application/xml", "application/atom"]
+            for (var j=0; j<extensions.length; j++) {
+                var ext = extensions[j];
+                var expectedCT = extensionsCT[j].toLowerCase();
+                var uri = path + ext;
+                if (req(uri) && confirmReq(uri)) {
+                    if (debug) trace("found new URI: " + uri);
+                    addLinkToCrawler(uri, root);
+                    // should I issue an alert?
+                    var ct = lastJob.response.headerValue('content-type');
+                    if (ct && (ct.toLowerCase().indexOf(expectedCT) != -1)) {
+                        // alert something here, research more
+                        var matchedText = "";
+                        //alert(uri, "Rails_controller_possible_sensitive_information_disclosure.xml", lastJob, matchedText)
+                        if (debug) logError("ALERT " + uri);
+                        var emailRegex = /(?:[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+                        var matches = lastJob.response.body.match(emailRegex);
+                        if (matches && matches.length > 0 && matches[0])
+                        {
+                            if (debug) logError("match  " + matches[0]);
+                            matchedText = matches[0];
+                            alert(uri, "Rails_controller_possible_sensitive_information_disclosure.xml", lastJob, matchedText)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+/***********************************************************************************/
+function getInterestingRoutes(list)
+{	
+	for (var i=0;i<list.count; i++){
+		var sf = list.getFile(i);
+        var childName = "";
+		if (
+            sf.name != ""                           // not interested in root
+            && !staticRoute(sf.name)                // or static routes
+            && !sf.ignored && sf.scanSiteFile       // or ignored files
+            && sf.hasChildren                       // need to have children
+            && !sf.isMarkedAs(MARKED_AS_RealDir)    // don't need real directories
+           )
+		{
+            var interesting     = false;
+            var validChildren   = true;
+            var child = sf.getFirstChild();
+            while(child != null){
+                childName = child.name;
+                // not interested in childrens with their own siblings
+                // also, not interested in filename childrens
+                if (child.hasChildren || child.name.indexOf(".") != -1) {
+                    validChildren = false;
+                    break;
+                }
+                child = child.getNextSibling();
+            }
+            // not interested in long paths (not Rails style)
+            var validPath = false;
+            parts = sf.fullPath.split("/");
+            if (parts.length <= 3) validPath = true;
+            interesting = validChildren && validPath;
+            if (interesting) {
+                var path = sf.fullPath + "{*}" + childName;
+                if (!pathAlreadyAdded(path)) routes.push(path);
+                if (parts.length == 3) {
+                    path = "/" + parts[1] + "{*}" + childName;
+                    if (!pathAlreadyAdded(path)) routes.push(path);
+                }
+            }
+		}
+	}	
+}
+// **************************************************************************************
+//main()
+// **************************************************************************************							 
+var RailsApp = isRails || railsCookies(getCookies());
+var root = getSiteRoot(0);
+if (RailsApp || debug) {
+	// rails application
+	if (debug) trace('rails detected');
+    var list = getNewFiles(loadHttp);
+	getInterestingRoutes(list);
+	if (routes.length > 0)
+	{
+        for (var i=0; i<routes.length; i++){
+            if (debug) trace("testing route " + routes[i]);
+            testRouteForHiddenActions(routes[i])
+        }
+	}
+}

@@ -1,0 +1,120 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for realvnc 4.1.1 auth bypass
+// get auth string
+function GetAuthTypeString(auth){
+	var res = "";
+	switch (auth) {
+		case 0: res = "Connection refused"; break;
+		case 1: res = "No authentication required"; break;
+		case 2: res = "VNC authentication"; break;
+		case 5: res = "RA2 authentication"; break;
+		case 6: res = "RA2ne authentication"; break;
+		case 16: res = "Tight authentication"; break;	
+		case 17: res = "Ultra authentication"; break;	
+		case 18: res = "TLS authentication"; break;	
+	
+		default : res = "Unknown authentication";
+	}
+	return res;	
+}
+// start
+if (IsPortOpen(5900)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 5900;
+	socket.Timeout = 5;	
+	socket.Connect();
+	if (socket.IsConnected) {
+		// receive server version
+		server_version_str = socket.ReceiveBytes(12);
+		trace(server_version_str);
+		srv_version = server_version_str.match(/^RFB\s([0-9]+)\.([0-9]+)/);
+		if (srv_version && srv_version.length > 1) {
+			// get major and minor version
+			//trace(srv_version[1]);
+			//trace(srv_version[2]);
+			srv_major = parseInt(srv_version[1], 10);
+			srv_minor = parseInt(srv_version[2], 10);	
+			//trace(srv_major);
+			//trace(srv_minor);
+			
+			// ignore older versions	
+			if (srv_major < 3 && srv_minor < 7) terminate();
+			// send client version (same as server)
+			socket.send(server_version_str);
+			// read auth types
+			authCount = socket.ReceiveBytes(1);
+			authCount = authCount.getByteAt(0);
+			//trace(authCount);
+			if (authCount > 0) {
+				authTypes = new Array();
+				for (var i=0; i<authCount; i++) {
+					auth = socket.ReceiveBytes(1);
+					auth = auth.getByteAt(0);
+					authTypes.push(auth);
+				}
+				if (authTypes.length > 0) {
+					authTypesStr  = "";					
+					auth_required = 1;	
+					// auth types
+					for (var i=0; i<authTypes.length; i++) {
+						if (authTypes[i] == 0 || authTypes[i] == 1) {
+							auth_required = 0;	
+						}	
+						//trace(authTypes[i]);
+				
+						authTypesStr += GetAuthTypeString(authTypes[i]);
+					}
+					if (authTypesStr.length > 0) {
+						trace("KBASE - VNC server version : " + srv_major + "." + srv_minor + "\r\n");
+						trace("KBASE - Authentication types: \r\n" + authTypesStr);
+						
+						KBase("VNC server running", "A VNC server is running on TCP port 5900. [break]Supported authentication types: [pre]" + authTypesStr + "[/pre]");
+						
+					}
+					if (auth_required == 0) {
+	
+						var report_no_auth = 1;
+	
+						// don't report if auth type = 0 (connection refused)
+						for (var i=0; i<authTypes.length; i++) {
+							if (authTypes[i] == 0) {
+								report_no_auth = 0;	
+							}	
+						}
+						if (report_no_auth) {
+							trace("no authentication required! - create an alert here");
+							ReportItem("VNC_no_auth.xml", "The VNC server is running on TCP port 5900.");								
+							
+						}
+						terminate();
+					};
+					// auth required
+					trace("test for realvnc 4.1.1 auth bypass");
+					socket.send(strFromRawData(0x01));
+					if (srv_minor < 8) {
+						socket.send(strFromRawData(0x01));
+						data = socket.Receive(true);
+						if (data.length >= 24) {
+							// extra validation
+							retLength = data.getLongAt(20);
+							if ((retLength + 24) == data.length) {
+								trace("realvnc 4.1.1 auth bypass vulnerable!");
+								ReportItem("VNC_realvnc_auth_bypass.xml", "The VNC server is running on TCP port 5900.");								
+							}
+						}
+					}
+					else {
+						response = socket.ReceiveBytes(4);
+						if (response.length && response == strFromLong(0)) {
+							trace("realvnc 4.1.1 auth bypass vulnerable!");
+							ReportItem("VNC_realvnc_auth_bypass.xml", "The VNC server is running on TCP port 5900.");								
+						}
+					}					
+				}				
+			}
+		}
+		socket.Close();
+	}
+}

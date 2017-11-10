@@ -1,0 +1,206 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "[break]Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestWebConsoleJMXInvoker()
+{
+	var urls = [
+					"/web-console/Invoker"
+				];
+	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{			
+			if (lastJob.response.headersString.indexOf('application/x-java-serialized-object') != -1)
+				alert("JBoss_Web_Console_JMX_Invoker.xml"); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestJBossWebConsole()
+{
+	var urls = [
+					"/web-console/"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+						/((<frame[^>]*?src="ServerInfo.jsp"[^>]*?>)|(form action="HtmlAdaptor\?action=displayMBeans"))/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("JBoss_Web_Console.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestJBossServerInfoMBean()
+{
+	var urls = [
+					"/jmx-console/HtmlAdaptor?action=inspectMBean&name=jboss.system:type%3DServerInfo"
+				];
+	
+	matches.plainArray = [
+						'<title>MBean Inspector</title>'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("JBoss_ServerInfo_MBean.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestJBossServerMBean()
+{
+	var urls = [
+					"/jmx-console/HtmlAdaptor?action=inspectMBean&name=jboss.system:type%3DServer"
+				];
+	
+	matches.plainArray = [
+						'<title>MBean Inspector</title>'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("JBoss_Server_MBean.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestJBossJMXManagementConsole()
+{
+	var urls = [
+					"/jmx-console/"
+				];
+	
+	matches.plainArray = [
+					  ];
+	
+	matches.regexArray = [
+						/(<title>JBoss JMX Management Console.*?<\/title>)/
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+				alert("JBoss_JMX_Management_Console.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestJBossHttpAdapterJMXInvokerServlet()
+{
+	var urls = [
+					"/invoker/JMXInvokerServlet",
+					"/invoker/EJBInvokerServlet"
+				];
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{			
+			if (lastJob.response.headersString.indexOf('application/x-java-serialized-object') != -1)
+				alert("JBoss_HttpAdaptor_JMXInvokerServlet.xml"); 	
+		}
+	}
+}
+// **************************************************************************************
+function TestBSHDeployerMBean()
+{
+	var urls = [
+					"/jmx-console/HtmlAdaptor?action=inspectMBean&name=jboss.deployer:service%3DBSHDeployer"
+				];
+	
+	matches.plainArray = [
+						'BSHDeployer'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText && lastJob.response.body.indexOf('createScriptDeployment') != -1)
+				alert("JBoss_BSHDeployer_MBean.xml", matchedText); 	
+		}
+	}
+}
+// **************************************************************************************	
+function startTesting()
+{
+	TestWebConsoleJMXInvoker();
+	TestJBossWebConsole();
+	TestJBossServerInfoMBean();
+	TestJBossServerMBean();
+	TestJBossJMXManagementConsole();
+	TestJBossHttpAdapterJMXInvokerServlet();
+	TestBSHDeployerMBean();
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+startTesting();

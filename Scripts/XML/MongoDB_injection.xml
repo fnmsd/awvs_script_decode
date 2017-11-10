@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="MongoDB injection" version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,code_execution,known_vulnerabilities" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.8" CVSSScoreEnv="6.8"/>
+		<Copyright></Copyright>
+		<Description>This script is possibly vulnerable to MongoDB Injection attacks.[break][break]
+There are various types of attacks against MongoDB databases. Consult web references for more information about this vulnerability. [break][break]
+[bold]1) Request Injection Attacks[/bold][break]
+If you are passing $_GET parameters to your queries, make sure that they are cast to strings first. Users can insert associative arrays in GET requests, which could then become unwanted $-queries.[break][break]
+[bold]2) Script Injection Attacks[/bold][break]
+If you are using JavaScript, make sure that any variables that cross the PHP- to-JavaScript boundary are passed in the scope field of MongoCode, not interpolated into the JavaScript string.
+</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact of this vulnerability varies depending on the affected application. In the more severe cases it's possible to bypass the user authentication or download arbitrary information from the database.</Impact>
+		<Recommendation>If you are passing $_GET/$_POST parameters to your queries, make sure that they are cast to strings first. If you are using JavaScript, make sure that any variables that cross the PHP- to-JavaScript boundary are passed in the scope field of MongoCode, not interpolated into the JavaScript string.</Recommendation>
+		<Reference database="PHP Manual MongoDB Security" URL="http://php.net/manual/en/mongo.security.php"/><Reference database="How does MongoDB address SQL or Query injection?" URL="http://docs.mongodb.org/manual/faq/developers/#how-does-mongodb-address-sql-or-query-injection"/><Reference database="Server-Side JavaScript Injection" URL="https://media.blackhat.com/bh-us-11/Sullivan/BH_US_11_Sullivan_Server_Side_WP.pdf"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,57 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(fname, lastJob, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function exploitMisfortuneCookie()
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.scheme = "http";
+	newUrl.port = 7547;
+	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;	
+	lastJob.addCookies = false;
+	lastJob.verb = "GET";
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/";	
+	
+	var randomStr = randStr(10);
+	var matchStr = "The requested URL '/" + randomStr + "' was not found on the RomPager server.";
+	
+	lastJob.request.addHeader('Cookie', 'C107373883=/' + randomStr, true);	
+	
+	lastJob.execute();
+	
+	
+	if (
+		lastJob.responseStatus==404 && 
+		lastJob.response.body.indexOf("<title>Object Not Found</title>") !=-1 && 
+		lastJob.response.body.indexOf(matchStr) !=-1 
+		)
+	{
+		
+		var details = "A special cookie was added to the request: Cookie: C107373883=/" + randomStr + "[break]Pattern found in response: " + matchStr;
+		alert("Misfortune_Cookie.xml", lastJob, details);
+	}	
+	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+exploitMisfortuneCookie();

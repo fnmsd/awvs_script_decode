@@ -1,0 +1,104 @@
+#include constants.inc;
+#include helpers.inc;
+var variants = [
+					"r57shell.php",
+					"r57.php",
+                    "r58.php",
+					"c99shell.php",
+					"c99.php",
+					"nstview.php",
+					"nst.php",
+					"rst.php",
+					"r57eng.php",
+					"shell.php",
+                    "dra.php",
+					"r.php",
+					"lol.php",
+					"zehir.php",
+					"c-h.v2.php",
+					"php-backdoor.php",
+					"simple-backdoor.php",
+					"cmdasp.asp",
+					"aspxspy.aspx"					
+				];
+{
+	// *********************************************************************************************
+	// class for testing the signs of an injection using text patterns found in the response text
+	// *********************************************************************************************	
+	function classInjectionPatterns(){
+		this.plainArray = [
+						  ];
+		this.regexArray = [
+							/<a href="http:\/\/ccteam.ru\/releases\/c99shell">c99shell[\s\S]*?<\/a>: access denied/,
+							/(<title>nsTView\s\v[\s\S]*?nst.void.ru<\/title>[\s\S]*?<b>nsTView\sv[\s\S]*?<a\shref=http:\/\/nst.void.ru\sstyle\='text-decoration:none;'>[\s\S]*?<b>Host:<\/b>[\s\S]*?<b>IP:<\/b>[\s\S]*?<b>Your\sip:<\/b>)/,
+							/(<\/font><\/b><\/td><td\sclass=td1\salign=left><input\stype=checkbox\sname=m\sid=m\svalue="1"><input\stype=text\sname=s_mask\ssize=82\svalue=".txt;.php">\*\s\(\s.txt;.php;.htm\s\)<input\stype=hidden\sname=cmd\svalue="search_text"><input\stype=hidden\sname=dir\svalue="[^"]*"><\/td><\/tr><\/table><\/)/,
+							/(<\/th><\/tr><tr><td><p\salign="left"><b>Software:&nbsp;[\s\S]*act=phpinfo"\starget="[\s\S]*<\/b>&nbsp;<\/p><p\salign="left"><b>Safe-mode:&nbsp;<font\scolor=[\s\S]*act=ftpquickbrute&d=C%3A%[\s\S]*act=selfremove"><)/,
+							/(<title>\sCrystal\sshell<\/title>[\s\S]*?<font size="1"\sface="Arial">Crystal hack shellphp<\/font><\/span>[\s\S]*2006-2007<\/span>)/,
+							/(<pre><form\saction\=""\sMETHOD\=GET\s>execute\scommand\:\s<input\stype="text"\sname="c"><input\stype="submit"\svalue="go"><hr><\/form>)/,
+							/(Usage\:\shttp\:\/\/target\.com\/simple-backdoor.php\?cmd=cat\+\/etc\/passwd)/,
+							/(<FORM\saction="[\s\S]*?"\smethod="POST">\n<input\stype=text\sname="\.CMD"\ssize=45\svalue="">\n<input\stype=submit\svalue="Run">\n<\/FORM>)/,
+							/(<head><title>\n\s+ASPXSpy\d\.\d\s->\sBin\:\)\n<\/title>[\s\S]*<span\sid="PassLabel">Password:<\/span>)/
+						  ];											
+	}
+	
+	// *********************************************************************************************
+	// search text for all the patterns from the list (plain text and regexes)
+	// *********************************************************************************************	
+	classInjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}						 
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Trojan_shell_scripts.xml");
+	ri.affects = newUri;
+	ri.alertPath = "Scripts/Trojan shell script";	
+	
+	if (matchedText) 
+		ri.Details =  ri.Details + "Pattern found: [pre][blue]" + matchedText + "[/blue][/pre]";		
+			
+	ri.setHttpInfo(job);	
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.isMarkedAs(MARKED_AS_RealDir)) // scan only real directories
+{
+    // don't test for shells if the directory doesn't return 200 OK
+    if (dir.response.msg2 == 200)  {
+    	var injectionPatterns = new classInjectionPatterns();
+    	
+    	for (var i=0; i<variants.length; i++) {
+    		var dirName = dir.fullPath;
+    		if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+    		
+    		var testURI = dirName + variants[i];
+    		var http = new THTTPJob();
+    		http.url = dir.url;
+    		http.verb = 'GET';
+    		http.URI = testURI;
+    		http.execute();
+    		if (!http.wasError && !http.notFound){	
+    			var matchedText = injectionPatterns.searchOnText(http.response.body);		
+    			if (matchedText) alert(dir.fullPath, testURI, http, matchedText);
+    		}
+    		
+    		ScriptProgress(ComputeProgress(i, variants.length));
+    	}
+    }
+}

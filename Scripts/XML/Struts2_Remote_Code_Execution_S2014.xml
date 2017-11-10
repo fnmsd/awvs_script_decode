@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Struts2/XWork remote command execution" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2013-1966,CVE-2013-2115" CWE="CWE-94" CVSSVer="2.0" CVSSScore="9.4" CVSSDescr="AV:N/AC:M/Au:N/C:C/I:C/A:C/E:POC/RL:OF/RC:C" CVSSScoreTemp="7.4" CVSSScoreEnv="7.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>A vulnerability introduced by forcing parameter inclusion in the URL and Anchor Tag allows remote command execution, session access and manipulation and XSS attacks. A request that included a specially crafted request parameter could be used to inject arbitrary OGNL code into the stack, afterward used as request parameter of an URL or A tag , which will cause a further evaluation. [break][break]The issue was originally addressed by Struts 2.3.14.1 and Security Announcement S2-013. However, the solution introduced with 2.3.14.1 did not address all possible attack vectors, such that every version of Struts 2 before 2.3.14.2 is still vulnerable to such attacks.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Remote command execution, remote server context manipulation, injection of malicious client side code.</Impact>
+		<Recommendation>It is strongly recommended to upgrade to Struts 2.3.14.2, which contains the corrected OGNL and XWork library.</Recommendation>
+		<Reference database="S2-014" URL="http://struts.apache.org/development/2.x/docs/s2-014.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

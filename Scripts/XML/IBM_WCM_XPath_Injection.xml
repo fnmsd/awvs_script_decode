@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="IBM Web Content Manager XPath injection" version="0.1" released="20080307" updated="20140306" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="CVE-2013-6735" CWE="CWE-264" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="3.9"/>
+		<Copyright></Copyright>
+		<Description>SEC Consult Vulnerability Lab reported an XPath injection vulnerability in IBM Web Content Manager (versions 6.x, 7.x, 8.x). The discovered vulnerability can be exploited without authentication and 
+therefore pose a high security risk - it allows extraction of configuration data from the server.
+ An unauthenticated user is able to perform blind XPath Injection attacks e.g. 
+get current application configuration, enumerate nodes and extract other 
+valuable information from vulnerable installations of Web Content Manager. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote unauthorized attacker could retrieve information from the JCR by manipulating a WCM URL.</Impact>
+		<Recommendation>Apply the Interim Fix PI07777 (consult web references).</Recommendation>
+		<Reference database="SEC Consult Vulnerability Lab Security Advisory 20131227-0" URL="https://www.sec-consult.com/fxdata/seccons/prod/temedia/advisories_txt/20131227-0_IBM_WCM_XPath_Injection_v10.txt"/><Reference database="Interim Fix PI07777" URL="http://www.ibm.com/eserver/support/fixes/fixcentral/swg/quickorder?productid=WebSphere%20Portal&amp;brandid=5&amp;apar=PI07777"/><Reference database="Fix available for Unauthorized Information Retrieval Security Vulnerability in IBM WebSphere Portal" URL="http://www-01.ibm.com/support/docview.wss?uid=swg21660289"/></TestDescription>
+</WebApplicationTest>

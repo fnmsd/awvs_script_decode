@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="PHP Safedir restriction bypass vulnerabilities" version="0.1" released="20051109" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" AlertTags="missing_update" SendCookies="true" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="1.9" CVSSDescr="AV:L/AC:M/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="1.5" CVSSScoreEnv="1.5"/>
+		<Reference database="BID 15119" URL="http://www.securityfocus.com/bid/15119/"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break]PHP is prone to multiple vulnerabilities that permit an attacker to bypass the 'safedir' directory restriction. An attacker can exploit these vulnerabilities to possible execute arbitrary code currently existing on a vulnerable system, or to retrieve the contents of arbitrary files, all in the security context of the Web server process.
+[break][break][navy]Affected PHP version 5.5.0.[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>PHP</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>PHP safedir restriction bypass.</Impact>
+		<Recommendation>Upgrade PHP to the latest version.</Recommendation>
+		<Reference database="PHP Homepage" URL="http://www.php.net"/>
+	</TestDescription>
+</WebApplicationTest>

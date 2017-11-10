@@ -1,0 +1,82 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job, affects, details)
+{	
+	var fname = "ASP_Net_Oracle_Padding.xml";
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.alertPath = "Scripts/" + fname;	
+	ri.affects = affects;
+	ri.setHttpInfo(job);
+	
+	if (details)
+		ri.Details = details;
+	AddReportItem(ri);
+}
+// **************************************************************************************	
+function request(uri)
+{	
+		lastJob = new THTTPJob();
+		lastJob.verb = "GET";
+		lastJob.addCookies = false;
+		lastJob.url = scanURL;
+		lastJob.uri = uri;
+		lastJob.execute();
+		return (!lastJob.wasError); 
+}
+/***********************************************************************************/
+if (false) { // disable this test, it gives too many false positives - must be rewritten
+	/* main entry point */
+	var lastJob = null;
+	var up = new TURL(scanURL.url);
+	var uri = up.path;
+	var rootDir = "/";
+	if (uri.indexOf("/") == -1) rootDir = "/"
+	else rootDir = uri.substr(0, uri.lastIndexOf("/")+1);
+	var queryStr = '?d=' + randStr(8);
+	// make first request (to an invalid URI)
+	if (request(rootDir + 'WebResource.axd' + queryStr))
+	{
+		if (lastJob)
+		{
+			// make sure it's ASP.NET
+			if (lastJob.response.headerExists('X-AspNet-Version'))
+			{	
+				var firstStatus = lastJob.responseStatus;
+				var firstBody   = lastJob.response.body;
+	            
+				firstBody = firstBody.replace(queryStr, "");
+				
+				// make second request
+				if (request(rootDir + 'WebResource.axd'))
+				{
+					if (lastJob)
+					{
+						var secondStatus = lastJob.responseStatus;
+						var secondBody   = lastJob.response.body;
+						
+						if (firstStatus != secondStatus || firstBody != secondBody) 
+						{
+							//trace(firstStatus);
+							//trace(firstBody.substr(0, 500) + "\n ... ");
+							//trace(secondStatus);
+							//trace(secondBody.substr(0, 500) + "\n ... ");
+							
+							var details = "Acunetix detected this vulnerability by comparing the HTTP response status and body for two different requests (one request when the padding is incorrect and another one where the encrypted text is not valid). If the body AND/OR status are different, this vulnerability can be exploited.[break]";
+							
+							details = details + "[break]First request: [break]";
+							details = details + "Status code  [bold][dark]" + firstStatus + "[/dark][/bold][break]";
+							details = details + "Response body (first 500 bytes) [bold][dark]" + firstBody.substr(0, 500) + "\n ... " + "[/dark][/bold][break]";
+							details = details + "[break]Second request: [break]";
+							details = details + "Status code  [bold][dark]" + secondStatus + "[/dark][/bold][break]";
+							details = details + "Response body (first 500 bytes) [bold][dark]" + secondBody.substr(0, 500) + "\n ... " + "[/dark][/bold][break]";
+							
+							alert(lastJob, rootDir, details);
+						}
+					}
+				}	
+			
+			}
+		}
+	}
+}

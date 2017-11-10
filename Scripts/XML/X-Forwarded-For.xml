@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="X-Forwarded-For HTTP header security bypass" version="0.1" released="20080307" updated="20140314" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-287" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>This directory normally returns a 403 Forbidden HTTP status code. Acunetix WVS managed to bypass this restriction by spoofing the "X-Forwarded-For" HTTP header and set various internal IP addresses.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote attacker could exploit this vulnerability by spoofing a "X-Forwarded-For" HTTP header to bypass the IP address-based Access Control List (ACL) checks.</Impact>
+		<Recommendation>X-Forwarded-For HTTP header should not be used for any  Access Control List (ACL) checks because it can be spoofed by attackers. Use the real IP address for this type of restrictions.</Recommendation>
+		<Reference database="Anatomy of an Attack: How I Hacked StackOverflow" URL="http://blog.ircmaxell.com/2012/11/anatomy-of-attack-how-i-hacked.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

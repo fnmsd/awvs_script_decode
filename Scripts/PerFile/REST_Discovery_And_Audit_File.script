@@ -1,0 +1,31 @@
+#include helpers.inc;
+#include constants.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include rest_helpers.inc;
+var debug = false;
+//--------------------------------------------------------------------------------------------------------
+var sf = getCurrentFile();
+if (sf.isFile) { 
+	if (sf.response.msg2 == 405 || sf.response.msg2 == 401 || sf.isMarkedAs(MARKED_AS_Discovered_From_Marvin)) { // 405 Method Not Allowed
+	    var http = new THTTPJob();
+	    http.url = sf.url;
+	    http.verb = 'OPTIONS';
+	    http.URI = sf.fullPath;
+	    http.execute();
+	    if (!http.wasError && !http.notFound && http.response.msg2 == 200 && http.response.body.indexOf("xmlns:jersey") != -1)
+	    {
+	        try {
+	            //processWADL(getURL("http://bld01/restWADL/sample1wadl.xml"), sf);
+				//processWADL(getURL("http://bld01/restWADL/sample2wadl.xml"), sf);
+				//processWADL(getURL("http://bld01/restWADL/yahooNewsSearch.xml"), sf);
+				//processWADL(getURL("http://bld01/restWADL/containers.xml"), sf);
+				//processWADL(getURL("http://bld01/restWADL/complicated.xml"), sf);
+				processWADL(http.response.body);
+	        }
+	        catch(err) {
+	            if (debug) logError(err.message);
+	        }
+	    }
+	}
+}

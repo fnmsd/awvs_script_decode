@@ -1,0 +1,308 @@
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+// test for writable FTP Anonymous 
+// try to enter pasive mode
+function enter_pasive_mode(socket){
+	trace("enter passive mode");
+	// set type I (binary)
+	socket.Send("TYPE I\r\n");
+	data = socket.ReceiveLine();	
+	trace(data);
+	// enter passive mode
+	socket.Send("PASV\r\n");
+	data = socket.ReceiveLine();	
+	trace("passive mode = " + data);
+	if(data.slice(0, 3) == "227"){		
+		
+		// compute passive port number
+		port = data.match(/^227 .* \(?[0-9]+,[0-9]+,[0-9]+,[0-9]+,([0-9]+),([0-9]+)\)?/);
+		if (port && port.length>1) {
+			//trace(port[1]);
+			//trace(port[2]);	
+			passiveModePort = parseInt(port[1]) * 256 + parseInt(port[2]);
+			trace("passiveModePort = " + passiveModePort);
+		}	
+	}	
+	
+	return true;
+}
+// try to change directory, returns true in case of success
+function change_directory(socket, dir){
+	var res = false;
+	trace("change directory " + dir);
+	socket.Send("CWD " + dir + "\r\n");
+	data = socket.ReceiveLine();
+	trace(data);
+	if(data.slice(0, 1) == "2"){
+		res = true;
+	}
+	socket.Send("PWD\r\n");
+	data = socket.ReceiveLine();
+	trace(data);
+	return res;
+}
+// try to extract a list of directories from output
+function extract_list_of_directories(input){
+	var res = new Array();	
+		
+	var dirs = input.split("\n");
+	//traceObject(dirs);
+	if (dirs && dirs.length > 0){
+		//trace(dirs.length);	
+		for (var i=0; i<dirs.length; i++)
+		{
+			if (dirs[i].length > 0){
+				entry = dirs[i].match(/([drstwx-]+)[\s|\t]+[0-9]+[\s|\t]+([^\s]+)[\s|\t]+([^\s]+)[\s|\t]+([0-9]+)[\s|\t]+[A-Za-z]+\s[0-9]+\s+[0-9]{2}\:[0-9]{2}[\s|\t]+([^\r\n]*)/);
+				//traceObject(entry);			
+				// only interested in directories
+				if (entry && entry.length >= 6 && entry[1].indexOf("d") >=0 && entry[5] != "." && entry[5] != ".."){
+					//trace(entry[5]);
+					res.push(entry[5]);
+				}
+			}
+		}
+	}
+	
+	return res;	
+}
+// try to get a directory listing, returns the directories as received from pasv mode
+function get_ftp_dir_listing(socket, dir){
+	var result = "";	
+	trace("get dir listing");
+	if (change_directory(socket, dir)) {
+		enter_pasive_mode(socket);
+		socket.Send("LIST -a\r\n");
+		var psocket = new TSocket("TCP");
+		psocket.Host = ScanHost;
+		psocket.Port = passiveModePort;
+		psocket.Timeout = 5;
+		psocket.Connect();
+		if (psocket.IsConnected)
+		{
+			trace("get data from passive");
+		
+			while( (pdata = psocket.ReceiveLine()) != ""){
+				trace("pdata=" + pdata);
+				result += pdata;
+			}
+			psocket.Close();
+		}			
+		data = socket.ReceiveLine();
+		trace(data);
+		if (data.slice(0,3) == "150"){
+			data = socket.ReceiveLine();
+			trace(data);	
+		
+		}
+	
+	}
+	
+	return result;
+}
+// try to create a directory, returns true in case of success!
+function create_directory(socket, dir){
+	var res = false;
+	trace("create directory " + dir);
+		socket.Send("MKD " + dir + "\r\n");
+		data = socket.ReceiveLine();
+		trace(data);		
+		if(data.slice(0, 1) == "2"){
+				trace("WAS ABLE TO CREATE A DIRECTORY (" + dir + ")!");
+				res = true;
+		}	
+	return res;
+}
+// try to delete a directory, returns true in case of success!
+function delete_directory(socket, dir){
+	var res = false;
+	trace("delete directory");
+	socket.Send("RMD " + dir + "\r\n");
+	data = socket.ReceiveLine();
+	//trace(data);		
+	if(data.slice(0, 1) == "2"){
+			trace("WAS ABLE TO DELETE THE DIRECTORY (" + dir + ")!");
+			res = true;
+	}	
+	return res;
+}
+// try to create a file, returns true in case of success!
+function create_file(socket, filename, content){
+	var res = false;
+	trace("create file " + filename);
+	if (enter_pasive_mode(socket)) {
+		socket.Send("STOR " + filename + "\r\n");
+		if (passiveModePort > 0){	
+			// send data for file creation
+			var psocket = new TSocket("TCP");
+			psocket.Host = ScanHost;
+			psocket.Port = passiveModePort;
+			psocket.Timeout = 5;
+			psocket.Connect();
+			if (psocket.IsConnected)
+			{
+				trace("send data to create file");	
+				psocket.send(content);
+				psocket.Close();
+				
+				trace("send data to create file 2");	
+				
+				data = socket.ReceiveLine();
+				trace(data);
+				
+				if(data.slice(0, 3) == "150"){
+						trace("WAS ABLE TO CREATE A FILE (" + filename + ")!");
+						res = true;
+						data = socket.ReceiveLine();
+						trace(data);
+				}	
+				
+			}		
+		}	
+		data = socket.ReceiveLine();
+		trace(data);		
+	}
+	return res;
+}
+// try to delete a file, returns true in case of success!
+function delete_file(socket, filename){
+	var res = false;
+	trace("try to delete " + filename);
+	socket.Send("DELE " + filename + "\r\n");
+	data = socket.ReceiveLine();
+	trace(data);		
+	if(data.slice(0, 1) == "2"){
+			trace("WAS ABLE TO DELETE THE FILE (" + filename + ")!");
+			res = true;
+	}	
+	return res;
+}
+// this function will try to create a directory/file in the specified directory
+// returns true in case of success
+function try_to_create_stuff_in_directory(socket, dir){
+	var res = false;
+	var error = false;	
+	// if a directory is specified, switch to that directory.	
+	if (dir.length > 0) {
+			if (!change_directory(socket, dir)) {
+				//trace("cannot change directory " + dir);
+				error = true;
+			}
+	}	
+	// try to create some stuff
+	if (error == false)	{
+		// try to create a directory
+		var dirname = "acunetix_test_dir_" + Random(1000);
+		var dirCreated = create_directory(socket, dirname);
+		if (dirCreated) {
+			res = true;
+			delete_directory(socket, dirname);	
+		}			
+		// try to create a file
+		var filename = "acunetix_test_file_" + Random(1000);
+		var fileCreated = create_file(socket, filename, "testx");
+		
+		trace("FILE created = " + fileCreated);		
+		
+		if (fileCreated) {
+			res = true;
+			delete_file(socket, filename);
+		}
+	}
+	
+	return res;
+}
+// crawl directory
+function crawl_and_test_dir(socket, dir){
+	
+	trace("crawl_and_test_dir(" + dir + ")");
+	var pasvData = get_ftp_dir_listing(socket, dir);
+	trace(pasvData);
+	if (pasvData.length > 0) {
+		var dirs = extract_list_of_directories(pasvData);
+		pasvData = "";		
+	
+		for (var i=0; i<dirs.length; i++){
+			dirname = dir + dirs[i] + "/";
+			trace("dirname = " + dirname);
+			crawledDirs.push(dirname);
+			crawl_and_test_dir(socket, dirname);			
+		}
+	
+	}	
+}
+// start
+if(IsPortOpen(21)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 21;
+	socket.Timeout = 5;
+	socket.Connect();
+	passiveModePort = 0;
+	crawledDirs = new Array();
+	writableDirs = new Array();
+  if(socket.IsConnected){
+		data = socket.ReceiveLine();
+		trace(data);
+		if(data.slice(0, 3) == "220"){	
+			// consume all banner
+			socket.timeout = 1;
+			do {data = socket.ReceiveLine();} while (data.length > 0 && (data.slice(0, 3) == "220"));
+			socket.timeout = 5;
+			socket.Send("USER anonymous\r\n");
+			data = socket.ReceiveLine();
+			trace(data);	
+			if(data.slice(0, 3) == "331"){
+				trace("send password");
+				socket.Send("PASS anon@acunetix\r\n");
+				data = socket.ReceiveLine();
+				trace(data);
+				if(data.slice(0, 3) == "230"){
+					// logged in - let's see what can we do.		
+					enter_pasive_mode(socket);
+					trace(passiveModePort);
+					// try to create stuff in root
+					var managed_to_write = try_to_create_stuff_in_directory(socket, "/");
+					//var managed_to_write = false;
+					// not possible to create directories/files in root 	
+					if (!managed_to_write) {
+						// crawl directories and test each of them individually
+						crawl_and_test_dir(socket, "/");
+						trace("crawled dirs ...");
+						if (crawledDirs.length > 0){
+							for (var i=0; i<crawledDirs.length; i++){
+								trace(crawledDirs[i]);
+							}
+							// test writable directories from here
+							for (var i=0; i<crawledDirs.length; i++){								
+								managed_to_write = try_to_create_stuff_in_directory(socket, crawledDirs[i]);
+								if (managed_to_write) {									
+									trace("WRITABLE DIRECTORY " + crawledDirs[i]);
+									writableDirs.push(crawledDirs[i]);
+								}
+							}
+							var writableStr = "";
+							if (writableDirs.length > 0){
+								trace("writable dirs ...");
+								for (var i=0; i<writableDirs.length; i++){
+									writableStr += writableDirs[i] + "\r\n";
+									trace(writableDirs[i]);
+								}
+								ReportItem("Ftp_anonymous_writable.xml", "The FTP server is running on TCP port 21.[break]List of writable directories:[break][pre]" + writableStr + "[/pre]");	
+							}
+						}						
+					}
+					else {
+						trace("managed to write in the root directory!");
+						ReportItem("Ftp_anonymous_writable.xml", "The FTP server is running on TCP port 21.[break]It was possible to create files/folders in the root directory!");
+				
+						
+					}
+					socket.Send("QUIT\r\n");
+				}
+			}
+		}
+    
+    socket.Close();
+	}
+}

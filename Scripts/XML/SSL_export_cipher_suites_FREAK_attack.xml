@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="The FREAK attack (export cipher suites supported)" version="0.1" released="20080307" updated="20150304" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="CVE-2015-0204" CWE="CWE-310" CVSSVer="2.0" CVSSScore="1.9" CVSSDescr="AV:L/AC:M/Au:N/C:P/I:N/A:N" CVSSScoreTemp="" CVSSScoreEnv="" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>The FREAK attack is a new SSL/TLS vulnerability that allows attackers to intercept HTTPS connections between vulnerable clients and servers and force them to use 'export-grade' cryptography, which can then be decrypted or altered. Websites that support RSA export cipher suites (e.g., TLS_RSA_EXPORT_WITH_DES40_CBC_SHA) are at risk to having HTTPS connections intercepted.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may intercept HTTPS connections between vulnerable clients and servers.</Impact>
+		<Recommendation>Reconfigure the affected SSL/TLS server to disable support for any export suites. Mozilla has published a guide and SSL Configuration Generator, which will generate known good configurations for common servers.</Recommendation>
+		<Reference database="Attack of the week: FREAK (or 'factoring the NSA for fun and profit')" URL="http://blog.cryptographyengineering.com/2015/03/attack-of-week-freak-or-factoring-nsa.html"></Reference>
+		<Reference database="Tracking the FREAK Attack" URL="https://freakattack.com/"></Reference>
+		<Reference database="Security/Server Side TLS" URL="https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations"></Reference>
+		<Reference database="Mozilla SSL Configuration Generator" URL="https://mozilla.github.io/server-side-tls/ssl-config-generator/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

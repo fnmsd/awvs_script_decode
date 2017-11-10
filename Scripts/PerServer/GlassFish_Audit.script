@@ -1,0 +1,126 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+var Passwords = Array(		
+  "",  
+  "password",
+  "glassfish",
+  "12345",
+  "qwerty",  
+  "admin",
+  "adminadmin"
+);
+// **************************************************************************************							 
+function alert(fname, lastJob, details)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname;
+	ri.setHttpInfo(lastJob);
+	
+	if (details) 
+	 ri.details = details;
+	 
+	AddReportItem(ri);	
+}
+// **************************************************************************************							 
+function try_credentials(username, password)
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.port = 4848;
+	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;	
+	lastJob.addCookies = false;
+	lastJob.verb = "POST";
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/j_security_check";	
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);	
+	lastJob.request.body = "j_username=" + username + "&j_password=" + password + "&loginButton=Login";
+	
+	lastJob.execute();
+	
+	if (lastJob.responseStatus==302 && lastJob.response.headerValue('Set-Cookie') && lastJob.response.headerValue('Set-Cookie').indexOf("JSESSIONID") !=-1)
+	{
+		return true;
+	}	
+	return false;
+}
+// **************************************************************************************							 
+function try_common_credentials()
+{
+	username = "admin";
+	for (var i=0; i<Passwords.length; i++) 
+	{
+		password = Passwords[i];
+		if (try_credentials(username, password))
+		{
+			var details = "Username: [bold][dark]" +  username  + "[/dark][/bold], Password: [bold][dark]" + password + "[/dark][/bold]";
+			alert('GlassFish_Weak_Credentials.xml', lastJob, details);
+		}		
+	}
+}
+// **************************************************************************************							 
+function try_glassfish_auth_bypass()
+{	
+	newUrl = scanURL;
+	newUrl.port = 4848;
+	lastJob = new THTTPJob();
+	lastJob.addCookies = false;
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	lastJob.verb = "get";
+	lastJob.url  = newUrl;	
+	lastJob.uri  = "/applications/upload.jsf";			
+	
+	lastJob.execute();
+	if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf("<title>Deploy Enterprise Applications/Modules") !=-1)
+	{
+		//trace("vuln");
+		alert('GlassFish_Auth_Bypass.xml', lastJob);
+	}
+	else {
+		lastJob = new THTTPJob();
+		lastJob.verb = "get";
+		lastJob.url  = newUrl;	
+		lastJob.uri  = "/common/applications/uploadFrame.jsf";			
+		
+		lastJob.execute();
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf("<title>Deploy Applications or Modules") !=-1)
+		{
+			//trace("vuln");
+			alert('GlassFish_Auth_Bypass.xml', lastJob);
+		}
+	}
+}
+// **************************************************************************************	
+function GlassFishIsDetected()
+{
+	lastJob = new THTTPJob();
+	
+	newUrl = scanURL;
+	newUrl.port = 4848;
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.url  = newUrl;		
+	lastJob.uri  = "/common/index.jsf";	
+	lastJob.timeout = 10000;
+	lastJob.retries = 0;
+	
+	lastJob.execute();
+	if (lastJob.responseStatus==302 && lastJob.response.headerValue('Location') && lastJob.response.headerValue('Location').indexOf("login.jsf") !=-1)
+	{
+		return true;
+	}	
+	return false;
+}
+/***********************************************************************************/
+/* main entry point */
+if (GlassFishIsDetected())
+{
+	try_glassfish_auth_bypass();
+	try_common_credentials();
+}

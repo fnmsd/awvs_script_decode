@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="SWFUpload movieName cross site scripting vulnerability" version="0.1" released="20080307" updated="20140227" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities, xss" CVE="CVE-2012-3414" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:W/RC:C" CVSSScoreTemp="3.8" CVSSScoreEnv="3.7" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>SWFUpload is prone to a cross-site scripting vulnerability because it fails to sanitize user-supplied input. 
+An attacker may leverage this issue to execute arbitrary script code in the browser of an unsuspecting user in the context of the affected site. This may allow the attacker to steal cookie-based authentication credentials and launch other attacks. 
+SWFUpload version 2.2.0.1 is vulnerable; prior versions may also be affected.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them. An attacker can steal the session cookie and take over the account, impersonating the user. It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>SWFUpload applet is installed on a large number of applications. The fix is different on each affected application. Please consult the application vendor for information on how to fix this vulnerability.</Recommendation>
+		<Reference database="SWFUpload 'movieName' Parameter Cross Site Scripting Vulnerability" URL="http://www.securityfocus.com/bid/54245"></Reference>
+		<Reference database="CVE-2012-2399" URL="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2012-2399"></Reference>
+	</TestDescription>
+</WebApplicationTest>

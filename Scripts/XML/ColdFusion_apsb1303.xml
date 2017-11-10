@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Security update: Hotfix available for ColdFusion" version="0.1" released="20080307" updated="20140310" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="code_execution,known_vulnerabilities" CVE="CVE-2013-0625,CVE-2013-0629,CVE-2013-0631,CVE-2013-0632" CWE="CWE-255" CVSSVer="2.0" CVSSScore="10.0" CVSSDescr="AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C" CVSSScoreTemp="8.3" CVSSScoreEnv="8.4"/>
+		<Copyright></Copyright>
+		<Description>Adobe has released a security hotfix for ColdFusion 10, 9.0.2, 9.0.1 and 9.0 for Windows, Macintosh and UNIX.  This hotfix addresses vulnerabilities that could permit an unauthorized user to remotely circumvent authentication controls, potentially allowing the attacker to take control of the affected server.
+
+Adobe is aware of reports that four vulnerabilities (CVE-2013-0625, CVE-2013-0629, CVE-2013-0631 and CVE-2013-0632, referenced in Security Advisory APSA13-01) are being exploited in the wild against ColdFusion customers. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can remotely circumvent authentication controls, potentially allowing the attacker to take control of the affected server.</Impact>
+		<Recommendation>Adobe recommends ColdFusion customers update their installation. Consult Web references section for instructions. </Recommendation>
+		<Reference database="ColdFusion Security hotfix APSB13-03" URL="http://helpx.adobe.com/coldfusion/kb/coldfusion-security-hotfix-apsb13-03.html"/><Reference database="Security update: Hotfix available for ColdFusion" URL="http://www.adobe.com/support/security/bulletins/apsb13-03.html"/></TestDescription>
+</WebApplicationTest>

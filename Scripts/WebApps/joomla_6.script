@@ -1,0 +1,43 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+#include string_helpers.inc;
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;    
+	if (details) ri.details = "Current version: [bold]" + details + "[/bold]";    
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function testJoomlaKunenaVuln(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.verb = 'GET';
+	lastJob.url = dir.url;
+	
+	lastJob.URI = uri + "/components/com_kunena/template/blue_eagle/template.xml";
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.body.indexOf("<version>") != -1){
+		var vulnRegex = /<version>([\d\.]+)<\/version>/;
+		var m = vulnRegex.exec(lastJob.response.body);            
+		if (m && m.length > 1) {
+			var versionText = m[1];
+			var versionTextFull = versionText.trim();
+			// add ".0" to make it a 3 digits version
+			if (versionTextFull.length == 3) versionTextFull = versionTextFull + ".0";
+			// convert it to number
+			var versionNumber = versionTextFull.replace(".", "").replace(".", "").replace(".", "").replace(".", "").replace(".", "");
+			// check version number
+			// trace(versionNumber);
+			if (versionNumber <= 305) {
+				alert(lastJob, uri + "/components/com_kunena/", "Joomla_Kunena_Forum_Multiple_Vulnerabilities.xml", versionText);
+			}
+		}
+	}	
+}
+var dir = getCurrentDirectory();
+testJoomlaKunenaVuln(dir, dir.fullPath);

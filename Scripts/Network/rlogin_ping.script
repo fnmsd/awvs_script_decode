@@ -1,0 +1,26 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for rlogin
+if (IsPortOpen(513)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 513;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		socket.send(strFromRawData(0x00)); // handshake
+		var str = "root" + strFromRawData(0x00) + // client username
+							"root" + strFromRawData(0x00) + // server username
+							"uname -a" + strFromRawData(0x00); // data
+		socket.send(str);
+		data = socket.receive(true);
+		if (data.length > 0)
+		{
+			//trace(data);
+			trace("rlogin detected!");			
+			ReportItem("Rlogin.xml", "The rlogin server is running on TCP port 513.");
+		}
+		
+		socket.Close();
+	}
+}

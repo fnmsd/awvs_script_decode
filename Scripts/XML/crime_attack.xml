@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="CRIME SSL/TLS attack" version="0.1" released="20080307" updated="20140730" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="CVE-2012-4929" CWE="CWE-310" CVSSVer="2.0" CVSSScore="2.6" CVSSDescr="AV:N/AC:H/Au:N/C:P/I:N/A:N" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Compression Ratio Info-leak Made Easy (CRIME) is a security exploit against secret web cookies over connections using the HTTPS and SPDY protocols that also use data compression. When used to recover the content of secret authentication cookies, it allows an attacker to perform session hijacking on an authenticated web session, allowing the launching of further attacks. [break][break]
+
+CRIME is a client-side attack, but the server can protect the client by refusing to use the feature combinations which can be attacked. For CRIME, the weakness is Deflate compression. This alert is issued if the server accepts Deflate compression.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can perform session hijacking on an authenticated web session, allowing the launching of further attacks.</Impact>
+		<Recommendation>CRIME can be defeated by preventing the use of compression, either at the client end, by the browser disabling the compression of HTTPS requests, or by the website preventing the use of data compression on such transactions using the protocol negotiation features of the TLS protocol. As detailed in The Transport Layer Security (TLS) Protocol Version 1.2, the client sends a list of compression algorithms in its ClientHello message, and the server picks one of them and sends it back in its ServerHello message. The server can only choose a compression method the client has offered, so if the client only offers 'none' (no compression), the data will not be compressed. Similarly, since 'no compression' must be allowed by all TLS clients, a server can always refuse to use compression.</Recommendation>
+		<Reference database="CRIME (security exploit)" URL="http://en.wikipedia.org/wiki/CRIME_(security_exploit)"></Reference>
+		<Reference database='Details on the "Crime" Attack' URL="http://isecpartners.com/blog/2012/september/details-on-the-crime-attack.aspx"></Reference>
+	</TestDescription>
+</WebApplicationTest>

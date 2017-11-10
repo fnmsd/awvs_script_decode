@@ -1,0 +1,28 @@
+#include helpers.inc;
+// **************************************************************************************							 
+function alert(job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("lotus_domino_crlf_xss.xml");
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/lotus_domino_crlf_xss";	
+	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}
+/***********************************************************************************/
+/* main entry point */
+var http = new THTTPJob();
+	
+http.url = scanURL;
+http.addCookies = false;
+http.verb = 'GET';
+http.URI = "/servlet/%0ARefresh:0;URL=javascript:prompt(1)%0A1";
+http.execute();	
+if (!http.wasError && http.responseStatus == 404)
+{
+	if (http.response.headerValue('refresh') == '0;URL=javascript:prompt(1)')	
+		{
+			alert(http);
+		}
+}

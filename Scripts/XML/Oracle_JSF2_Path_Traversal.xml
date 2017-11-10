@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Oracle JavaServer Faces multiple vulnerabilities" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal,information_disclosure" CVE="CVE-2013-3827" CWE="CWE-22" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="3.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Oracle JavaServer Faces contains multiple vulnerabilities which could allow an attacker to obtain sensitive information. Alex Kouzemtchenko and Jon Passki of Coverity Security Research Labs vulnerability report states Oracle JavaServer Faces contains the following vulnerabilities: [break]
+
+[ul]
+[li]Partial Directory Traversal Via Resource Identifier (CWE-22): A defect exists that allows for directory traversal within the application. The directory traversal is limited in that it cannot be used to escape from the application and access arbitrary files on the application server. [/li]
+[li]Partial Directory Traversal Via Library Name (CWE-22). A defect exists that allows for directory traversal within the application. The directory traversal is limited in that it cannot be used to escape from the application and access arbitrary files on the application server. [/li]
+[li]Encryption Context Parameter Incorrectly Documented (CWE-705).[/li]
+[li]ViewState HMAC Not Verified in Constant Time (CWE-367).[/li]
+
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>A remote unauthenticated attacker may obtain sensitive information.</Impact>
+		<Recommendation>These vulnerabilities have been addressed in Oracle Critical Patch Update Advisory - October 2013. Affected users are advised to apply the recommended Critical Path updates listed in the Oracle Critical Patch Update Advisory - October 2013 for CVE-2013-3827.</Recommendation>
+		<Reference database="VU#526012" URL="http://www.kb.cert.org/vuls/id/526012"></Reference>
+		<Reference database="Coverity Advisory" URL="http://security.coverity.com/advisory/2013/Oct/two-path-traversal-defects-in-oracles-jsf2-implementation.html"></Reference>
+		<Reference database="Oracle Critical Patch Update Advisory - October 2013" URL="http://www.oracle.com/technetwork/topics/security/cpuoct2013-1899837.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

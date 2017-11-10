@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="IBM WebSphere application source file exposure" version="0.1" released="20080307" updated="20150302" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure" CVE="" CWE="CWE-200" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N" CVSSScoreTemp="6.5" CVSSScoreEnv="6.5" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>WebSphere Application Server could allow a remote attacker to bypass security restrictions. Web-based applications, including Web services applications running on WebSphere Application Server, could disclose application specific files contained within the war file, including files under the web-inf and meta-inf directories. An attacker could exploit this vulnerability to view or execute files on the server contained within the war file. This vulnerability also affects the WebSphere administrative console when administrative security is disabled. 
+[break][break]
+Users affected:
+[li]IBM WebSphere Application Server versions 5.1, 6.0, 6.1 and 7.0 users.[/li]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Application specific files are open to display and execution by an attacker.</Impact>
+		<Recommendation>Upgrade to the latest version of WebSphere or apply the PK81387 security fix.</Recommendation>
+		<Reference database="PK81387; 7.0.0.1: Possible application source file exposure" URL="http://www-01.ibm.com/support/docview.wss?uid=swg24022456"></Reference>
+	</TestDescription>
+</WebApplicationTest>

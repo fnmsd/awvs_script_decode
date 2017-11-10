@@ -1,0 +1,14 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include joomla_helpers.inc;
+#include joomla_weak_password.inc;
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+  	// look for weak passwords
+	test_for_joomla_weak_passwords(dir, dir.fullPath);
+}

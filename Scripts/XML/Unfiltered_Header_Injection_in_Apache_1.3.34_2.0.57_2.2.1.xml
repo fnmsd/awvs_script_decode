@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Unfiltered header injection in Apache 1.3.34/2.0.57/2.2.1" version="0.1" released="20060726" updated="20140227" protocol="HTTP" mayproxy="true" affects="file" severity="high" alert="success" type="Validation">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="missing_update,xss" CVE="CVE-2006-3918" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="3.5" CVSSScoreEnv="3.4" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Reference database="Unfiltered Header Injection in Apache 1.3.34/2.0.57/2.2.1" URL="http://www.securityfocus.com/archive/1/433280"></Reference>
+		<Reference database="Forging HTTP request headers with Flash" URL="http://www.securityfocus.com/archive/1/441014/30/0/threaded"></Reference>
+		<Reference database="Apache homepage" URL="http://httpd.apache.org/"></Reference>
+		<Copyright></Copyright>
+		<Description>This version of Apache is vulnerable to HTML injection (including
+malicious Javascript code) through "Expect" header. Until now it was not classified as a security vulnerability, since an attacker has no way to influence the Expect header to send the victim to a target website. However, according to Amit Klein's paper: "Forging HTTP request headers with Flash"  there is a working cross site scripting (XSS) attack against Apache 1.3.34, 2.0.57 and 2.2.1 (as long as the client browser is IE or Firefox, and it supports Flash 6/7+).  [break][break][navy]Affected Apache versions (up to 1.3.34/2.0.57/2.2.1).[/navy]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>All</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest Apache versions. This flaw has been corrected in Apache versions (1.3.35/2.0.58/2.2.2)</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="testfile">
+			<Request>
+				<MessageHeader>
+					<Method>GET</Method>
+					<URI>${scheme}://${host}:${port}</URI>
+					<Version>HTTP/1.0</Version>
+					<Header>
+						<Name encoding="text">Expect</Name>
+						<Value encoding="text">&lt;script&gt;alert(${random})&lt;/script&gt;</Value>
+					</Header>
+				</MessageHeader>
+				<MessageBody>
+					<Separator></Separator>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="HtmlParser" type="htmlparser">
+					<Description>set the description here</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>417</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${HtmlParser}" test="cont">
+							<Value>tag=script;textwithin=alert(${random})</Value>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>417</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>

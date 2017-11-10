@@ -1,0 +1,50 @@
+#include helpers.inc;
+//--------------------------------------------------------------------------------------------------------
+function alert(uri, newUri, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile("Apache_Tomcat_Directory_Traversal.xml");
+	ri.affects = uri;
+	ri.alertPath = "Scripts/Apache Tomcat Directory Traversal";	
+	
+	ri.Details =  "Directory traversal found at : [dark]" + newUri + "[/dark]";
+	ri.setHttpInfo(job);	
+	AddReportItem(ri);	
+}
+//--------------------------------------------------------------------------------------------------------
+var dir = getCurrentDirectory(); // this is the sitefile
+if (dir.response.msg2 == 200)  {
+	// only check tomcat dirs
+	banner = dir.response.headersString;
+	if (banner.search(/(Apache-Coyote|Tomcat)/i) != -1){
+		// only check main directories
+		var sar = dir.fullPath.split("/");
+		if (sar.length == 2)  {
+			var dirName = dir.fullPath;
+			if (dirName.charAt(dirName.length-1) != '/') dirName = dirName + '/';
+			
+			var testURI = dirName + "\\../manager/html";		
+			var rootTomcatDir = dirName + "\\../";		
+			var http = new THTTPJob();
+			http.url = dir.url;
+			http.verb = 'GET';
+			http.URI = testURI;
+			http.autoAuthenticate = false;
+			http.execute();
+			if (!http.wasError && !http.notFound && http.response.msg2 == 401){	
+				if (http.response.headersString.search(/(WWW-Authenticate\s*:\s*Basic\s+realm="Tomcat Manager Application")/) != -1)
+				{
+					alert(dir.fullPath, testURI, http);
+					
+					// add a list of common tomcat directories to the crawler to look for problems inside.
+					addLinkToCrawler(rootTomcatDir + "manager/", dir);
+					addLinkToCrawler(rootTomcatDir + "manager/html/", dir);
+					addLinkToCrawler(rootTomcatDir + "examples/", dir);
+					addLinkToCrawler(rootTomcatDir + "examples/jsp/", dir);
+					addLinkToCrawler(rootTomcatDir + "examples/jsp/cal/", dir);
+					addLinkToCrawler(rootTomcatDir + "examples/jsp/cal/cal2.jsp", dir);					
+				}	
+			}
+		}	
+	}
+}

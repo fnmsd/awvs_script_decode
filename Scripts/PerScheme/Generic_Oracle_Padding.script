@@ -1,0 +1,173 @@
+#include constants.inc;
+#include helpers.inc;
+#include error_messages_helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var errorMessages = new classErrorMessages();
+{
+	function InjectionPatterns(){
+		this.plainArray = [
+							'javax.crypto.BadPaddingException: Given final block not properly padded',
+							'Given final block not properly padded',
+							'javax.crypto.BadPaddingException',
+							'Padding is invalid and cannot be removed.',
+							'padding byte out of range'
+						];
+						
+		this.regexArray = [
+						  ];											
+	}
+	
+	InjectionPatterns.prototype.searchOnText = function(text) {
+		// search plain texts first
+		for (var i=0;i<this.plainArray.length;i++) {
+			if (text.indexOf(this.plainArray[i]) != -1) return this.plainArray[i];
+		}
+			
+		// search regexes
+		for (var i=0;i<this.regexArray.length;i++) {
+			var m = this.regexArray[i].exec(text);
+			if (m) return m[0];
+		}			
+			
+		return false;	
+	}
+}
+var InjectionPatterns = new InjectionPatterns();
+{ 
+	// *********************************************************************************************
+	// class for testing Padding Oracle
+	// *********************************************************************************************
+	function classPadding_Oracle(scheme, inputIndex){
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.origValue = this.getOrigValue();
+		this.lastJob = null;
+	}
+	
+	// *********************************************************************************************
+	// function to get a value for this input
+	// *********************************************************************************************
+	classPadding_Oracle.prototype.getOrigValue = function(value)
+	{	
+		var value = "";
+		
+		for (var i=0; i<this.variations.count; i++)
+		{
+			var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+			
+			// if the value is not yet set		
+			if(value == "" && varValue != "") {
+				value = varValue;						
+			}	
+				
+			if (value != "") break;
+		}
+		return value;
+	}
+	
+	
+	// *********************************************************************************************
+	// function to make set a value for the current variation and issue an HTTP request 
+	// *********************************************************************************************
+	classPadding_Oracle.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	// *********************************************************************************************
+	// generates an report item for the scanner
+	// *********************************************************************************************
+	classPadding_Oracle.prototype.alert = function(testValue, vulnxml, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile(vulnxml);
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/" + vulnxml; 	
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+	
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText + "[/blue][/pre]";
+		}
+		
+		AddReportItem(ri);	
+	}		
+	
+	// *********************************************************************************************
+	// function to check if the response contains any error messages that would indicate bad padding
+	// *********************************************************************************************
+	classPadding_Oracle.prototype.checkIfVulnerable = function(value)
+	{	
+		if (!this.lastJob) return false;
+		if (!this.lastJob.response) return false;
+		if (!this.lastJob.response.body.length) return false;
+	
+		var matchedText = InjectionPatterns.searchOnText(this.lastJob.response.toString());		
+		if (matchedText) {
+			this.alert(value, 'Generic_Padding_Oracle.xml', matchedText);
+			//trace('vulnerable ' + matchedText);
+			return false;
+		}		
+	
+	    // look for error messages	
+		errorMessages.checkForError(this.lastJob, this.scheme, this.inputIndex, value);
+	}	
+	
+	// *********************************************************************************************
+	// function to test if the scheme is vulnerable to Padding Oracle vulnerabilities
+	// *********************************************************************************************
+	classPadding_Oracle.prototype.testPaddingOracle = function()
+	{	
+		// don't test small length values
+		if (this.origValue.length < 8) return false;
+		// don't test parameters that are numbers
+		if (!isNaN(this.origValue)) return false;
+		// only test base64 encoded strings
+		if (!this.origValue.match(/^[a-zA-Z0-9\+\/=\%]+$/)) return false;
+		// make a request with a random string base64 encoded
+		var value = plain2b64(randStr(this.origValue.length));
+		if (this.request(value))
+			this.checkIfVulnerable(value);
+	}	
+	// *********************************************************************************************
+	// main function to test all input variation
+	// *********************************************************************************************		
+	classPadding_Oracle.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;	
+			this.currentVariation = i;		
+			// don't test if we don't have a value
+			if (this.origValue != "") this.testPaddingOracle();
+		}
+	}	
+}
+// main entry point 
+// don't do anything for now
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classPadding_Oracle(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

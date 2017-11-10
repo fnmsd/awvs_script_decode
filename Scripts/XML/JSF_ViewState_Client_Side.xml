@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="JSF ViewState client side storage" version="0.1" released="20080307" updated="20150326" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>JavaServer Faces (JSF) is a Java specification for building component-based user interfaces for web applications. There are two ViewState storage methods: server side and client side. By default, most implementations are configured to use server side storage. However, your application is configured to store ViewState on the client side. For security reasons, server side storage is highly recommended as client side storage can cause a lot of security issues. If you really need to use client side storage make sure the ViewState is encrypted and an integrity check is performed on the ViewState value. Consult web references for more information about the dangers of JSF ViewState client side storage.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact depends on the affected web applications but various issues such as data leaks, direct object references exploitation, bypassing user inputs validators and even arbitrary code execution can occur when client side storage is used.</Impact>
+		<Recommendation>If possible, it's recommended to change the ViewState saving method to client side. To do so, add the following lines of code to your web.xml file:
+
+[pre]
+&lt;context-param&gt;
+    &lt;param-name&gt;javax.faces.STATE_SAVING_METHOD&lt;/param-name&gt;
+    &lt;param-value&gt;server&lt;/param-value&gt;
+&lt;/context-param&gt;
+[/pre]</Recommendation>
+		<Reference database="JSF ViewState upside-down" URL="http://synacktiv.com/ressources/JSF_ViewState_InYourFace.pdf"/><Reference database="Beware of Serialized GUI Objects Bearing Data" URL="https://www.blackhat.com/presentations/bh-dc-10/Byrne_David/BlackHat-DC-2010-Byrne-SGUI-slides.pdf"/></TestDescription>
+</WebApplicationTest>

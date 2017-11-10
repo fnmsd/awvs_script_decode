@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Roundcube security updates 0.8.6 and 0.7.3" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,known_vulnerabilities" CVE="CVE-2013-1904" CWE="CWE-22" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="3.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Roundcube published new releases which fix a recently reported vulnerability that allows an attacker to access files on the server. Please update your installations with the new versions or patch them with the fix which is also published in the downloads section on our sourceforge.net page.
+[break][break]
+
+In order to find out whether one of your users has vulnerable preferences, you can run the following query on the Roundcube user database:[break]
+[pre]
+SELECT * FROM users WHERE preferences LIKE '%generic_message_footer%'
+[/pre]
+
+If this returns any results, you should block that user because he or she most likely tried to exploit your system.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can access any files on the server.</Impact>
+		<Recommendation>Upgrade to the latest version of Roundube or apply the vendor patches.</Recommendation>
+		<Reference database="Patch for 0.9.x" URL="http://ow.ly/jtQD0"></Reference>
+		<Reference database="Patch for 0.8.x" URL="http://ow.ly/jtQHM"></Reference>
+		<Reference database="Patch for 0.7.x" URL="http://ow.ly/jtQK0"></Reference>
+		<Reference database="Patch for 0.6" URL="http://ow.ly/jtQNd"></Reference>
+		<Reference database="Security updates 0.8.6 and 0.7.3" URL="http://sourceforge.net/news/?group_id=139281&amp;id=310497"></Reference>
+		<Reference database="[RCD] zero day vulnerability (tested on v8.0 to 9.0)" URL="http://lists.roundcube.net/pipermail/dev/2013-March/022328.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,76 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+// test for mdns/zeroconf/bonjour
+function prepare_domain_name(domain)
+{
+	var res = "";
+	parts = domain.split(".");
+	for (i=0;i<parts.length;i++)
+	if ((parts[i].length > 0) && (parts[i].toLowerCase() != "www") && (parts[i].toLowerCase() != "www2"))
+	{
+		res += String.fromCharCode(parts[i].length);
+		res += parts[i];
+	}
+	//trace(res);
+	return res;
+}
+function prepare_mdns_request(domain, type)
+{
+	var res = "";	
+	res = String.fromCharCode(
+						 0x68, 0xb3,   // transaction ID
+             0x01, 0x00,   // flags - standard query
+             0x00, 0x01,   // questions
+             0x00, 0x00,   // answers
+             0x00, 0x00,   // auth rrs
+             0x00, 0x00),  // additional rrs
+	res += prepare_domain_name(domain); 
+	res += String.fromCharCode(
+						 0x00,         // null
+             0x00, type,   // mdns type
+             0x00, 0x01)   // class IN
+	//res = res.setWordAt(res.length - 2, 0, true);
+	return res;
+}
+// test if mdns is enabled for hostname
+function test_mdns_on_hostname(hostname){
+	var res = false;
+	
+	socket = new TSocket("UDP");
+	socket.Host = ScanHost;
+	socket.Port = 5353;
+	socket.Timeout = 3;
+	socket.Connect();
+	//trace("testing ..." + hostname);
+	ptr_req = prepare_mdns_request(hostname, 0x0c);
+	//trace(ptr_req.toHexString());	
+	
+	socket.Send(ptr_req);
+	dnsResp = socket.Receive(true);
+	
+	// get dns response
+	if (dnsResp.length > 0 ) {		
+		
+		//trace(dnsResp.toHexString());
+		var numberAnswers = dnsResp.getWordAt(6, true);
+		//trace(numberAnswers);
+		if (numberAnswers > 0){
+			//trace("mdns is enabled!");
+			res = true;
+		}
+	}
+	// close the socket
+	socket.Close();
+	return res;
+}
+// start script
+// test on two possible domain names
+if (test_mdns_on_hostname("_workstation._tcp.local") == true) {	
+	trace("mdns is enabled!");
+	ReportItem("Bonjour.xml", "The Bonjour server is running on UDP port 5353.");	
+}	
+else 
+if (test_mdns_on_hostname("_daap._tcp.local") == true) {
+	trace("mdns is enabled!");				
+	ReportItem("Bonjour.xml", "The Bonjour server is running on UDP port 5353.");	
+}

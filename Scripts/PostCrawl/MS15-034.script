@@ -1,0 +1,87 @@
+#include constants.inc;
+#include os_detection.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+// files to be tested
+var files   = new Array();
+var lastJob = null;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testOnFile(fullPath)
+{
+    //trace(fullPath);
+	lastJob = new THTTPJob();
+	lastJob.verb = "GET";
+	lastJob.url  = scanURL;
+	lastJob.uri  = fullPath;
+    lastJob.request.addHeader('Range', "bytes=0-18446744073709551615", true);
+	lastJob.execute();
+	if (!lastJob.wasError && !lastJob.notFound)
+	{
+		if (lastJob.responseStatus == 416)
+		{
+            var patternStr = "<TITLE>Requested Range Not Satisfiable</TITLE>";
+            if (lastJob.response.body.indexOf(patternStr) != -1) {
+                alert(lastJob.uri, "MS15-034.xml", lastJob, patternStr)
+                return true;
+            }
+		}
+	}
+	return false;
+}
+/***********************************************************************************/
+function prepareFilesToBeTested(list)
+{
+    var maxFiles = 25;
+	for (var i=0;i<list.count; i++){	
+		var sf = list.getFile(i);
+        var valid = false;
+        if (sf.name.endsWith(".js") || sf.name.endsWith(".swf") || sf.name.endsWith(".css")) {
+            valid = true;
+        }
+        if (sf.response.headerExists("content-type")) {
+            var ct = sf.response.headerValue("content-type");
+            if (ct.startsWith("image/") || ct.startsWith("text/css") || ct.startsWith("text/xml")) {
+                valid = true;
+            }
+        }
+        if(valid && !sf.ignored && sf.scanSiteFile)
+		{
+			fileName = sf.fullPath;
+            if (maxFiles >= 0)
+            {
+                files.push(fileName);
+                maxFiles--;
+            }
+		}
+	}	
+    
+    var tested_common_files = getGlobalValue("MS15034_tested_common_files");
+    if (!tested_common_files)
+    {
+	    SetGlobalValue("MS15034_tested_common_files", 1, true);
+        files.push("/favicon.ico");
+    }
+}
+/***********************************************************************************/
+/* main entry point */
+if (isIIS) {
+    var list = getNewFiles(loadHttp);
+    prepareFilesToBeTested(list);
+    if (files.length > 0)
+    {
+        // report only the first one
+        for (var i=0; i<files.length; i++)
+            if (testOnFile(files[i])) break;
+    }
+}

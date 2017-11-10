@@ -1,0 +1,42 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include debug_helpers.inc;
+#include reporting_helpers.inc;
+#noretest;
+	
+// **************************************************************************************
+function alert()
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile("Access_Control_Allow_Origin.xml");
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;
+	AddReportItem(ri);
+}
+// **************************************************************************************
+function TestACAO(response)
+{
+    if (response.headerValue('Access-Control-Allow-Origin').trim() == "*")
+        return true;
+    return false;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentDirectory(); // this is the sitefile
+if (file.isDir)
+{
+    if (TestACAO(file.response)) {
+        var InstancesCount = getGlobalValue('ACAOInstancesCount');
+        if (!InstancesCount) InstancesCount = 1
+        else InstancesCount = InstancesCount + 1;
+        // don't report more than 10 times
+        if (InstancesCount < 10) {
+            SetGlobalValue("ACAOInstancesCount", InstancesCount, true);
+            alert();
+        }
+    }
+}

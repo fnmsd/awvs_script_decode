@@ -1,0 +1,30 @@
+#include ast_js_parser.inc;
+#include ast_processor.inc;
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#noretest;
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+    // only 200
+    if (file.response.msg2 != 200) return false;
+    // only files with some content
+    if (file.response.body.length == 0) return false;
+		if (file.response.body.length > 5*1024*1024) return false; // don't scan JS files bigger than 5MB
+    // look for extension .js (if yes, search it)
+    var fileExt  = getFileExt(file.name);
+    if (fileExt.toLowerCase() == 'js') return true;
+    // or right content type
+    var ct = file.response.headerValue('content-type');
+    if (ct && ct.toLowerCase().indexOf("javascript") == -1) return false;
+    return true;
+}
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+// verify if the file should be searched
+if (file.isFile && fileShouldBeSearched() && file.response)
+{
+    processJavaScriptCode(file.response.body);
+}

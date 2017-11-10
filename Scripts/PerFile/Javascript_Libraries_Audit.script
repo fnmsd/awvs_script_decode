@@ -1,0 +1,1029 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include text_search_helpers.inc;
+#include debug_helpers.inc;
+#noretest;
+// **************************************************************************************
+// retire.js functions
+// **************************************************************************************
+var repo = {
+	"jquery": {
+		"vulnerabilities" : [
+			{
+				"below" : "1.6.3",
+				"severity" : "medium",
+				"identifiers" : { "CVE": [ "CVE-2011-4969" ] },
+				"info" : [ "http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2011-4969" , "http://research.insecurelabs.org/jquery/test/" ]
+			},
+			{
+				"below" : "1.9.0b1",
+				"identifiers": {
+					"bug": "11290",
+					"summary": "Selector interpreted as HTML"
+				},
+				"severity": "medium",
+				"info" : [ "http://bugs.jquery.com/ticket/11290" , "http://research.insecurelabs.org/jquery/test/" ]}
+		],
+		"extractors" : {
+			"func"    		: [ "/[0-9.]+/.test(jQuery.fn.jquery) ? jQuery.fn.jquery : undefined" ],
+			"uri"			: [ "/(§§version§§)/jquery(\\.min)?\\.js" ],
+			"filename"		: [ "jquery-(§§version§§)(\\.min)?\\.js" ],
+			"filecontent"	: [
+				"/\\*!? jQuery v(§§version§§)", "\\* jQuery JavaScript Library v(§§version§§)",
+				"\\* jQuery (§§version§§) - New Wave Javascript", "// \\$Id: jquery.js,v (§§version§§)",
+				"/\\*! jQuery v(§§version§§)", "[^a-z]f=\"(§§version§§)\",.*[^a-z]jquery:f,"
+			],
+			"hashes"		: {}
+		}
+	},
+	"jquery-migrate" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.2.0",
+				"severity": "medium",
+				"identifiers": {
+					"release": "jQuery Migrate 1.2.0 Released",
+					"summary": "cross-site-scripting"
+				},
+				"info" : [ "http://blog.jquery.com/2013/05/01/jquery-migrate-1-2-0-released/" ]
+			}
+		],
+		"extractors" : {
+			"filename"		: [ "jquery-migrate-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "/\\*!?(?:\n \\*)? jQuery Migrate(?: -)? v(§§version§§)" ],
+			"hashes"		: {}
+		}
+	},
+	"jquery-mobile" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.0RC2",
+				"severity": "high",
+				"identifiers": {"osvdb": ["94563", "93562", "94316", "94561", "94560"]},
+				"info" : [ "http://osvdb.org/show/osvdb/94563", "http://osvdb.org/show/osvdb/94562", "http://osvdb.org/show/osvdb/94316", "http://osvdb.org/show/osvdb/94561", "http://osvdb.org/show/osvdb/94560" ]
+			},
+			{
+				"below" : "1.0.1",
+				"severity": "high",
+				"identifiers": {"osvdb": "94317"},
+				"info": [ "http://osvdb.org/show/osvdb/94317" ]
+			},
+			{
+				"below" : "1.1.2",
+				"severity": "medium",
+				"identifiers": {
+					"issue": "4787",
+					"release": "http://jquerymobile.com/changelog/1.1.2/",
+					"summary": "location.href cross-site scripting"
+				},
+				"info": [ "http://jquerymobile.com/changelog/1.1.2/", "https://github.com/jquery/jquery-mobile/issues/4787" ]
+			},
+			{
+				"below" : "1.2.0",
+				"severity": "medium",
+				"identifiers": {
+					"issue": "4787",
+					"release": "http://jquerymobile.com/changelog/1.2.0/",
+					"summary": "location.href cross-site scripting"
+				},
+				"info": [ "http://jquerymobile.com/changelog/1.2.0/", "https://github.com/jquery/jquery-mobile/issues/4787" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "jQuery.mobile.version" ],
+			"filename"		: [ "jquery.mobile-(§§version§§)(.min)?\\.js" ],
+			"uri"			: [ "/(§§version§§)/jquery.mobile(\\.min)?\\.js" ],
+			"filecontent"	: [ "/\\*!?(?:\n \\*)? jQuery Mobile(?: -)? v(§§version§§)" ],
+			"hashes"		: {}
+		}
+	},
+	"jquery-ui-dialog" : {
+		"vulnerabilities" : [
+			{
+				"atOrAbove": "1.8.9",
+				"below" : "1.10.0",
+				"severity": "medium",
+				"identifiers": {
+					"bug": "6016",
+					"summary": "Title cross-site scripting vulnerability"
+				},
+				"info" : [ "http://bugs.jqueryui.com/ticket/6016" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "jQuery.ui.dialog.version" ],
+			"filecontent"	: [
+				"/\\*!? jQuery UI - v(§§version§§)(.*\n){1,3}.*jquery\\.ui\\.dialog\\.js",
+				"/\\*!?[\n *]+jQuery UI (§§version§§)(.*\n)*.*\\.ui\\.dialog",
+				"/\\*!?[\n *]+jQuery UI Dialog (§§version§§)"
+			],
+			"hashes"		: {}
+		}
+	},
+	"jquery-ui-autocomplete" : {
+		"vulnerabilities" : [ ],
+		"extractors" : {
+			"func"    		: [ "jQuery.ui.autocomplete.version" ],
+			"filecontent"	: [
+				"/\\*!? jQuery UI - v(§§version§§)(.*\n){1,3}.*jquery\\.ui\\.autocomplete\\.js",
+				"/\\*!?[\n *]+jQuery UI (§§version§§)(.*\n)*.*\\.ui\\.autocomplete",
+				"/\\*!?[\n *]+jQuery UI Autocomplete (§§version§§)"
+			],
+			"hashes"		: {}
+		}
+	},
+	"jquery-ui-tooltip" : {
+		"vulnerabilities" : [
+			{
+				"atOrAbove": "1.9.2",
+				"below" : "1.10.0",
+				"severity": "high",
+				"identifiers": {
+					"bug": "8859",
+					"summary": "Autocomplete cross-site scripting vulnerability"
+				},
+				"info" : [ "http://bugs.jqueryui.com/ticket/8859" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "jQuery.ui.tooltip.version" ],
+			"filecontent"	: [
+				"/\\*!? jQuery UI - v(§§version§§)(.*\n){1,3}.*jquery\\.ui\\.tooltip\\.js",
+				"/\\*!?[\n *]+jQuery UI (§§version§§)(.*\n)*.*\\.ui\\.tooltip",
+				"/\\*!?[\n *]+jQuery UI Tooltip (§§version§§)"
+			],
+			"hashes"		: {}
+		}
+	},
+	"jquery.prettyPhoto" : {
+		"vulnerabilities" : [
+			{
+				"below" : "3.1.5",
+				"severity" : "high",
+				"identifiers" : { "CVE" : [ "CVE-2013-6837" ] },
+				"info" : [ "http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2013-6837&cid=3" ]
+			},
+			{
+				"below" : "3.1.6",
+				"severity" : "high",
+				"info" : [ "https://github.com/scaron/prettyphoto/issues/149", "https://blog.anantshri.info/forgotten_disclosure_dom_xss_prettyphoto" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "jQuery.prettyPhoto.version" ],
+			"filecontent"	: [
+				"/\\*(?:.*[\n\r]+){1,3}.*Class: prettyPhoto(?:.*[\n\r]+){1,3}.*Version: (§§version§§)",
+				"\\.prettyPhoto[ ]?=[ ]?\\{version:[ ]?(?:'|\")(§§version§§)(?:'|\")\\}"
+			],
+			"hashes"		: {}
+		}
+	},
+	"jPlayer" : {
+		"vulnerabilities" : [
+			{
+				"below" : "2.4.0",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-2023" ]},
+				"info" : [ "http://jplayer.org/latest/release-notes/", "http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2013-2023" ]
+			},
+			{
+				"below" : "2.3.0",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2013-1942", "CVE-2013-2022"]},
+				"info" : [ "http://jplayer.org/latest/release-notes/", "http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2013-1942", "http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2013-2022" ]
+			},
+			{
+				"below" : "2.2.0",
+				"severity": "high",
+				"identifiers": {
+					"release": "2.2.0",
+					"summary": "Flash SWF vulnerability"
+				},
+				"info" : [ "http://jplayer.org/latest/release-notes/" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "new jQuery.jPlayer().version.script" ],
+			"filecontent"	: [
+				"/\\*(?:.*[\n\r]+){1,3}.*jPlayer Plugin for jQuery(?:.*[\n\r]+){1,10}.*Version: (§§version§§)"
+			],
+			"hashes"		: {}
+		}
+	},
+	"sessvars": {
+		"vulnerabilities" : [
+			{
+				"below" : "1.01",
+				"severity": "low",
+				"identifiers": {"summary": "Unsanitized data passed to eval()"},
+				"info" : [ "http://www.thomasfrank.se/sessionvars.html" ]
+			}
+		],
+		"extractors" : {
+			"filename"		: [ "sessvars-(§§version§§)(.min)?\\.js"],
+			"filecontent"	: [ "sessvars ver (§§version§§)"],
+			"hashes"		: {}
+		}
+	},
+	"swfobject": {
+		"vulnerabilities" : [
+			{
+				"below" : "2.1",
+				"severity": "medium",
+				"identifiers": {"summary": "DOM-based XSS"},
+				"info" : [ "https://code.google.com/p/swfobject/wiki/release_notes", "https://code.google.com/p/swfobject/source/detail?r=181" ]
+			}
+		],
+		"extractors" : {
+			"filename"		: [ "swfobject_(§§version§§)(.min)?\\.js"],
+			"filecontent"	: [ "SWFObject v(§§version§§) "],
+			"hashes"		: {}
+		}
+	},
+	"YUI" : {
+		"vulnerabilities" : [
+			{
+				"atOrAbove" : "3.5.0" ,
+				"below" : "3.9.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-4942" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-4942/" ]
+			},
+			{
+				"atOrAbove" : "3.2.0" ,
+				"below" : "3.9.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-4941" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-4941/" ]
+			},
+			{
+				"below" : "3.10.3",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-4940" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-4940/" ]
+			},
+			{
+				"atOrAbove" : "3.0.0" ,
+				"below" : "3.9.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-4939" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-4939/" ]
+			},
+			{
+				"atOrAbove" : "2.8.0" ,
+				"below" : "2.9.1",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE_2012-5883" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2012-5883/" ]
+			},
+			{
+				"atOrAbove" : "2.5.0" ,
+				"below" : "2.9.1",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2012-5882" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2012-5882/" ]
+			},
+			{
+				"atOrAbove" : "2.4.0" ,
+				"below" : "2.9.1",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2012-5881" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2012-5881/" ]
+			},
+			{
+				"below" : "2.9.0",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2010-4710" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2010-4710/" ]
+			},
+			{
+				"atOrAbove" : "2.8.0" ,
+				"below" : "2.8.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2010-4209" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2010-4209/" ]
+			},
+			{
+				"atOrAbove" : "2.5.0" ,
+				"below" : "2.8.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2010-4208" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2010-4208/" ]
+			},
+			{
+				"atOrAbove" : "2.4.0" ,
+				"below" : "2.8.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2010-4207" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2010-4207/" ]
+			}
+		],
+		"extractors" : {
+			"func"    		: [ "YUI.Version" ],
+			"filename"		: [ "yui-(§§version§§)(.min)?\\.js"],
+			"filecontent"	: [ "/*\nYUI (§§version§§)", "/yui/license.(?:html|txt)\nversion: (§§version§§)"],
+			"hashes"		: {}
+		}
+	},
+	"prototypejs" : {
+		"vulnerabilities" : [
+			{
+				"atOrAbove" : "1.6.0",
+				"below" : "1.6.0.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2008-7220" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2008-7220/" ] },
+			{
+				"below" : "1.5.1.2",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2008-7220" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2008-7220/" ] }
+		],
+		"extractors" : {
+			"func"    		: [ "Prototype.Version" ],
+			"uri"			: [ "/(§§version§§)/prototype(\\.min)?\\.js" ],
+			"filename"		: [ "prototype-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "Prototype JavaScript framework, version (§§version§§)",
+				"Prototype[ ]?=[ ]?\\{[ \r\n\t]*Version:[ ]?(?:'|\")(§§version§§)(?:'|\")" ],
+			"hashes"		: {}
+		}
+	},
+	"ember" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.5.0",
+				"severity": "medium",
+				"identifiers": {
+					"CVE": [ "CVE-2014-0046" ],
+					"summary": "ember-routing-auto-location can be forced to redirect to another domain"
+				},
+				"info" : [ "https://github.com/emberjs/ember.js/blob/v1.5.0/CHANGELOG.md" ]
+			},
+			{
+				"atOrAbove" : "1.3.0-*",
+				"below" : "1.3.2",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2014-0046" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/1h6FRgr8lXQ" ]
+			},
+			{
+				"atOrAbove" : "1.2.0-*",
+				"below" : "1.2.2",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2014-0046" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/1h6FRgr8lXQ" ] },
+			{
+				"atOrAbove" : "1.4.0-*",
+				"below" : "1.4.0-beta.2",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2014-0013", "CVE-2014-0014"]},
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/2kpXXCxISS4", "https://groups.google.com/forum/#!topic/ember-security/PSE4RzTi6l4" ]
+			},
+			{
+				"atOrAbove" : "1.3.0-*",
+				"below" : "1.3.1",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2014-0013", "CVE-2014-0014"]},
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/2kpXXCxISS4", "https://groups.google.com/forum/#!topic/ember-security/PSE4RzTi6l4" ]
+			},
+			{
+				"atOrAbove" : "1.2.0-*",
+				"below" : "1.2.1",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2014-0013", "CVE-2014-0014"]},
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/2kpXXCxISS4", "https://groups.google.com/forum/#!topic/ember-security/PSE4RzTi6l4" ]
+			},
+			{
+				"atOrAbove" : "1.1.0-*",
+				"below" : "1.1.3",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2014-0013", "CVE-2014-0014"]},
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/2kpXXCxISS4", "https://groups.google.com/forum/#!topic/ember-security/PSE4RzTi6l4" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-*",
+				"below" : "1.0.1",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2014-0013", "CVE-2014-0014"]},
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/2kpXXCxISS4", "https://groups.google.com/forum/#!topic/ember-security/PSE4RzTi6l4" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.1",
+				"below" : "1.0.0-rc.1.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.2",
+				"below" : "1.0.0-rc.2.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.3",
+				"below" : "1.0.0-rc.3.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.4",
+				"below" : "1.0.0-rc.4.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.5",
+				"below" : "1.0.0-rc.5.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"atOrAbove" : "1.0.0-rc.6",
+				"below" : "1.0.0-rc.6.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2013-4170" ] },
+				"info" : [ "https://groups.google.com/forum/#!topic/ember-security/dokLVwwxAdM" ]
+			},
+			{
+				"below" : "0.9.7.1",
+				"info" : [ "https://github.com/emberjs/ember.js/blob/master/CHANGELOG" ]
+			},
+			{
+				"below" : "0.9.7",
+				"severity": "high",
+				"identifiers": {
+					"bug": "699",
+					"summary": "Bound attributes aren't escaped properly"
+				},
+				"info" : [ "https://github.com/emberjs/ember.js/issues/699" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "Ember.VERSION" ],
+			"uri"			: [ "/(?:v)?(§§version§§)/ember(\\.min)?\\.js" ],
+			"filename"		: [ "ember-(§§version§§)(\\.min)?\\.js" ],
+			"filecontent"	: [
+				"Project:   Ember -(?:.*\n){9,11}// Version: v(§§version§§)",
+				"// Version: v(§§version§§)(.*\n){10,15}(Ember Debug|@module ember|@class ember)",
+				"Ember.VERSION[ ]?=[ ]?(?:'|\")(§§version§§)(?:'|\")"
+			],
+			"hashes"		: {}
+		}
+	},
+	"dojo" : {
+		"vulnerabilities" : [
+			{
+				"atOrAbove" : "0.4",
+				"below" : "0.4.4",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2272"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2272/" ]
+			},
+			{
+				"atOrAbove" : "1.0",
+				"below" : "1.0.3",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2274", "CVE-2010-2273"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2274/", "http://www.cvedetails.com/cve/CVE-2010-2273/" ]
+			},
+			{
+				"atOrAbove" : "1.1",
+				"below" : "1.1.2",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2274", "CVE-2010-2273"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2274/", "http://www.cvedetails.com/cve/CVE-2010-2273/" ]
+			},
+			{
+				"atOrAbove" : "1.2",
+				"below" : "1.2.4",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2274", "CVE-2010-2273"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2274/", "http://www.cvedetails.com/cve/CVE-2010-2273/" ]
+			},
+			{
+				"atOrAbove" : "1.3",
+				"below" : "1.3.3",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2274", "CVE-2010-2273"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2274/", "http://www.cvedetails.com/cve/CVE-2010-2273/" ]
+			},
+			{
+				"atOrAbove" : "1.4",
+				"below" : "1.4.2",
+				"severity": "high",
+				"identifiers": {"CVE": ["CVE-2010-2276", "CVE-2010-2274", "CVE-2010-2273"]},
+				"info" : [ "http://dojotoolkit.org/blog/dojo-security-advisory", "http://www.cvedetails.com/cve/CVE-2010-2276/", "http://www.cvedetails.com/cve/CVE-2010-2274/", "http://www.cvedetails.com/cve/CVE-2010-2273/" ]
+			},
+			{
+				"below" : "1.4.2",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2010-2275" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2010-2275/"]
+			},
+			{
+				"below" : "1.1",
+				"severity": "medium",
+				"identifiers": {"CVE": [ "CVE-2008-6681" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2008-6681/"]
+			}
+		],
+		"extractors" : {
+			"func"				 : [ "dojo.version.toString()" ],
+			"uri"				 : [ "/(?:dojo-)?(§§version§§)/dojo(\\.min)?\\.js" ],
+			"filename"			 : [ "dojo-(§§version§§)(\\.min)?\\.js" ],
+			"filecontentreplace" : [ "/dojo.version=\\{major:([0-9]+),minor:([0-9]+),patch:([0-9]+)/$1.$2.$3/"],
+			"hashes"			 : {
+				"73cdd262799aab850abbe694cd3bfb709ea23627" : "1.4.1",
+				"c8c84eddc732c3cbf370764836a7712f3f873326" : "1.4.0",
+				"d569ce9efb7edaedaec8ca9491aab0c656f7c8f0" : "1.0.0",
+				"ad44e1770895b7fa84aff5a56a0f99b855a83769" : "1.3.2",
+				"8fc10142a06966a8709cd9b8732f7b6db88d0c34" : "1.3.1",
+				"a09b5851a0a3e9d81353745a4663741238ee1b84" : "1.3.0",
+				"2ab48d45abe2f54cdda6ca32193b5ceb2b1bc25d" : "1.2.3",
+				"12208a1e649402e362f528f6aae2c614fc697f8f" : "1.2.0",
+				"72a6a9fbef9fa5a73cd47e49942199147f905206" : "1.1.1"
+			}
+		}
+	},
+	"angularjs" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.2.0",
+				"severity": "high",
+				"identifiers": {
+					"summary": [
+						"execution of arbitrary javascript",
+						"sandboxing fails",
+						"possible cross-site scripting vulnerabilities"
+					]
+				},
+				"info" : [ "https://code.google.com/p/mustache-security/wiki/AngularJS" ]
+			},
+			{
+				"below" : "1.2.19",
+				"severity": "medium",
+				"identifiers": {
+					"release": "1.3.0-beta.14",
+					"summary": "execution of arbitrary javascript"
+				},
+				"info" : [ "https://github.com/angular/angular.js/blob/b3b5015cb7919708ce179dc3d6f0d7d7f43ef621/CHANGELOG.md" ]
+			},
+			{
+				"below" : "1.2.24",
+				"severity": "medium",
+				"identifiers": {
+					"commit": "b39e1d47b9a1b39a9fe34c847a81f589fba522f8",
+					"summary": "execution of arbitrary javascript"
+				},
+				"info" : [ "http://avlidienbrunn.se/angular.txt", "https://github.com/angular/angular.js/commit/b39e1d47b9a1b39a9fe34c847a81f589fba522f8"]
+			},
+			{
+				"atOrAbove" : "1.3.0-beta.1",
+				"below" : "1.3.0-beta.14",
+				"severity": "medium",
+				"identifiers": {
+					"commit": "b39e1d47b9a1b39a9fe34c847a81f589fba522f8",
+					"summary": "execution of arbitrary javascript"
+				},
+				"info" : [ "https://github.com/angular/angular.js/blob/b3b5015cb7919708ce179dc3d6f0d7d7f43ef621/CHANGELOG.md" ]
+			},
+			{
+				"atOrAbove" : "1.3.0-beta.1",
+				"below" : "1.3.0-rc.1",
+				"severity": "medium",
+				"identifiers": {
+					"commit": "b39e1d47b9a1b39a9fe34c847a81f589fba522f8",
+					"summary": "execution of arbitrary javascript"
+				},
+				"info" : [ "http://avlidienbrunn.se/angular.txt", "https://github.com/angular/angular.js/commit/b39e1d47b9a1b39a9fe34c847a81f589fba522f8"]
+			},
+			{
+				"below" : "1.3.2",
+				"severity": "low",
+				"identifiers": {
+					"summary": "server-side xss can bypass CSP"
+				},
+				"info" : [ "https://github.com/angular/angular.js/blob/master/CHANGELOG.md" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "angular.version.full" ],
+			"uri"			: [ "/(§§version§§)/angular(\\.min)?\\.js" ],
+			"filename"		: [ "angular(?:js)?-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [
+				"/\\*[ \n]+AngularJS v(§§version§§)",
+				"http://errors.angularjs.org/(§§version§§)/"
+			],
+			"hashes"		: {}
+		}
+	},
+	"backbone.js" : {
+		"vulnerabilities" : [
+			{
+				"below" : "0.5.0",
+				"severity": "medium",
+				"identifiers": {
+					"release": "0.5.0",
+					"summary": "cross-site scripting vulnerability"
+				},
+				"info" : [ "http://backbonejs.org/#changelog" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "Backbone.VERSION" ],
+			"uri"			: [ "/(§§version§§)/backbone(\\.min)?\\.js" ],
+			"filename"		: [ "backbone(?:js)?-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "//[ ]+Backbone.js (§§version§§)", "a=t.Backbone={}}a.VERSION=\"(§§version§§)\"" ],
+			"hashes"		: {}
+		}
+	},
+	"mustache.js" : {
+		"vulnerabilities" : [
+			{
+				"below" : "0.3.1",
+				"severity": "high",
+				"identifiers": {
+					"bug": "112",
+					"summary": "execution of arbitrary javascript"
+				},
+				"info" : [ "https://github.com/janl/mustache.js/issues/112" ] } ],
+		"extractors" : {
+			"func"			: [ "Mustache.version" ],
+			"uri"			: [ "/(§§version§§)/mustache(\\.min)?\\.js" ],
+			"filename"		: [ "mustache(?:js)?-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "name:\"mustache.js\",version:\"(§§version§§)\"",
+				"[^a-z]mustache.version[ ]?=[ ]?(?:'|\")(§§version§§)(?:'|\")",
+				"exports.name[ ]?=[ ]?\"mustache.js\";[\n ]*exports.version[ ]?=[ ]?(?:'|\")(§§version§§)(?:'|\");"
+			],
+			"hashes"		: {}
+		}
+	},
+	"handlebars.js" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.0.0.beta.3",
+				"severity": "medium",
+				"identifiers": {
+					"summary": "poorly sanitized input passed to eval()"
+				},
+				"info" : [ "https://github.com/wycats/handlebars.js/pull/68" ] } ],
+		"extractors" : {
+			"func"			: [ "Handlebars.VERSION" ],
+			"uri"			: [ "/(§§version§§)/handlebars(\\.min)?\\.js" ],
+			"filename"		: [ "handlebars(?:js)?-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "Handlebars.VERSION = \"(§§version§§)\";", "Handlebars=\\{VERSION:(?:'|\")(§§version§§)(?:'|\")",
+				"this.Handlebars=\\{\\};[\n\r \t]+\\(function\\([a-z]\\)\\{[a-z].VERSION=(?:'|\")(§§version§§)(?:'|\")"
+			],
+			"hashes"		: {}
+		}
+	},
+	"easyXDM" : {
+		"vulnerabilities" : [
+			{
+				"below" : "2.4.18",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-5212" ] },
+				"info" : [ "http://blog.kotowicz.net/2013/09/exploiting-easyxdm-part-1-not-usual.html", "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-5212" ]
+			},
+			{
+				"below" : "2.4.19",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2014-1403" ] },
+				"info" : [ "http://blog.kotowicz.net/2014/01/xssing-with-shakespeare-name-calling.html", "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-1403" ]
+			}
+		],
+		"extractors" : {
+			"uri"			: [ "/(easyXDM-)?(§§version§§)/easyXDM(\\.min)?\\.js" ],
+			"filename"		: [ "easyXDM-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ " \\* easyXDM\n \\* http://easyxdm.net/(?:\r|\n|.)+version:\"(§§version§§)\"",
+				"@class easyXDM(?:.|\r|\n)+@version (§§version§§)(\r|\n)" ],
+			"hashes"		: { "cf266e3bc2da372c4f0d6b2bd87bcbaa24d5a643" : "2.4.6"}
+		}
+	},
+	"plupload" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.5.4",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2012-2401" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2012-2401/" ]
+			},
+			{
+				"below" : "1.5.5",
+				"severity": "high",
+				"identifiers": {"CVE": [ "CVE-2013-0237" ] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-0237/" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "plupload.VERSION" ],
+			"uri"			: [ "/(§§version§§)/plupload(\\.min)?\\.js" ],
+			"filename"		: [ "plupload-(§§version§§)(.min)?\\.js" ],
+			"filecontent"	: [ "\\* Plupload - multi-runtime File Uploader(\r|\n)+ \\* v§§version§§",
+				"var g=\\{VERSION:\"§§version§§\",.*;window.plupload=g\\}"
+			],
+			"hashes"		: {}
+		}
+	},
+	"DOMPurify" : {
+		"vulnerabilities" : [
+			{
+				"below" : "0.6.1",
+				"severity": "medium",
+				"identifiers": { },
+				"info" : [ "https://github.com/cure53/DOMPurify/releases/tag/0.6.1" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "DOMPurify.version" ],
+			"filecontent"	: [ "DOMPurify.version = '§§version§§';" ],
+			"hashes"		: {}
+		}
+	},
+	"DWR" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.1.4",
+				"severity": "high",
+				"identifiers": { "CVE" : "CVE-2007-01-09" },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2014-5326/", "http://www.cvedetails.com/cve/CVE-2014-5326/" ]
+			},
+			{
+				"below" : "2.0.11",
+				"severity": "medium",
+				"identifiers": { "CVE" : ["CVE-2014-5326", "CVE-2014-5325"] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2014-5326/", "http://www.cvedetails.com/cve/CVE-2014-5326/" ]
+			},
+			{
+				"above" : "3",
+				"below" : "3.0.RC3",
+				"severity": "medium",
+				"identifiers": { "CVE" : ["CVE-2014-5326", "CVE-2014-5325"] },
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2014-5326/", "http://www.cvedetails.com/cve/CVE-2014-5326/" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "dwr.version" ],
+			"filecontent"	: [
+				" dwr-§§version§§.jar"
+			]
+		}
+	}
+};
+function isDefined(o) {
+	return typeof o !== 'undefined';
+}
+function scan(data, extractor, repo) {
+	var detected = [];
+	for (var component in repo) 
+	if (repo.hasOwnProperty(component))
+	{
+		var extractors = repo[component].extractors[extractor];
+		if (!isDefined(extractors)) continue;
+		
+		for (var i in extractors)
+		if (extractors.hasOwnProperty(i))
+		{
+			var regexStr = replaceVersion(extractors[i]);
+			//trace("RE:" + regexStr);
+			
+			var re = new RegExp(regexStr);
+			var match = re.exec(data);
+			if (match) {
+				//trace("match");
+				var matchStr = match[1];
+				if (matchStr) {
+					matchStr = matchStr.replace(".min", "");
+					//trace(matchStr);
+					detected.push({ version: matchStr, component: component, detection: extractor });
+				}
+			}
+		}
+		
+	}
+	
+	//traceObject(detected);
+	return detected;
+}
+function scanhash(hash, repo) {
+	for (var component in repo) {
+		var hashes = repo[component].extractors.hashes;
+		if (!isDefined(hashes)) continue;
+		for (var i in hashes) {
+			//trace(i);
+			if (i === hash) return [{ version: hashes[i], component: component, detection: 'hash' }];
+		}
+	}
+	return [];
+}
+function check(results, repo) {
+	//traceObject(results);
+	
+	for (var r in results) 
+	if (results.hasOwnProperty(r))
+	{
+		var result = results[r];
+		var vulns = repo[result.component].vulnerabilities;
+		
+		for (var i in vulns) 
+		if (vulns.hasOwnProperty(i)) {
+		{
+				if (!isAtOrAbove(result.version, vulns[i].below)) {					
+					//traceObject(vulns[i]);			
+					if (isDefined(vulns[i].atOrAbove) && !isAtOrAbove(result.version, vulns[i].atOrAbove)) {
+						//trace('continue');
+						continue;
+					}
+					result.vulnerabilities = vulns[i].info;
+				}
+			}
+		}
+	}
+	return results;
+}
+function toComparable(n) {
+	if (!isDefined(n)) return 0;
+	if (n.match(/^[0-9]+$/)) {
+		return parseInt(n, 10);
+	}
+	return n;
+}
+function isAtOrAbove(version1, version2) {
+	//trace("isAtOrAbove()");
+	//trace("version1:" + version1);
+	//trace("version2:" + version2);
+	var v1 = version1.split(/[\.\-]/g);
+	var v2 = version2.split(/[\.\-]/g);
+	var l = v1.length > v2.length ? v1.length : v2.length;
+	for (var i = 0; i < l; i++) {
+		var v1_c = toComparable(v1[i]);
+		var v2_c = toComparable(v2[i]);
+		if (typeof v1_c !== typeof v2_c) return typeof v1_c === 'number';
+		
+		if (v1_c > v2_c) {
+			//trace('TRUE');
+			return true;
+		}
+		if (v1_c < v2_c) {
+			//trace('FALSE');
+			return false;
+		}
+	}
+	//trace('TRUE');
+	return true;
+}
+replaceVersion = function(jsRepoJsonAsText) {
+	return jsRepoJsonAsText.replace(/§§version§§/g, '[0-9][0-9.a-z\\\\-]+');
+};
+scanFileName = function(fileName, repo) {
+	var result = scan(fileName, 'filename', repo);
+	return check(result, repo);
+};
+scanUri = function(uri, repo) {
+	var result = scan(uri, 'uri', repo);
+	return check(result, repo);
+};
+scanFileContent = function(content, repo) {
+	var result = scan(content, 'filecontent', repo);
+	if (result.length === 0) {
+		result = scanhash(plain2sha1(content), repo);
+	}
+	return check(result, repo);
+};
+// **************************************************************************************
+// END retire.js functions
+// **************************************************************************************
+// **************************************************************************************
+function alert(details, references)
+{
+	var ri = new TReportItem();
+	ri.LoadFromFile('Vulnerable_Js_Library.xml');
+	ri.affects = file.fullPath;
+	ri.alertPath = "Scripts/" + ri.Name;
+	ri.request = file.request.headersString;
+	ri.response = file.response.headersString;
+	ri.fullResponse = file.response.body;	
+	
+	if (details) 
+		ri.Details =  details;
+	
+	for (var i=0; i<references.length;i++) {
+		ri.addReference(references[i], references[i]);
+	}
+	
+	AddReportItem(ri);	
+}
+// **************************************************************************************
+function fileShouldBeSearched()
+{
+	// only 200
+	if (file.response.msg2 != 200) return false;
+	// only files with some content
+	if (file.response.body.length == 0) return false;
+    // look for extension .js (if yes, search it)
+    var fileExt  = getFileExt(file.name);
+    if (fileExt.toLowerCase() == 'js') return true;
+	// or right content type
+    var ct = file.response.headerValue('content-type');
+    if (ct && ct.toLowerCase().indexOf("javascript") == -1) return false;
+	return true;
+}
+// **************************************************************************************
+function getDetectionStr(input) {
+	if (input == 'filename') return 'filename';
+	if (input == 'uri') return 'uri';
+	if (input == 'hash') return 'file hash';
+	if (input == 'filecontent') return 'file content';
+	return "";
+}
+	
+// main entry point
+// **************************************************************************************
+var file = getCurrentFile(); // this is the sitefile
+var matches = new classMatches();
+var matchedText = "";
+// verify if the file should be searched
+if (file.isFile && fileShouldBeSearched() && file.response) 
+{
+	componentStr = "";
+	detectionStr = "";
+	versionStr = "";
+	references = [];
+	
+	//matchedText = TestForjQuery163XSS(matches, file.response.toString());
+	//if (matchedText) alert(matchedText, "jQuery_163_XSS.xml");
+	
+	//logError(file.fullPath);
+	
+	var resultsFilename = scanFileName(file.name, repo);
+	if (resultsFilename.length > 0) {
+		o = resultsFilename[0];
+		
+		//traceObject(resultsFilename);
+		
+		if (detectionStr == "") detectionStr = getDetectionStr(o['detection'])
+			else detectionStr = detectionStr + ", " + getDetectionStr(o['detection']);
+		 
+		if (versionStr == "") versionStr = o["version"];
+		if (componentStr == "") componentStr = o["component"];
+		
+		vulns = o["vulnerabilities"];	
+			
+		if (vulns) {
+			for (var i=0; i<vulns.length; i++) {
+				if (references.indexOf(vulns[i]) == -1) 
+					references.push(vulns[i]);
+			}
+		}
+	}
+	
+	var resultsUri = scanUri(file.fullPath, repo);
+	if (resultsUri.length > 0) {
+		o = resultsUri[0];
+		
+		if (detectionStr == "") detectionStr = getDetectionStr(o['detection'])
+			else detectionStr = detectionStr + ", " + getDetectionStr(o['detection']);
+		 
+		if (versionStr == "") versionStr = o["version"];
+		if (componentStr == "") componentStr = o["component"];
+		if (typeof(o.vulnerabilities) !== 'undefined') {
+			vulns = o["vulnerabilities"];		
+			for (var i=0; i<vulns.length; i++) {
+				if (references.indexOf(vulns[i]) == -1) 
+					references.push(vulns[i]);
+			}
+		}
+	}
+	
+	var resultsFileContent = scanFileContent(file.response.body, repo);
+	if (resultsFileContent.length > 0) {
+		o = resultsFileContent[0];
+		
+		//traceObject(o);
+		if (detectionStr == "") detectionStr = getDetectionStr(o['detection'])
+			else detectionStr = detectionStr + ", " + getDetectionStr(o['detection']);
+		 
+		if (versionStr == "") versionStr = o["version"];
+		if (componentStr == "") componentStr = o["component"];
+		
+		vulns = o["vulnerabilities"];				
+		if (vulns) {
+			for (var i=0; i<vulns.length; i++) {
+				if (references.indexOf(vulns[i]) == -1) 
+					references.push(vulns[i]);
+			}
+		}
+	}
+	
+	if (componentStr && versionStr && detectionStr && references && references.length > 0) {
+		details = "Detected Javascript library [bold][dark]" + componentStr + "[/dark][/bold] version [dark][bold]" + versionStr + "[/dark][/bold].";
+		details = details + "[break]The version was detected from [bold]" + detectionStr + "[/bold].";
+		alert(details, references);
+	}
+}

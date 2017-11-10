@@ -1,0 +1,20 @@
+#include reporting_helpers.inc;
+//finger solaris disclosure test
+if(IsPortOpen(79)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port = 79;
+	socket.Timeout = 1;
+	socket.Connect();
+  if(socket.IsConnected){
+		socket.send("a b c d e f g h\r\n");
+		data = socket.Receive(true);		
+		if (data.indexOf("root") >=0 && data.indexOf("nobody") >=0)
+		{
+			Trace("solaris finger disclosure!");
+			Trace(data);	
+			ReportItem("Finger_solaris_disclosure.xml", "The finger server is running on TCP port 79.[break]The remote service returned: [break][pre]" + data + "[/pre]");	
+		}
+		socket.Close();	
+	}
+}

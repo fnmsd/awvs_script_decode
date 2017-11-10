@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Rlogin service running" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="low" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="information_disclosure,configuration,insecure_admin_access,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The rlogin service is running on this host. Rlogin allows users to log in on another host via a network, as if they were physically present at the computer. Rlogin has several serious security problems:
+[ul]
+[li]All information, including passwords, is transmitted unencrypted (making it vulnerable to interception).[/li]
+[li]The .rlogin (or .rhosts) file is easy to misuse (potentially allowing anyone to login without a password) - for this reason many corporate system administrators prohibit .rlogin files and actively search their networks for offenders.[/li]
+[li]The protocol partly relies on the remote party's rlogin client providing information honestly (including source port and source host name). A corrupt client is thus able to forge this and gain access, as the rlogin protocol has no means of authenticating other machines' identities, or ensuring that the rlogin client on a trusted machine is the real rlogin client.[/li]
+[li]The common practice of mounting users' home directories via NFS exposes rlogin to attack by means of fake .rhosts files - this means that any of NFS' (legion) security faults automatically plague rlogin.[/li]
+[/ul]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure.</Impact>
+		<Recommendation>If you are not using this service, it is recommended to disable it. Otherwise, replace it with SSH and its rlogin-equivalent slogin.</Recommendation>
+		<Reference database="Wikipedia rlogin" URL="http://en.wikipedia.org/wiki/Rlogin"/>
+	</TestDescription>
+</WebApplicationTest>

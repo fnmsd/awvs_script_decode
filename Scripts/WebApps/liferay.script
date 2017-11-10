@@ -1,0 +1,59 @@
+#include helpers.inc;
+#include reporting_helpers.inc;
+// **************************************************************************************							 
+function alert(uri, vxml, job, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = uri;
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	addHTTPJobToCrawler(job, 1, 1);
+	
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function test_json_api_auth_bypass(dir, uri)
+{
+	//trace(uri);
+	lastJob = new THTTPJob();
+	lastJob.verb = "POST";
+	lastJob.url  = dir.url;
+    
+    if (uri == '/') lastJob.uri  = uri + 'tunnel-web/secure/json';		
+    else lastJob.uri  = uri + '/tunnel-web/secure/json';
+    
+	lastJob.request.addHeader("Authorization", "Basic dGVzdEBsaWZlcmF5LmNvbTp0ZXN0", true);
+    lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);	
+	lastJob.request.body = 'serviceClassName=com.liferay.portal.service.UserServiceUtil&serviceMethodName=getUserById&serviceParameters=[userId]&userId=[9999999]';
+	
+	lastJob.execute();
+	
+	//trace(lastJob.responseStatus);
+	
+	if (!lastJob.wasError && !lastJob.notFound) 
+	{
+		if (lastJob.responseStatus == 200 && lastJob.response.body.indexOf('com.liferay.portal.NoSuchUserException: No User exists with the primary key 9999999') != -1)
+		{
+				// successful
+				alert(lastJob.uri, 'liferay_json_api_auth_bypass.xml', lastJob);
+				return true;				
+		}
+	}		
+	
+	return false;
+}
+/***********************************************************************************/
+/* main */
+/***********************************************************************************/	
+var dir = getCurrentDirectory(); 
+if (dir)
+{
+	var alreadyReportedWebApplication = getGlobalValue("detectedAppLiferay");
+	if (!alreadyReportedWebApplication)
+	{
+	    setGlobalValue("detectedAppLiferay", 1, true);           
+	    KBase("Liferay web application", "Liferay web application was detected in directory [dark][bold]" + dir.fullPath + "[/bold][/dark].");
+	}
+	test_json_api_auth_bypass(dir, dir.fullPath);
+}

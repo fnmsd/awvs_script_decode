@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Cross site scripting vulnerability in SimpleViewer" version="0.1" released="20080307" updated="20151125" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="xss" CVE="" CWE="CWE-79" CVSSVer="2.0" CVSSScore="4.4" CVSSDescr="AV:N/AC:M/Au:N/C:N/I:P/A:N" CVSSScoreTemp="4.5" CVSSScoreEnv="4.3" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>SimpleViewer is a free, customizable image gallery. It allows you to display your images on any web page in a professional and intuitive way. A cross site scripting vulnerability was reported in older versions of the SimpleViewer library that may allow an attacker to execute arbitrary Javascript code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+An attacker can steal the session cookie and take over the account, impersonating the user.
+It is also possible to modify the content of the page presented to the user.</Impact>
+		<Recommendation>Upgrade to the latest version of SimpleViewer.</Recommendation>
+		<Reference database="Cross Site Scripting (XSS) &amp; Content spoofing in SimpleViewer" URL="http://rm-rf.ninja/releases/SimpleViewer.txt"></Reference>
+		<Reference database="SimpleViewer" URL="http://www.simpleviewer.net/simpleviewer/"></Reference>
+	</TestDescription>
+</WebApplicationTest>

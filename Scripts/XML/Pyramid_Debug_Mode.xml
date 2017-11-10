@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Pyramid debug mode" version="0.1" released="20080307" updated="20151105" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>This Pyramid web application is running in debug mode. If you set the environment variable [bold][dark]PYRAMID_DEBUG_ALL[/dark][/bold], the app will be run in debug/development mode. In this mode, several features intended for convenience while developing will be enabled. While in debug mode the application may disclose sensitive information (such as parts of the source code, local filesystem paths, ...).</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Possible sensitive information disclosure. An attacker can use this information to conduct further attacks.</Impact>
+		<Recommendation>In production is not recommended to run Pyramid in debug mode.</Recommendation>
+		<Reference database="Environment Variables and .ini File Settings" URL="http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/environment.html"/></TestDescription>
+</WebApplicationTest>

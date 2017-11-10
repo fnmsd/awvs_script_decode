@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Ektron CMS400.NET ContentRatingGraph.aspx SQL injection" version="0.1" released="20080307" updated="20140307" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="known_vulnerabilities,sql_injection" CVE="CVE-2008-5122" CWE="CWE-89" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="6.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Ektron CMS400.NET is vulnerable to SQL injection. A remote attacker could send specially-crafted SQL statements to the ContentRatingGraph.aspx script using the res parameter, which could allow the attacker to view, add, modify or delete information in the back-end database.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can view, add, modify or delete information from the back-end database</Impact>
+		<Recommendation>Upgrade to the latest version Ektron CMS.</Recommendation>
+		<Reference database="Ektron CMS400.NET ContentRatingGraph.aspx SQL injection" URL="http://xforce.iss.net/xforce/xfdb/43268"></Reference>
+		<Reference database="Ektron CMS400.NET 'ContentRatingGraph.aspx' SQL Injection Vulnerability" URL="http://www.securityfocus.com/bid/29857/exploit"></Reference>
+	</TestDescription>
+</WebApplicationTest>

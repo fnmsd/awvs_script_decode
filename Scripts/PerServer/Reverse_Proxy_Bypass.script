@@ -1,0 +1,65 @@
+#include helpers.inc;
+#include classMatches.inc;
+// **************************************************************************************							 
+function alert(fname, matchedText)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+	ri.setHttpInfo(lastJob);
+	AddReportItem(ri);	
+}							 
+// **************************************************************************************							 
+function request(uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = scanURL;
+	lastJob.addCookies = false;
+	lastJob.verb = 'GET';
+	lastJob.URI = uri;
+    lastJob.autoRedirect = false;
+	lastJob.execute();	
+	if (!lastJob.wasError && lastJob.response.msg2 == 200)
+	{
+		return true;
+	}	
+	
+	return false;
+}
+// **************************************************************************************
+function TestReverseProxyBypass()
+{
+	var urls = [
+                    "@testasp.vulnweb.com/rpb.png",
+                    ":@testasp.vulnweb.com/rpb.png",
+                    "@testasp.vulnweb.com::80/rpb.png",
+                    ":@testasp.vulnweb.com::80/rpb.png"
+				];
+	
+	matches.plainArray = [
+                        '39a6ea3246b507782676a6d79812fa1d29e12e9c'
+					  ];
+	
+	matches.regexArray = [
+					  ];	
+	
+	for (var i=0;i<urls.length;i++)
+	{ 	
+		if (request(urls[i]))
+		{
+			var matchedText = matches.searchOnText(lastJob.response.body);	
+			if (matchedText)
+            {
+				alert("Reverse_Proxy_Bypass.xml"); 	
+                break;
+            }
+		}
+	}
+}
+/***********************************************************************************/
+/* main entry point */
+var matches = new classMatches();
+var lastJob = null;
+TestReverseProxyBypass();

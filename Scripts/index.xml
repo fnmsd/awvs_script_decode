@@ -1,0 +1,1213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DirIndex>
+    <description>Scripts for testing network services</description>
+    <file name="Hashbang_Ajax_Crawling.script">
+        <description>Analyzes the responses looking for Ajax Hashbang URLs</description>
+    </file>     
+    <file name="IIS_service_cnf.script">
+        <description>Tests for an exposed Microsoft IIS service configuration. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="dns_open_recursion.script">
+        <description>Tests for a Domain Name System (DNS) server on the remote host that allows querys for third-party names. Publicly available DNS servers should only respond to queries regarding hosts to which they are authoritative for. </description>
+    </file>
+    <file name="J2EE_Audit.script">
+        <description>Tests for known vulnerabilities in J2EE web applications</description>
+    </file>
+    <file name="smtp_commands.script">
+        <description>Tests what SMTP commands are enabled on the remote host</description>
+    </file>
+    <file name="7-Stored_File_Tampering.script">
+        <description>Tests for stored file tampering vulnerabilities</description>
+    </file>
+    <file name="WebDAV_Audit.script">
+        <description>Tests for a WebDAV service running on the remote host</description>
+    </file>
+    <file name="Arbitrary_File_Creation.script">
+        <description>Tests if a web application has scripts which are possibly vulnerable to arbitrary file creation. Such an issue allows an attacker to influence calls to functions which create files/directories and create arbitrary files. Due to a lack of input validation, an attacker can supply directory traversal sequences followed by an arbitrary file name to create specific files</description>
+    </file>
+    <file name="phpmyadmin.script">
+        <description>Tests for vulnerabilities in phpMyAdmin web applications</description>
+    </file>
+    <file name="Invalid_Page_Text_Search.script">
+        <description>Tests for various information disclosure vulnerabilities in the text of the web page source code (such as error messages, email addresses, etc)</description>
+    </file>
+    <file name="wordpress_6.script">
+        <description>Tests for vulnerabilities in WordPress W3 Total Cache plugin</description>
+    </file>
+    <file name="Hadoop_Cluster_Web_Interface.script">
+        <description>Tests for an exposed Hadoop cluster web interface</description>
+    </file>
+    <file name="Expression_Language_Injection.script">
+        <description>Tests for scripts that are vulnerable to Expression Language Injection attacks. Expression Language (EL), which was developed as part of JSTL (Java Server Pages Standard Tag Library), provides easy ways of outputting data from an object model that more closely resembles pure scripting languages</description>
+    </file>
+    <file name="Javascript_Libraries_Audit.script">
+        <description>Tests a variety of JavaScript libraries for known vulnerabilities</description>
+    </file>
+    <file name="wordpress_5.script">
+        <description>Tests for WordPress XML-RPC authentication brute force</description>
+    </file>
+    <file name="Clipboard_SWF_Audit.script">
+        <description>Tests for known cross-site scripting vulnerabilities in clipboard.swf in the SyntaxHighlighter Evolved WordPress plugin</description>
+    </file>
+    <file name="symphony.script">
+        <description>Tests for vulnerabilities in Symphony XSLT CMS web applications</description>
+    </file>
+    <file name="mediawiki.script">
+        <description>Tests for vulnerabilities in MediaWiki web applications</description>
+    </file>
+    <file name="PHP_User_Controlled_Vulns.script">
+        <description>Tests for PHP user controlled vulnerabilities</description>
+    </file>
+    <file name="FCKEditor_Audit.script">
+        <description>Tests if the FCKeditor service is running on the remote host. FCKeditor contains functionality to handle file uploads and file management. A remote attacker could use this functionality to upload malicous executable files on the system</description>
+    </file>
+    <file name="Crossdomain_XML.script">
+        <description>Tests for an insecure crossdomain.xml file. The browser security model normally prevents web content from one domain from accessing data from another domain. This is commonly known as the &quot;same-origin policy&quot;. </description>
+    </file>
+    <file name="mantisbt.script">
+        <description>Tests for vulnerabilities in MantisBT web applications</description>
+    </file>
+    <file name="phpThumb_Audit.script">
+        <description>Tests for phpThumb() used in a web application. phpThumb() versions 1.7.9 and below are vulnerable to a command injection vulnerability that allows an attacker to execute arbitrary commands. This vulnerability could lead to remode command execution</description>
+    </file>
+    <file name="Weak_Password_Basic_Auth.script">
+        <description>Tests for weak passwords in Basic Authentication</description>
+    </file>
+    <file name="Database_Backup.script">
+        <description>Tests for database backups on the remote host</description>
+    </file>
+    <file name="cvs_server.script">
+        <description>Tests for a Concurrent Versions System (CVS) server on the remote host. CVS is, an important component of Source Configuration Management (SCM). This service can lead to  information and source code disclosure</description>
+    </file>
+    <file name="vmware_server.script">
+        <description>Tests if a VMware server service is running on a remote host</description>
+    </file>
+    <file name="joomla_7.script">
+        <description>Tests for Joomla! Akeeba Backup extension access control bypass</description>
+    </file>
+    <file name="PHP_CGI_RCE_Force_Redirect.script">
+        <description>Tests for Apache / PHP 5.x - cgi-bin remote code execution vulnerability</description>
+    </file>
+    <file name="IBM_WCM_XPath_Injection.script">
+        <description>Tests for known XPath injection vulnerabilities in IBM Web Content Manager</description>
+    </file>
+    <file name="proxy_use_any_port.script">
+        <description>Tests for a proxy server running on the remote host that can be used to connect to arbitrary ports. Allowing HTTP requests to be sent to arbitrary ports may allow an attacker to bypass firewalls and connect to sensitive ports via the vulnerable proxy server</description>
+    </file>
+    <file name="smb_audit.script">
+        <description>Tests if an SMB service is running on the remote host</description>
+    </file>
+    <file name="Oracle_Reports_Audit.script">
+        <description>Tests for known vulnerabilities in Oracle Reports</description>
+    </file>
+    <file name="drupal_2.script">
+        <description>Tests for Drupal Views module information disclosure vulnerability</description>
+    </file>
+    <file name="dns_cache_snooping.script">
+        <description>Tests for a Domain Name System (DNS) server vulnerable to DNS cache snooping attacks on the remote host. DNS cache snooping is the process of determining whether a given Resource Record (RR) is, or is not present in a given DNS cache. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="drupal_1.script">
+        <description>Tests for Drupal arbitrary PHP code execution and Information disclosure vulnerabilities</description>
+    </file>
+    <file name="ip_address_info.script">
+        <description>Retrieves information about the IP address of the remote host</description>
+    </file>
+    <file name="joomla_4.script">
+        <description>Tests for Joomla! v3.2.1 SQL injection</description>
+    </file>
+    <file name="windows_terminal_services.script">
+        <description>Tests for Windows Terminal Services</description>
+    </file>
+    <file name="Struts2_ClassLoader_Manipulation.script">
+        <description>Tests for the default upload mechanism in Apache Struts2 is based on Commons FileUpload version 1.3 which is vulnerable and allows DoS attacks</description>
+    </file>
+    <file name="webmin_ping.script">
+        <description>Tests if a Webmin service is running on the remote host</description>
+    </file>
+    <file name="Rails_Weak_secret_token.script">
+        <description>Tests for weak/known secret tokens in Ruby on Rails web applications that are used to sign cookies that the application sets. This vulnerability could lead to user impersonation, authentication bypass and remote code execution through de-serialization of a crafted Ruby object</description>
+    </file>
+    <file name="wordpress_11.script">
+        <description>Tests for vulnerabilities in OptimizePress WordPress plugins</description>
+    </file>
+    <file name="oracle_HTTP.script">
+        <description>Tests for an Oracle HTTP service running on the remote host</description>
+    </file>
+    <file name="Email_Header_Injection.script">
+        <description>Tests for Email Header Injection vulnerabilities</description>
+    </file>
+    <file name="mysqlInfo.script">
+        <description>Tests for a MySQL service running on the remote host</description>
+    </file>
+    <file name="Server_Side_Request_Forgery.script">
+        <description>Tests for Server Side Request Forgery vulnerabilities</description>
+    </file>
+    <file name="JSP_Authentication_Bypass.script">
+        <description>Tests for authentication bypass vulnerabilities on JSP pages protected using basic HTTP authentication</description>
+    </file>
+    <file name="Tomcat_Hello_JSP_XSS.script">
+        <description>Tests for various cross-site scripting (XSS) vulnerabilities in the Apache Tomcat's &quot;Hello.jsp&quot; file. This file makes part of the installed Apache Tomcat documentation files</description>
+    </file>
+    <file name="identd_ping.script">
+        <description>Tests for the IDENT Protocol service on the remote host. The IDENT Protocol service helps identify the user of a particular TCP connection. The IDENT protocol may be exploited in various ways to provide an attacker with unauthorized access to the system</description>
+    </file>
+    <file name="dns_zone_transfer.script">
+        <description>Tests for a Domain Name System (DNS) server on the remote host allows zone transfers. A DNS zone transfer is a transaction commonly used for replicating databases containing DNS data across a set of DNS servers. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="proxy_open.script">
+        <description>Tests for an open proxy server running on the remote host. An open proxy server is a proxy that can be accessed by any Internet user</description>
+    </file>
+    <file name="mdns_zeroconf_ping.script">
+        <description>Tests for a Zero-configuration networking (zeroconf) service on the remote host</description>
+    </file>
+    <file name="tftp_ping.script">
+        <description>Tests for a TFTP service running on the remote host</description>
+    </file>
+    <file name="Rails_Audit_Routes.script">
+        <description>Tests for known vulnerabilities in Ruby on Rails web applications</description>
+    </file>
+    <file name="9-Multiple_Web_Servers.script">
+        <description>Tests for multiple web servers running on the remote host</description>
+    </file>
+    <file name="ftp_anonymous.script">
+        <description>Tests for an FTP server allowing anonymous authentication on the remote host. Anonymous FTP authentication allows anyone without a user account to gain limited access to certain directories on the system. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="moinmoin.script">
+        <description>Tests for vulnerabilities in MoinMoin Wiki web applications</description>
+    </file>
+    <file name="ASP_NET_Oracle_Padding.script">
+        <description>Tests for ASP.NET Padding Oracle Vulnerability. ASP.NET uses encryption to hide sensitive data and protect it from tampering by the client. A vulnerability in the ASP.NET encryption implementation can allow an attacker to decrypt and tamper with this data</description>
+    </file>
+    <file name="Frontpage_authors_pwd.script">
+        <description>Tests if the Microsoft FrontPage &quot;authors.pwd&quot; file is available. This file contains sensitive information and should not be available. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Rails_Devise_Authentication_Password_Reset.script">
+        <description>Tests for misconfigurations in Ruby on Rails' routing. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="phpMoAdmin_Remote_Code_Execution.script">
+        <description>Tests for known Remote Code Execution vulnerabilities in phpMoAdmin</description>
+    </file>
+    <file name="Session_Fixation.script">
+        <description>Tests for session fixation. Session fixation is an attack that permits an attacker to hijack a valid user session. This vulnerability could lead to authentication bypass</description>
+    </file>
+    <file name="Error_Page_Path_Disclosure.script">
+        <description>Tests for error page path disclosure by requesting a page that doesn't exist. If one or more fully qualified path names is found in a response an attacker could learn the file system structure from the web server. This vulnerability may lead to information disclosure and also used to escalate attacks</description>
+    </file>
+    <file name="Rails_Audit.script">
+        <description>Tests for known vulnerabilities in Ruby on Rails</description>
+    </file>
+    <file name="mssql_bruteforce.script">
+        <description>Tests for Microsoft SQL Server using a weak password on the remote host</description>
+    </file>
+    <file name="SQL_Injection_In_Basic_Auth.script">
+        <description>Tests for SQL Injection vulnerabilities in Basic Authentication of a web application</description>
+    </file>
+    <file name="Apache_CN_Discover_New_Files.script">
+        <description>Tests the abuse of the Apache HTTP Server Content Negotiation (Multiviews) functionality to discover new files on an Apache server. This vulnerability can lead to information disclosure</description>
+    </file>
+    <file name="imap_server.script">
+        <description>Tests for an IMAP service running on the remote host</description>
+    </file>
+    <file name="telnet_bruteforce.script">
+        <description>Tests if a Telnet server using a weak password on the remote host</description>
+    </file>
+    <file name="WADL_Files.script">
+        <description>Tests for the existance of WADL files, used to describe RESTful web services, and tests any discovered inputs for vulnerabiltiies</description>
+    </file>
+    <file name="ldap_audit.script">
+        <description>Tests for an IMAP server allowing anonymous binds on the remote host</description>
+    </file>
+    <file name="Unprotected_phpMyAdmin_Interface.script">
+        <description>Tests for an unprotected phpMyAdmin interface. phpMyAdmin is an application that provides a web-based interface for the administration of MySQL databases. The initial MySQL root account password is blank, allowing an attacker to connect to the MySQL server as &quot;root&quot;, without a password, and be granted all privileges</description>
+    </file>
+    <file name="SQL_Injection_In_URI.script">
+        <description>Tests for SQL Injection vulnerabilities in the uniform resource identifier (URI)</description>
+    </file>
+    <file name="Generic_Oracle_Padding.script">
+        <description>Tests for scripts that are vulnerable to a Padding Oracle Attack. The Padding Oracle Attack is a powerful side-channel attack against CBC-mode encryption with PKCS#5 padding. If there is an oracle which on receipt of a ciphertext, decrypts it and then replies to the sender whether the padding is correct or not, that oracle can be used to efficiently decrypt data without knowing the encryption key</description>
+    </file>
+    <file name="Tiny_MCE_Audit.script">
+        <description>Tests for vulnerable versions of the TineMCE library</description>
+    </file>
+    <file name="smtp_open_relay.script">
+        <description>Tests if an SMTP server on the remote host is acting as an open mail relay. An open mail relay is an SMTP server configured in such a way that allows anyone on the Internet to send e-mail through it, not just mail destined to or originating from known users. By processing mail that is neither for, nor from a local user, an open relay makes it possible for an attacker to route large volumes of spam through the SMTP server</description>
+    </file>
+    <file name="phpLiteAdmin_Audit.script">
+        <description>Tests for phpLiteAdmin using a default password on the remote host</description>
+    </file>
+    <file name="Amazon_S3_Buckets_Audit.script">
+        <description>Tests if a web application is using a public Amazon S3 (Simple Storage Service) bucket. Public Amazon S3 buckets will list all of the files and directories it contains. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="REST_Discovery_And_Audit_File.script">
+        <description>Tests discovered RESTful web services for various vulnerabilities</description>
+    </file>
+    <file name="ASP-NET_Application_Trace.script">
+        <description>Tests if the ASP.NET application trace is enabled. This file contains sensitive information such as Session ID values and the physical path to the requested file</description>
+    </file>
+    <file name="Web_Statistics.script">
+        <description>Tests for unprotected web statistics scripts (such as AWStats) on the remote host</description>
+    </file>
+    <file name="PHP_CGI_RCE.script">
+        <description>Tests for PHP-CGI remote code execution. When PHP is used in a CGI-based setup (such as Apache HTTP Server's mod_cgid), the php-cgi receives a processed query string parameter as command line arguments which allows command-line switches, such as -s, -d or -c to be passed to the php-cgi binary. This vulnerability could lead to source code disclousure arbitrary code execution</description>
+    </file>
+    <file name="Possible_Sensitive_Files.script">
+        <description>Tests for common sensitive resources such as password files, configuration files, log files, include files, statistics data, database dumps... This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Fantastico_Filelist.script">
+        <description>Tests for a Fantastico fileslist. Fantastico creates a file named fantastico_fileslist.txt that is publicly available. This file contains a list of all the files from the current directory. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="wordpress_8.script">
+        <description>Tests for weak credentials of WordPress users</description>
+    </file>
+    <file name="JetBrains_Idea_Project_Directory.script">
+        <description>Tests for JetBrains .idea project directory. The .idea directory contains a set of configuration files (.xml) for your project. These configuration files contain information core to the project itself, such as names and locations of its component modules, compiler settings, etc</description>
+    </file>
+    <file name="CVS_Repository.script">
+        <description>Tests if a CVS Web Repository exists on a webpage. The CVS directory is a special directory. CVS/Entries lists files and subdirectories registered into the server. CVS/Repository contains the path to the corresponding directory in the repository. CVS/Root contains the path to the repository</description>
+    </file>
+    <file name="MongoDB_Audit.script">
+        <description>Tests fora MongoDB web interface open on an external network interface on the remote host</description>
+    </file>
+    <file name="upnp_ping.script">
+        <description>Tests if a UPnP (Universal Plug and Play) service is running on a remote host. The UPnP protocol does not implement any authentication, so UPnP device implementations must implement their own authentication mechanisms, or implement the Device Security Service</description>
+    </file>
+    <file name="drupal.script">
+        <description>Tests for vulnerabilities in Drupal web applications</description>
+    </file>
+    <file name="GlassFish_Audit.script">
+        <description>Tests if the GlassFish service is running on the remote host</description>
+    </file>
+    <file name="Host_Based_Attack_Reset_Password.script">
+        <description>Tests for Password Reset Poisoning vulnerabilities</description>
+    </file>
+    <file name="Email_Injection.script">
+        <description>Tests for scripts that are vulnerable to Email injection attacks. Email injection is a security vulnerability that allows malicious users to send email messages using someone else's server without prior authorization. A malicious spammer could use this tactic to send large numbers of messages anonymously</description>
+    </file>
+    <file name="wordpress.script">
+        <description>Tests for vulnerabilities in the TimThumb WordPress plugin</description>
+    </file>
+    <file name="Mercurial_Repository.script">
+        <description>Tests if Mercurial metadata directory (.hg) exists in a directory. An attacker can extract sensitive information by requesting the hidden metadata directory that version control tool Mercurial creates</description>
+    </file>
+    <file name="Text_Search_Dir.script">
+        <description>Tests for various information disclosure vulnerabilities in the text of the web page source code (such as error messages, email addresses, etc)</description>
+    </file>
+    <file name="XXE_Folder.script">
+        <description>Tests for XML external entity injection (XXE)</description>
+    </file>
+    <file name="xdmcp_ping.script">
+        <description>Tests if a X Display Manager Control Protocol (XDMCP)  service is running on a remote host. XDMCP allows the starting of a session on an X server from the same or another computer. An attacker may use this service to mount a dictionary attack against the remote host to try to log in remotely. Furthermore, all information, including passwords, is transmitted unencrypted</description>
+    </file>
+    <file name="dns_cache_poisoning.script">
+        <description>Tests for a Domain Name System (DNS) server vulnerable to DNS cache poisoning attacks on the remote host. In a DNS cach poisoning attack, data is introduced into a DNS resolver's cache, causing the name server to return an incorrect IP address, diverting traffic to the attacker</description>
+    </file>
+    <file name="Core_Dump_Files.script">
+        <description>Tests for the existance of core dump files consisting of the recorded state of the working memory of a computer program at a specific time, generally a program has crashed or otherwise terminated abnormally. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="nagios.script">
+        <description>Tests for vulnerabilities in Nagios web applications</description>
+    </file>
+    <file name="Django_Admin_Weak_Password.script">
+        <description>Tests for weak passwords in Django applications</description>
+    </file>
+    <file name="joomla_2.script">
+        <description>Tests for Joomla! JCE extension arbitrary file upload</description>
+    </file>
+    <file name="Minify_Audit.script">
+        <description>Tests for known vulnerabilities in Minify, a PHP JavaScript and CSS minification server</description>
+    </file>
+    <file name="X11_server.script">
+        <description>Tests if an X11 server is running on a remote host. The remote X11 server accepts connections from any host. Any client that can connect to your server is able to monitor your keystrokes and perform other (possibly malicious) actions. This means that, if you do not enforce any type of access control for such clients, anyone on the internet can potentially see what you are typing at xterms or other X clients</description>
+    </file>
+    <file name="Telnet_ping.script">
+        <description>Tests for a Telnet service is running on the remote host. Telnet allows users to log in on another host via a network, as if they were physically present at the computer. rlogin has several serious security vulnerabilities including all data (including passwords) transmitted in cleartext, making it making it vulnerable to man-in-the-middle attacks</description>
+    </file>
+    <file name="Timthumb_Audit.script">
+        <description>An image resizing utility named TimThumb is a widely used PHP script for image manipulation. Some versions of this utility contain a security vulnerability that could lead to remote code execution</description>
+    </file>
+    <file name="Subdomain_Takeover.script">
+        <description>Tests for known vulnerabilities in Apache Tomcat</description>
+    </file>
+    <file name="Snoop_Servlet.script">
+        <description>Tests if a Snoop serverlet is running on the remote host. This servlet returns information about the HTTP request itself. While useful for debugging, this vulnerability can lead to information disclosure</description>
+    </file>
+    <file name="Amazon_S3_Ping.script">
+        <description>Checks if Amazon S3 (Simple Storage Service) is accessible. If it is not accessible (for example when scanning web aplications in networks without an internet connection), certain tests that require internet access will be disabled (for example tests requiring AcuMonitor)</description>
+    </file>
+    <file name="Same_Site_Scripting.script">
+        <description>Tests for a common DNS misconfiguration which can lead to same-site scripting</description>
+    </file>
+    <file name="Apache_Geronimo_Default_Administrative_Credentials.script">
+        <description>Tests if the Apache Geronimo Administration Console is using the default credentials</description>
+    </file>
+    <file name="umbraco.script">
+        <description>Tests for vulnerabilities in Umbraco web applications</description>
+    </file>
+    <file name="Apache_Axis2_Audit.script">
+        <description>Tests for known vulnerabilities in Apache Axis (Apache eXtensible Interaction System)</description>
+    </file>
+    <file name="VMWare_Directory_Traversal.script">
+        <description>Tests for known directory traversal and privilege escalation vulnerabilities in various VMWare products</description>
+    </file>
+    <file name="Options_Server_Method.script">
+        <description>Tests if the OPTIONS method is enabled. The OPTIONS method provides a list of the methods that are supported by the web server. It represents a request for information about the communication options available on the request/response chain identified by the Request-URI. </description>
+    </file>
+    <file name="Html_Authentication_Audit.script">
+        <description>Tests for weak passwords in HTML authentication forms</description>
+    </file>
+    <file name="2-Stored_XSS.script">
+        <description>Tests for stored cross-site scripting (XSS) vulnerabilities</description>
+    </file>
+    <file name="ntp_ping.script">
+        <description>Tests for an NTP service running on the remote host</description>
+    </file>
+    <file name="SFTP_Credentials_Exposure.script">
+        <description>Tests for exposed Secure File Transfer Protocol (SFTP) credentials</description>
+    </file>
+    <file name="Apache_Tomcat_Directory_Traversal.script">
+        <description>Tests for Apache version on Windows which is vulnerable to directory traversal attacks. The issue is related to the failure to properly process the backslash (\) character, which may be used as a directory delimiter. All Apache versions up to 2.0.38 are affected</description>
+    </file>
+    <file name="Tomcat_Examples.script">
+        <description>Tests for the existence of any Apache Tomcat example applications available on the remote host. It is recommended to delete the example applications</description>
+    </file>
+    <file name="ssh_random.script">
+        <description>Tests for a weakness that has been discovered in the random number generator used by OpenSSL on Debian and Ubuntu systems.  As a result of this weakness, certain encryption keys are much more common than they should be, such that an attacker could guess the key through a brute-force attack given minimal knowledge of the system. </description>
+    </file>
+    <file name="PHP_SuperGlobals_Overwrite.script">
+        <description>Tests if the register_globals setting in PHP's configuration file (php.ini) has any security issues. This setting (which can be either On or Off) instructs if the contents of the EGPCS (Environment, GET, POST, Cookie, Server) variables are registered as global variables. This feature is a great security risk, and you should ensure that register_globals is Off for all scripts (as of PHP 4.2.0 this is the default)</description>
+    </file>
+    <file name="memcached_ping.script">
+        <description>Tests for a Memcached service running on an externally accessible interface on the remote host</description>
+    </file>
+    <file name="ircd_info.script">
+        <description>Tests for an IRC service running on the remote host and exctracts statistics and version information</description>
+    </file>
+    <file name="ColdFusion_User_Agent_XSS.script">
+        <description>Tests for ColdFusion User-Agent Cross-Site Scripting. Input passed to the &quot;User-Agent&quot; header parameter it isn't properly sanitised before being returned to the user on 404 or 500 error. This can be exploited to execute arbitrary HTML and script code in a user's browser session in context of an affected site</description>
+    </file>
+    <file name="Postgresql_bruteforce.script">
+        <description>Tests for PostgreSQL using a weak password on the remote host</description>
+    </file>
+    <file name="Directory_Traversal.script">
+        <description>Tests for scripts that are vulnerable to directory traversal attacks. Directory Traversal is a vulnerability which allows attackers to access restricted directories and execute commands outside of the web server's root directory</description>
+    </file>
+    <file name="snmp_ping.script">
+        <description>Tests for an SNMP service running on the remote host</description>
+    </file>
+    <file name="Rails_XML_YAML.script">
+        <description>Tests for Ruby on Rails XML processor YAML deserialization code execution</description>
+    </file>
+    <file name="Open_Redirect.script">
+        <description>Tests for Open Redirect vulnerabilities</description>
+    </file>
+    <file name="kayakofusion.script">
+        <description>Tests for vulnerabilities in Kayako Fusion web applications</description>
+    </file>
+    <file name="CakePHP_Audit.script">
+        <description>Tests for the CakePHP framework running on the remote host. Tests for a file inclusion attacks because of CakePHP's use of the unserialize() function on unchecked user input. This makes it possible for an attacker to inject arbitary objects into the scope</description>
+    </file>
+    <file name="Server_Directory_Listing.script">
+        <description>Tests if a web server is configured to display the list of files contained in a directory. This is not recommended because the directory may contain files that are not normally exposed through links on the web site. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="WAF_Detection.script">
+        <description>Tests for a Web Application Firewall (WAF) running on the remote host</description>
+    </file>
+    <file name="lighttpd_v1434_Sql_Injection.script">
+        <description>Tests for known SQL injection vulnerabilities in Lighttpd</description>
+    </file>
+    <file name="proxy_use_connect_to_itself.script">
+        <description>Tests for a proxy server on the remote host that allows the users to perform repeated CONNECT requests to itself. This may allow an attacker to perform a denial of service attack by saturating the proxy CPU, memory or file descriptors</description>
+    </file>
+    <file name="File_Inclusion.script">
+        <description>Tests for scripts that are vulnerable to file inclusion attacks. Scripts may include a file where the file name is determined using user-supplied data. A vulnerability arises when this data is not properly validated before being passed to the include function. </description>
+    </file>
+    <file name="8-Stored_PHP_Code_Execution.script">
+        <description>Tests for stored PHP code execution vulnerabilities</description>
+    </file>
+    <file name="JBoss_Seam_actionOutcome.script">
+        <description>Tests for JBoss Seam Framework remote code execution</description>
+    </file>
+    <file name="sybase_bruteforce.script">
+        <description>Tests for SAP Sybase ASE (Adaptive Server Enterprise) using a weak password on the remote host</description>
+    </file>
+    <file name="finger_ping.script">
+        <description>Tests for an Finger Protocol service on the remote host. The Finger Protocol service is used to find out information about users on a remote system and can usually provide a list of logged-in users or detailed information on a single user. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Zend_Framework_Config_File.script">
+        <description>Tests for Zend framework configuration file information disclosure</description>
+    </file>
+    <file name="Plesk_Agent_SQL_Injection.script">
+        <description>Tests for known SQL injection vulnerabilities in Odin Plesk</description>
+    </file>
+    <file name="File_Tampering.script">
+        <description>Tests for scripts that are vulnerable to file tampering by checking if user input gets written to a file from the server. It depends on the file that gets written and how/if user input is santitized before being written to this file</description>
+    </file>
+    <file name="4-Stored_File_Inclusion.script">
+        <description>Tests for stored file inclusion vulnerabilities</description>
+    </file>
+    <file name="Postgresql_ping.script">
+        <description>Tests for a PostgreSQL service running on the remote host</description>
+    </file>
+    <file name="rsync_ping.script">
+        <description>Tests if an RSync service is running on the remote host</description>
+    </file>
+    <file name="Apache_Proxy_CONNECT_Enabled.script">
+        <description>Tests if the HTTP method CONNECT is enabled in the Apache proxy</description>
+    </file>
+    <file name="Track_Trace_Server_Methods.script">
+        <description>Tests for enabled TRACK and TRACE HTTP methods on the remote host</description>
+    </file>
+    <file name="dotnetnuke.script">
+        <description>Tests for vulnerabilities in DotNetNuke web applications</description>
+    </file>
+    <file name="IIS51_Directory_Auth_Bypass.script">
+        <description>Tests for the Microsoft IIS 5.1 Directory Authentication Bypass vulnerability</description>
+    </file>
+    <file name="echo_ping.script">
+        <description>Tests for an Echo Protocol service on the remote host. The Echo Protocol service was intended for testing and measurement purposes. This service sends back any data it receives, with no modification</description>
+    </file>
+    <file name="Jenkins_Audit.script">
+        <description>Tests for known vulnerabilities in Jenkins</description>
+    </file>
+    <file name="3-Stored_SQL_Injection.script">
+        <description>Tests for stored SQL injection vulnerabilities</description>
+    </file>
+    <file name="ColdFusion_v9_Solr_Exposed.script">
+        <description>Tests for ColdFusion 9 Solr service exposed. This vulnerability could allow access to collections created by the Solr service to be accessed from any external machine using a specific URL. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="crossdomain_xml.script">
+        <description>Tests for an insecure crossdomain.xml file. An insecure crossdomain.xml file may expose the domain to information disclosure and request forgery</description>
+    </file>
+    <file name="joomla_9.script">
+        <description>Test for Joomla! VirtueMart extension access control bypass</description>
+    </file>
+    <file name="joomla_10.script">
+        <description>Test for Joomla! SQL injection vulnerability (v3.2 to v3.4.4)</description>
+    </file>
+    <file name="Apache_Server_Information.script">
+        <description>Tests if Apache displays /server-info information about the Apache configuration. If you are not using this feature, disable it</description>
+    </file>
+    <file name="Struts2_ClassLoader_Manipulation2.script">
+        <description>Tests for the default upload mechanism in Apache Struts2 is based on Commons FileUpload version 1.3 which is vulnerable and allows DoS attacks</description>
+    </file>
+    <file name="chargen_ping.script">
+        <description>Tests for a running Character Generator Protocol (CHARGEN) service on the remote host. The CHARGEN service was intended for testing, debugging and measurement purposes and may listen on both TCP and UDP protocols. It can be spoofed into sending data from one service on one host to another service on another host, causing an infinite loop and creating a denial of service (DoS) attack</description>
+    </file>
+    <file name="movabletype.script">
+        <description>Tests for vulnerabilities in Movable Type web applications</description>
+    </file>
+    <file name="htaccess_File_Readable.script">
+        <description>Tests if a directory contains an .htaccess file that is readable. This may indicate a server misconfiguration. .htaccess files are designed to be parsed by the web server and should not be directly accessible. These files could contain sensitive information that could help an attacker conduct further attacks</description>
+    </file>
+    <file name="Server_Directory_Traversal.script">
+        <description>Tests for directory traversal vulnerabilities. Directory traversal allows an attacker to access restricted directories outside of the web server's root directory</description>
+    </file>
+    <file name="oracle_version.script">
+        <description>Tests for an Oracle Database service running on the remote host</description>
+    </file>
+    <file name="Grails_Database_Console.script">
+        <description>Tests for a database console the Grails development environment provides. This database should not should not be available in production environments as it leaks sensitive information about the database structure and permits the execution of SQL queries. This vulnerability could lead to information disclosure and arbitrary SQL execution</description>
+    </file>
+    <file name="Struts2_Remote_Code_Execution.script">
+        <description>Tests for Object Graph Navigation Language (OGNL) expression injection vulnerabilities in Apache Struts2. Apache Struts 2 is an open-source web application framework for developing Java EE web applications</description>
+    </file>
+    <file name="proxy_use_connect.script">
+        <description>Tests for a proxy server running on the remote host that can be used to send CONNECT requests. Allowing CONNECT requests to be sent to arbitrary ports may allow an attacker to bypass firewalls and connect to sensitive ports via the vulnerable proxy server. </description>
+    </file>
+    <file name="vnc_web.script">
+        <description>Tests for security issues in the VNC web interface</description>
+    </file>
+    <file name="ssl_v2_hello_overflow.script">
+        <description>Tests if the remote host is using a vulnerable version of the Mozilla Network Security Services (NSS) Library. This vulnerability could allow an attacker to cause a heap overflow and therefore execute arbitrary commands on the remote host</description>
+    </file>
+    <file name="pmwiki.script">
+        <description>Tests for vulnerabilities in PmWiki web applications</description>
+    </file>
+    <file name="APC.script">
+        <description>Tests for Alternative PHP Cache (APC) pages. The Alternative PHP Cache (APC) is a free and open opcode cache for PHP. Its goal is to provide a free, open, and robust framework for caching and optimizing PHP intermediate code. The installer comes with a small php script (apc.php) which gives you some useful information about APC. This script should not be available on a production environment as it may expose sensitive information. </description>
+    </file>
+    <file name="wordpress_13.script">
+        <description>Tests for vulnerabilities in the All in One SEO Pack WordPress plugin</description>
+    </file>
+    <file name="vbulletin.script">
+        <description>Tests for vulnerabilities in vBulletin web applications</description>
+    </file>
+    <file name="AJP_Audit.script">
+        <description>Tests for known vulnerabilities in the Apache Tomcat AJP Protocol</description>
+    </file>
+    <file name="Frontpage_Information.script">
+        <description>Tests for Microsoft Frontpage configuration information in a webpage. Configuration information might include the Frontpage version and may help an attacker to learn more about the remote host. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Bash_RCE.script">
+        <description>Tests for Bash Remote Code Execution (Shellshock)</description>
+    </file>
+    <file name="LDAP_Injection.script">
+        <description>Tests for scripts that are vulnerable to Lightweight Directory Access Protocol (LDAP) Injection attacks. LDAP is an open-standard protocol for both querying and manipulating X.500 directory services. When a web application fails to properly sanitize user-supplied input, it is possible for an attacker to alter the construction of an LDAP statement</description>
+    </file>
+    <file name="CoreDumpCheck.script">
+        <description>Tests for the existance of core dump files consisting of the recorded state of the working memory of a computer program at a specific time, generally a program has crashed or otherwise terminated abnormally. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Jetty_Audit.script">
+        <description>Tests for known vulnerabilities in Jetty</description>
+    </file>
+    <file name="Java_Application_Servers_Fuzz.script">
+        <description>Tests for the existance of files and directories that are common in Java-based servers. If these files/directories are found, they will be added to crawler for indexing</description>
+    </file>
+    <file name="Ioncube_Loader_Wizard.script">
+        <description>Tests for known vulnerabilities in Ironcube Loader</description>
+    </file>
+    <file name="horde.script">
+        <description>Tests for vulnerabilities in Horde web applications</description>
+    </file>
+    <file name="swat_ping.script">
+        <description>Tests if a Samba Web Administration Tool (SWAT) service is running on the remote host</description>
+    </file>
+    <file name="finger_solaris_disclosure.script">
+        <description>Tests for a vulnerability in the in.fingerd daemon in Sun Solaris versions 8 and earlier which could allow a remote attacker to obtain sensitive account information. A remote attacker can send a specially-crafted finger request to a vulnerable system to cause a list of accounts to be returned to the attacker. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Tomcat_Audit.script">
+        <description>Tests for an Apache Tomcat service running on the remote host</description>
+    </file>
+    <file name="wordpress_17.script">
+        <description>Tests for WordPress debug mode</description>
+    </file>
+    <file name="Debug_Parameters.script">
+        <description>Tests for possible debug parameters. To ease debugging of web applications some developers add hidden debug parameters to their application. When these parameters are present, the developers send additional output to the browser, often giving a trace of internal application details such as database connections, SQL queries, and variable states. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="10-Webmail_Audit.script">
+        <description>Tests for webmail applications using a weak password on the remote host</description>
+    </file>
+    <file name="rsh_ping.script">
+        <description>Tests for an remote shell (rsh) service running on the remote host. rsh is a command line program which can execute shell commands as another user, and on another computer across a network. This service is not ciphered. All information, including passwords, is transmitted unencrypted (making it vulnerable to interception)</description>
+    </file>
+    <file name="Basic_Auth_Over_HTTP.script">
+        <description>Tests for HTTP Basic authentication used over HTTP</description>
+    </file>
+    <file name="MongoDB_Injection.script">
+        <description>Tests for scripts that are vulnerable to MongoDB Injection attacks</description>
+    </file>
+    <file name="Plupload_Audit.script">
+        <description>Tests for a known Cross-site Scripting (XSS) vulnerabilities in Plupload</description>
+    </file>
+    <file name="GWT_Audit.script">
+        <description>Tests for known vulnerabilities in Google Web Toolkit</description>
+    </file>
+    <file name="ASP_NET_Padding_Oracle.script">
+        <description>Tests for a known vulnerability in the ASP.NET encryption implementation could allow an attacker to decrypt and tamper with encrypted data</description>
+    </file>
+    <file name="Rails_Mass_Assignment.script">
+        <description>Tests for scripts that are vulnerable to Rails Mass Assignment vulnerability</description>
+    </file>
+    <file name="GIT_Repository.script">
+        <description>Tests if the Git metadata directory (.git) exists in a directory. An attacker can extract sensitive information by requesting the hidden metadata directory that version control tool Git creates</description>
+    </file>
+    <file name="XPath_Injection.script">
+        <description>Tests for scripts that are vulnerable to XPath Injection attacks. XPath Injection is an attack technique used to exploit web sites that construct XPath queries from user-supplied input</description>
+    </file>
+    <file name="Http_Verb_Tampering.script">
+        <description>Tests if a web application is vulnerable to HTTP Verb Tampering, which is caused by improper server configuration and can be used to bypass web authentication and authorization</description>
+    </file>
+    <file name="Horde_IMP_Webmail_Exploit.script">
+        <description>Tests for known vulnerabilities in Horde Webmail</description>
+    </file>
+    <file name="sybase_ping.script">
+        <description>Tests for a SAP Sybase ASE (Adaptive Server Enterprise) service running on the remote host</description>
+    </file>
+    <file name="AjaxControlToolkit_Audit.script">
+        <description>Tests for known vulnerabiltiies in ASP.NET AJAX Control Toolkit</description>
+    </file>
+    <file name="Web_Server_Default_Welcome_Page.script">
+        <description>Tests for a web server default welcome page. Such pages may divulge sensitive information and lead to information disclosure</description>
+    </file>
+    <file name="REST_Discovery_And_Audit_Folder.script">
+        <description>Tests discovered RESTful web services for various vulnerabilities</description>
+    </file>
+    <file name="CRLF_Injection.script">
+        <description>Tests for scripts that are vulnerable to CRLF injection or HTTP response splitting attacks. HTTP headers have the structure &quot;Key: Value&quot;, where each line is separated by the CRLF combination. If the user input is injected into the value section without properly escaping/removing CRLF characters it is possible to alter the HTTP headers structure. HTTP Response Splitting is a new application attack technique which enables various new attacks such as web cache poisoning, cross user defacement, hijacking pages with sensitive user information and Cross Site Scripting (XSS). The attacker sends a single HTTP request that forces the web server to form an output stream, which is then interpreted by the target as two HTTP responses instead of one response</description>
+    </file>
+    <file name="pc_anywhere.script">
+        <description>Tests for a PcAnywhere service running on the remote host</description>
+    </file>
+    <file name="Struts2_Remote_Code_Execution_S2014.script">
+        <description>Tests for various remote code execution vulnerabilities in Apache Struts2. Apache Struts 2 is an open-source web application framework for developing Java EE web applications</description>
+    </file>
+    <file name="Config_File_Disclosure.script">
+        <description>Tests for source code disclosure in configuration files on the remote host</description>
+    </file>
+    <file name="Plone&amp;Zope_Remote_Command_Execution.script">
+        <description>Tests for Plone arbitrary code execution that exists in Zope 2.12.x and Zope 2.13.x. This vulnerability could lead to remote code execution by anonymous users</description>
+    </file>
+    <file name="netbios_query.script">
+        <description>Tests for a Samba/NetBIOS service running on an external accessible interface on the remote host</description>
+    </file>
+    <file name="wordpress_16.script">
+        <description>Tests for vulnerabilities in Revolution Slider WordPress plugin</description>
+    </file>
+    <file name="jira.script">
+        <description>Tests for vulnerabilities in Atlassian JIRA web applications</description>
+    </file>
+    <file name="HTML_Form_In_Redirect_Page.script">
+        <description>Tests for HTML Forms in redirect pages of a web application which might lead to a security issue. </description>
+    </file>
+    <file name="JBoss_Audit.script">
+        <description>Tests for a RedHat JBoss service running on the remote host</description>
+    </file>
+    <file name="roundcube.script">
+        <description>Tests for vulnerabilities in Roundcube web applications</description>
+    </file>
+    <file name="IIS_v5_NTML_Basic_Auth_Bypass.script">
+        <description>Tests for Microsoft IISv5 NTLM and Basic authentication bypass. Microsoft IISv5 has a &quot;Hit-highlighting&quot; functionality that opens some site object and highlights some part of it, that has had a transversal vulnerability in the past. Now it can be used to bypass the IIS authentication. This vulnerability can lead to authentication bypass</description>
+    </file>
+    <file name="Nginx_PHP_FastCGI_Code_Execution_File_Upload.script">
+        <description>Tests for Nginx PHP code execution via FastCGI. This issue could allow an attacker to execute arbitrary PHP code on the remote host</description>
+    </file>
+    <file name="Oracle_Application_Logs.script">
+        <description>Tests for the existance of Oracle SQL*Net and Oracle Net Listener log files. These logs are publicly accessible and could contain sensitive information (such as usernames and passwords stored in cleartext). This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Struts2_Development_Mode.script">
+        <description>Tests if Apache Struts2 development mode is enabled. This vulnerability can lead to information disclosure</description>
+    </file>
+    <file name="IIS_Global_Asa.script">
+        <description>The Global.asa file is an optional file that can contain declarations of objects, variables, and methods that can be accessed by every page in an ASP application. This file may contain sensitive information such as database credentials, sensitive source code snippets... This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Apache_httpOnly_Cookie_Disclosure.script">
+        <description>Tests for HttpOnly Cookie Disclosure in Apache HTTP Server 2.2.x through 2.2.21. Due to improper restriction of header information during construction of Bad Request (aka 400) error documents, remote attackers are allowed to obtain the values of HTTPOnly cookies via vectors involving a long or malformed header in conjunction with a crafted web script</description>
+    </file>
+    <file name="1-Stored_Vulnerabilities.script">
+        <description>Tests for stored vulnerabilities such as stored cross-site scripting (XSS) and stored SQL injection</description>
+    </file>
+    <file name="smtp_exim_overflow.script">
+        <description>Tests if an Exim service is running on the remote host. Exim is a message transfer agent (SMTP) which is prone to an IPv6 address and a SPA authentication buffer overflow. This vulnerability could lead to arbitrary remote code execution</description>
+    </file>
+    <file name="ExtJS_Examples_Arbitrary_File_Read.script">
+        <description>Tests for known Arbitrary File Read vulnerabilities in ExtJS</description>
+    </file>
+    <file name="tcpdf_Audit.script">
+        <description>Tests for known vulnerabilities in TCPDF, a PHP class for generating PDF documents</description>
+    </file>
+    <file name="XFS_and_Redir.script">
+        <description>Tests for scripts that are vulnerable to Cross Frame Scripting (XFS), which is an attack technique used to trick a user into thinking that fake web site content is legitimate data. Also tests for URL redirection attacks, which is sometimes used as a part of phishing attacks that confuse visitors about which web site they are visiting</description>
+    </file>
+    <file name="Code_Execution.script">
+        <description>Tests for scripts that are vulnerable to Code Execution vulnerabilities. Code injection vulnerabilities occur where the output or content served from a web application can be manipulated in such a way that it triggers server-side code execution. In some poorly written web applications that allow users to modify server-side files (such as by posting to a message board or guestbook) it is sometimes possible to inject code in the scripting language of the application itself</description>
+    </file>
+    <file name="PHP_Hash_Collision_Denial_Of_Service.script">
+        <description>Tests for PHP Hash Collision Denial Of Service Vulnerability. Hash tables are a commonly used data structure in most programming languages. Web application servers or platforms commonly parse attacker-controlled POST form data into hash tables automatically, so that they can be accessed by application developers. If the language does not provide a randomized hash function or the application server does not recognize attacks using multi-collisions, an attacker can degenerate the hash table by sending lots of colliding keys. The algorithmic complexity of inserting n elements into the table makes it possible to exhaust hours of CPU time using a single HTTP request. Thsi vulnerability could lead to denial of service</description>
+    </file>
+    <file name="Text_Search_File.script">
+        <description>Tests for various information disclosure vulnerabilities in the text of the web page source code (such as error messages, email addresses, etc)</description>
+    </file>
+    <file name="IBM_WebSphere_Audit.script">
+        <description>Tests for known vulnerabilities in IBM WebSphere</description>
+    </file>
+    <file name="timbuktu_ping.script">
+        <description>Tests for a Timbuktu service running on the remote host</description>
+    </file>
+    <file name="Script">
+        <description>Description</description>
+    </file>
+    <file name="PHP_Code_Injection.script">
+        <description>Tests for scripts that are vulnerable to PHP code injection. PHP code injection is a vulnerability that allows an attacker to inject custom code into the server side scripting engine</description>
+    </file>
+    <file name="Apache_Roller_Audit.script">
+        <description>Tests for known vulnerabilities in the Apache Roller</description>
+    </file>
+    <file name="NodeJs_Injection.script">
+        <description>Tests for scripts that are vulnerable to Node.js JavaScript Injection attacks. Node.js is a platform built on Google Chrome's JavaScript runtime for easily building fast, scalable network applications. Node.js based web applications are vulnerable when using  the Javascript eval function to parse the incoming JSON data without performing any type of input validation. An attacker can inject arbitrary JavaScript code that will be executed on the server side</description>
+    </file>
+    <file name="wordpress_1.script">
+        <description>Tests for vulnerabilities in various WordPress plugins and themes</description>
+    </file>
+    <file name="wordpress_7.script">
+        <description>Tests for various vulnerabilities in WordPress core and WordPress plugins</description>
+    </file>
+    <file name="subversion_server.script">
+        <description>Tests if Subversion metadata exists on the remote host</description>
+    </file>
+    <file name="MS15-034.script">
+        <description>Tests for Microsoft Windows' HTTP.sys vulnerability that could lead to denial of service and remote code execution</description>
+    </file>
+    <file name="ASP_Code_Injection.script">
+        <description>Tests if ASP is vulnerable to code injection. ASP code injection is a vulnerability that allows an attacker to inject custom code into the server side scripting engine. This vulnerability occurs when an attacker can control all or part of an input string that is fed into an eval() statement, which results in code execution</description>
+    </file>
+    <file name="Barracuda_locale_Directory_Traversal.script">
+        <description>Tests for known directory traversal vulnerabilities in Barracuda products</description>
+    </file>
+    <file name="ssh_bruteforce.script">
+        <description>Tests for an SSH server using a weak password on the remote host</description>
+    </file>
+    <file name="trojan_Nuclear.script">
+        <description>Tests if a Nuclear Trojan is running on the remote host</description>
+    </file>
+    <file name="WebInfWebXML_Audit.script">
+        <description>Tests for backup or temporary configuration files of /WEB-INF/web.xml. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Version_Check.script">
+        <description>Tests for a variety of known vulnerabilities on a variety of web servers</description>
+    </file>
+    <file name="ColdFusion_Audit.script">
+        <description>Tests if the Adobe ColdFusion service is running on the remote host</description>
+    </file>
+    <file name="wordpress_20.script">
+        <description>Tests whether WordPress registration is permitted</description>
+    </file>
+    <file name="SharePoint_Audit.script">
+        <description>Tests for a Microsoft SharePoint service running on the remote host</description>
+    </file>
+    <file name="rpc_info.script">
+        <description>Tests for a Unix RPC service running on the remote host</description>
+    </file>
+    <file name="Oracle_JSF2_Path_Traversal.script">
+        <description>Tests for known directory traversal vulnerabilities in Oracle's Java Server Faces 2 (JSF 2) Implementation</description>
+    </file>
+    <file name="elmah_Information_Disclosure.script">
+        <description>Tests for elmah.axd Information Disclosure. ELMAH (Error Logging Modules and Handlers) is an application-wide error logging facility. If ELMAH is not properly configured, the elmah.axd handler can be accessed without authorization, potentially listing all the error messages generated by the web application. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="rlogin_ping.script">
+        <description>Tests for a rlogin service is running on the remote host. rlogin allows users to log in on another host via a network, as if they were physically present at the computer. rlogin has several serious security vulnerabilities including all data (including passwords) transmitted in cleartext, making it making it vulnerable to man-in-the-middle attacks</description>
+    </file>
+    <file name="X_Forwarded_For.script">
+        <description>Tests for access to the administrative interfaces using various internal X-Forwarded-For headers to bypass authentication</description>
+    </file>
+    <file name="trojan_ProRat.script">
+        <description>Tests if the ProRat trojan exists on a remote host. ProRat is a Microsoft Windows based backdoor trojan horse, more commonly known as a RAT (Remote Administration Tool). As with other trojan horses it uses a client and server</description>
+    </file>
+    <file name="wordpress_12.script">
+        <description>Tests for vulnerabilities in the Jetpack WordPress plugin</description>
+    </file>
+    <file name="Plesk_SSO_XXE.script">
+        <description>Tests for known XML external entity injection (XXE) vulnerabilities in Odin Plesk</description>
+    </file>
+    <file name="File_Upload.script">
+        <description>Tests for scripts that are vulnerable to unrestricted file upload. Various web applications allow users to upload files (such as pictures, images, sounds, etc.). Uploaded files may pose a significant risk if not handled correctly. A remote attacker could send a multipart/form-data POST request with a specially-crafted filename or MIME type and execute arbitrary code</description>
+    </file>
+    <file name="Tomcat_Status_Page.script">
+        <description>Tests if an Apache Tomcat status page exists. Aapache Tomcat status page shows information about the current server state (memory status, thread information and a list of the recent requests). This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Tomcat_Default_Credentials.script">
+        <description>Tests for Apache Tomcat insecure default administrative password. The Windows installer for Apache Tomcat defaults to a blank password for the administrative user. If this is not changed during the install process, then by default a user is created with the name &quot;admin&quot;, roles &quot;admin&quot; and &quot;manager&quot;, and a blank password</description>
+    </file>
+    <file name="JBoss_Status_Servlet_Information_Leak.script">
+        <description>Tests the JBoss status servlet for sensitive information leakage. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="symfony.script">
+        <description>Tests for vulnerabilities in Symfony PHP framework web applications</description>
+    </file>
+    <file name="Flask_Debug_Mode.script">
+        <description>Tests if an application is exposing the Werkzeug debugger. This vulnerability can lead to information disclosure and remote code execution</description>
+    </file>
+    <file name="Readme_Files.script">
+        <description>Tests for the existance of 'readme' files. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="elasticsearch_Audit.script">
+        <description>Tests for known vulnerabilities in ElasticSearch</description>
+    </file>
+    <file name="umbraco_1.script">
+        <description>Tests for Umbraco local file inclusion</description>
+    </file>
+    <file name="Apache_Solr_Exposed.script">
+        <description>Tests if the Apache Solr Service Admin page is accessible. This page should not be accessible on a production website as it may give an attacker access to sensitive information about the affected system</description>
+    </file>
+    <file name="Movable_Type_4_RCE.script">
+        <description>Tests for known Remote Code Execution vulnerabilitites in Movable Type</description>
+    </file>
+    <file name="Uploadify_Audit.script">
+        <description>Tests for vulnerabilities in the jQuery Uploadify plugin</description>
+    </file>
+    <file name="lpd_ping.script">
+        <description>Tests for a TCP/IP Print Server service (LPDSVC), also known as the Line Printer Daemon (LPD) service running on the remote host</description>
+    </file>
+    <file name="WS_FTP_log_file.script">
+        <description>Tests if the WS_FTP.LOG file exists in a web application. This file contains sensitive data such as file source/destination and file name, date/time of upload, etc</description>
+    </file>
+    <file name="Server_Source_Code_Disclosure.script">
+        <description>Tests for source code disclosure. This test uses pattern matching to determine if server side tags are found in the file. </description>
+    </file>
+    <file name="Genericons_Audit.script">
+        <description>Tests for known vulnerabilities in the Genericons webfont</description>
+    </file>
+    <file name="5-Stored_Directory_Traversal.script">
+        <description>Tests for stored directory traversal vulnerabilities</description>
+    </file>
+    <file name="HTTP_Parameter_Pollution.script">
+        <description>Tests for scripts that are vulnerable to HTTP Parameter Pollution (HPP) attacks. HPP attacks consist of injecting encoded query string delimiters into other existing parameters. If the web application does not properly sanitize the user input, a malicious user can compromise the logic of the application to perform either client-side or server-side attacks</description>
+    </file>
+    <file name="SSL_Audit.script">
+        <description>Tests if the TLS/SSL protocol is running on the remote host</description>
+    </file>
+    <file name="ASP_NET_Forms_Authentication_Bypass.script">
+        <description>Tests for Microsoft ASP.NET Forms Authentication bypass. The Forms Authentication feature in the ASP.NET subsystem in Microsoft .NET Framework 1.1 SP1, 2.0 SP2, 3.5 SP1, 3.5.1, and 4.0 allows remote authenticated users to obtain access to arbitrary user accounts via a crafted username</description>
+    </file>
+    <file name="socks_bruteforce.script">
+        <description>Tests for a SOCKS server using a weak password on the remote host</description>
+    </file>
+    <file name="ColdFusion_v8_File_Upload.script">
+        <description>Tests for ColdFusion 8 FCKEditor File Upload Vulnerability. ColdFusion version 8.0.1 installs a vulnerable version of FCKEditor which is enabled by default. FCKEditor includes functionality to handle file uploads and file management. This vulnerability could lead to malicious file upload and remote code execution</description>
+    </file>
+    <file name="Azure_Blobs_Audit.script">
+        <description>Tests if a web application is using a public Microsoft Azure blob. Public Microsoft Azure blobs will list all of the files and directories it contains. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="Sensitive_Files.script">
+        <description>Tests for the existance of sensitive files that could lead to information disclosure</description>
+    </file>
+    <file name="liferay.script">
+        <description>Tests for vulnerabilities in Liferay web applications</description>
+    </file>
+    <file name="vbulletin_1.script">
+        <description>Tests for vBulletin 5.1.2 SQL Injection</description>
+    </file>
+    <file name="Spring_Framework_Audit.script">
+        <description>Tests for various vulnerabilities in the Spring Framework</description>
+    </file>
+    <file name="Registration_Page.script">
+        <description>Runs various heuristic tests looking for user registration pages and adds them to the crawler. A Knowledge Base item is also created</description>
+    </file>
+    <file name="trojan_Sub7.script">
+        <description>Tests if Sub7 exists on a remote host. Sub7, or SubSeven or Sub7Server, is the name of a Remote Administration Tool (RAT) program. Sub7 is distributed with a server and a client</description>
+    </file>
+    <file name="Long_Password_Denial_of_Service.script">
+        <description>Tests for denial of service vulnerabilities resulting from very long passwords (thousands of characters long) being sent to the web application. This is usually caused by a vulnerable password hashing implementation, resulting in CPU and memory exhaustion</description>
+    </file>
+    <file name="ssl_ping.script">
+        <description>Tests if the SSL/TLS protocol is running on a host</description>
+    </file>
+    <file name="Apache_Running_As_Proxy.script">
+        <description>Tests if Apache is configured to run as a proxy server. In order to avoid abuse, it's recommended to restrict access to this proxy server. Open proxy servers are dangerous both to your network and to the Internet at large</description>
+    </file>
+    <file name="VirtualHost_Audit.script">
+        <description>Tests for internal virtual hosts on the remote host</description>
+    </file>
+    <file name="Rails_Where_SQL_Injection.script">
+        <description>Tests for SQL Injection vulneabilities in all versions of Ruby on Rails in Active Record</description>
+    </file>
+    <file name="gallery.script">
+        <description>Tests for vulnerabilities in Gallery web applications</description>
+    </file>
+    <file name="IIS_Unicode_Directory_Traversal.script">
+        <description>Tests for Microsoft IIS extended Unicode directory traversal vulnerability where the web server is vulnerable to double-dot (../) directory traversal exploitation if extended Unicode character representations are used in substitution for &quot;/&quot; and &quot;\&quot;. </description>
+    </file>
+    <file name="Relative_Path_Overwrite.script">
+        <description>Tests for relative path overwrite vulnerabilities. Relative path overwrite (RPO) is a technique where an attacker can overwrite the target file of a relative URL</description>
+    </file>
+    <file name="Railo_Audit.script">
+        <description>Tests for known vulnerabilities in Ralio, a ColdFusion markup language (CFML) engine</description>
+    </file>
+    <file name="joomla_8.script">
+        <description>Tests for Joomla! remote file inclusion vulnerabilities</description>
+    </file>
+    <file name="ms12-050.script">
+        <description>Tests for various cross-site scripting vulnerabilities in Microsoft SharePoint that could lead to privilege escalation</description>
+    </file>
+    <file name="WEBrick_Directory_Traversal.script">
+        <description>Tests for WEBrick v.1.3 directory traversal vulnerability</description>
+    </file>
+    <file name="pop3_bruteforce.script">
+        <description>Tests for a POP3 server using a weak password on the remote host</description>
+    </file>
+    <file name="Host_Header_Attack.script">
+        <description>Tests for a web application's implicit trust of the HTTP 'Host' header. This vulnerability could allow an attacker to generate links, import scripts and even generate password resets links</description>
+    </file>
+    <file name="Access_Control_Allow_Origin_Dir.script">
+        <description>Tests for Cross Origin Resource Sharing (CORS)  Access-Control-Allow-Origin insecure configurations</description>
+    </file>
+    <file name="zabbix.script">
+        <description>Tests for vulnerabilities in Zabbix web applications</description>
+    </file>
+    <file name="Parallels_Plesk_Audit.script">
+        <description>Tests for known vulnerabilities in Odin Plesk</description>
+    </file>
+    <file name="imap_bruteforce.script">
+        <description>Tests for an IMAP server using a weak password on the remote host</description>
+    </file>
+    <file name="wordpress_9.script">
+        <description>Compiles a list of installed WordPress plugins</description>
+    </file>
+    <file name="ASP-NET_Debugging_Enabled.script">
+        <description>Tests if ASP.NET debugging is enabled on a web application. It is recommended to disable debug mode before deploying a production application</description>
+    </file>
+    <file name="JAAS_Authentication_Bypass.script">
+        <description>Tests for Java Authentication and Authorization Service (JAAS) authentication bypass</description>
+    </file>
+    <file name="XML_External_Entity_Injection.script">
+        <description>Tests for XML External Entity (XXE) and XML injection attacks. XXE allows a wide range of XML based attacks, including local file disclosure, TCP scans, denial of service, attribute blow-up and other types of injection</description>
+    </file>
+    <file name="JBoss_Seam_Remoting.script">
+        <description>Tests for known vulnerabilities in JBoss Seam</description>
+    </file>
+    <file name="mssql_ping.script">
+        <description>Tests for a Microsoft SQL Server service running on the remote host</description>
+    </file>
+    <file name="SVN_Repository.script">
+        <description>Tests if the Subversion metadata directory (.svn) exists in a directory. An attacker can extract sensitive information by requesting the hidden metadata directory that popular version control tool Subversion creates from such directories</description>
+    </file>
+    <file name="ipb.script">
+        <description>Tests for vulnerabilities in Invision Power Board web applications</description>
+    </file>
+    <file name="JMX_RMI_service.script">
+        <description>Tests if Java Management Extensions (JMX) and Java Remote Method Invocation (Java RMI) services running on the remote host</description>
+    </file>
+    <file name="joomla_6.script">
+        <description>Tests for Joomla! Kunena Forum extension vulnerabilities</description>
+    </file>
+    <file name="pop3_server.script">
+        <description>Tests for a POP3 service is running on the remote host</description>
+    </file>
+    <file name="XSS_in_URI_Folder.script">
+        <description>Tests for cross-site scripting (XSS) vulnerabilities in the uniform resource identifier (URI)</description>
+    </file>
+    <file name="joomla_5.script">
+        <description>Tests for Joomla! v3.2.2 SQL injection</description>
+    </file>
+    <file name="joomla_1.script">
+        <description>Tests for weak credentials in Joomla! web applications</description>
+    </file>
+    <file name="PHPInfo.script">
+        <description>Tests for a PHPInfo page on a web application. The PHPInfo page outputs a large amount of information about the current state of PHP. This includes information about PHP compilation options and extensions, the PHP version, server information and environment (if compiled as a module), the PHP environment, OS version information, paths, master and local values of configuration options, HTTP headers, and the PHP License</description>
+    </file>
+    <file name="Misfortune_Cookie.script">
+        <description>Tests for Misfortune Cookie, a critical vulnerability that allows an intruder to remotely take over an Internet router and use it to attack home and business networks</description>
+    </file>
+    <file name="Dreamweaver_Scripts.script">
+        <description>Tests if Adobe Dreamweaver has created a directory (_mmServerScripts or _mmDBScripts) that contains scripts for testing database connectivity. One of these scripts (mmhttpdb.php or mmhttpdb.asp) can be accessed without user ID or password and contains numerous operations, such as listing Datasource Names or executing arbitrary SQL queries</description>
+    </file>
+    <file name="proxy_use_post.script">
+        <description>Tests for a proxy server on the remote host that can be used to send POST requests without any Content-length header. Allowing POST requests to be sent to arbitrary ports may allow an attacker to bypass firewalls and connect to sensitive ports via the vulnerable proxy server. </description>
+    </file>
+    <file name="joomla_3.script">
+        <description>Tests for Joomla! JomSocial extension remote code execution</description>
+    </file>
+    <file name="SQLite_Database_Found.script">
+        <description>Tests if an SQLite database file exists in a directory. This file may disclose sensitive information and help an attacker learn more about the target website</description>
+    </file>
+    <file name="openx.script">
+        <description>Tests for vulnerabilities in OpenX web applications</description>
+    </file>
+    <file name="ClientAccessPolicy_XML.script">
+        <description>Tests for insecure clientaccesspolicy.xml files. The browser security model normally prevents web content from one domain from accessing data from another domain. This is commonly known as the &quot;same origin policy&quot;. When a domain is specified in clientaccesspolicy.xml, the site declares that it is willing to allow the operators of any servers in that domain to obtain any document on the server where the policy file resides. This practice is suitable for public servers, but should not be used for sites located behind a firewall because it could permit access to protected areas. It should not be used for sites that require authentication in the form of passwords or cookies. </description>
+    </file>
+    <file name="vnc_audit.script">
+        <description>Tests for security issues of a VNC service</description>
+    </file>
+    <file name="wordpress_14.script">
+        <description>Tests for vulnerabilities in the MailPoet Newsletters (Wysija Newsletters) WordPress plugin</description>
+    </file>
+    <file name="JBoss_Web_Service_Console.script">
+        <description>Tests for an exposed JBoss web service console. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="codeigniter.script">
+        <description>Tests for vulnerabilities in CodeIgniter PHP framework web applications</description>
+    </file>
+    <file name="Development_Files.script">
+        <description>Tests for the existance of files containing source code, configuration or other information used during the development stage that that could lead to information disclosure</description>
+    </file>
+    <file name="Remote_File_Inclusion_XSS.script">
+        <description>Tests for Remote File Inclusion cross-site scripting (XSS) vulnerabilities</description>
+    </file>
+    <file name="smtp_vrfy_expn.script">
+        <description>Tests if an SMTP server on the remote host responds to EXPN/VRFY verbs. VRFY and EXPN verbs can be used to query the SMTP server for information about an address. Using these verbs it's possible to enumerate the names of valid users on the remote host. Login names are also a way to gather addresses for spam email messages</description>
+    </file>
+    <file name="sharepoint.script">
+        <description>Tests for vulnerabilities in Microsoft Sharepoint web applications</description>
+    </file>
+    <file name="XSS.script">
+        <description>Tests for scripts that are vulnerable to cross-site scripting (XSS) attacks. Cross-site scripting is a vulnerability that allows an attacker to send malicious code (usually in the form of JavaScript) to another user</description>
+    </file>
+    <file name="Frontpage_Extensions_Enabled.script">
+        <description>Tests if the Microsoft FrontPage Extensions is enabled on the remote host</description>
+    </file>
+    <file name="Apache_XSS_via_Malformed_Method.script">
+        <description>Tests for Cross-site Scripting via malformed HTTP requests on Apache HTTP Server</description>
+    </file>
+    <file name="Bash_RCE_Server_Audit.script">
+        <description>Tests for Bash remote code execution (Shellshock) on the remote host</description>
+    </file>
+    <file name="daytime_ping.script">
+        <description>Tests for a Daytime Protocol service on the remote host. The Daytime Protocol service was intended for testing and measurement purposes. This service provides the system time to anyone querying it. If available on a UDP port, is often susceptible to an attack that can cause the remote host and another arbitrary host to use a significant amount of bandwidth</description>
+    </file>
+    <file name="XSS_in_URI_File.script">
+        <description>Tests for cross-site scripting (XSS) vulnerabilities in the uniform resource identifier (URI)</description>
+    </file>
+    <file name="magento.script">
+        <description>Tests for vulnerabilities in Magento web applications</description>
+    </file>
+    <file name="ASP_NET_Error_Message.script">
+        <description>Tests for ASP.NET error messages by requesting a specially crafted URL that can generate an ASP.NET error message. The message contains the complete stack trace and Microsoft .NET Framework Version. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="wordpress_2.script">
+        <description>Tests for WordPress configuration file backups</description>
+    </file>
+    <file name="wordpress_19.script">
+        <description>Tests for various WordPress path disclosure vulnerabilities</description>
+    </file>
+    <file name="joomla.script">
+        <description>Tests for vulnerabilities in Joomla! web applications</description>
+    </file>
+    <file name="wordpress_18.script">
+        <description>Tests for WordPress admin directory accessible through HTTP authentication</description>
+    </file>
+    <file name="XSS_in_URI.script">
+        <description>Tests for cross-site scripting (XSS) vulnerabilities in the uniform resource identifier (URI)</description>
+    </file>
+    <file name="wordpress_4.script">
+        <description>Tests for ToolsPack WordPress malware</description>
+    </file>
+    <file name="11-Malware.script">
+        <description>Tests for URLs linking to external sites known to host malware or that are known to be used for phishing attacks. Such links may indicate that the site being scanned has either been compromised, or that somehow an attacker has managed to inject URLs to the malicious site. It may also indicate that a legitimate site that your site links to has been compromised and is hosting malware</description>
+    </file>
+    <file name="CKEditor_Audit.script">
+        <description>Tests for known vulnerabilities in CKEditor, a WYSIWYG HTML editor</description>
+    </file>
+    <file name="Heartbleed_Bug.script">
+        <description>Tests for the Heartblead bug on the remote host</description>
+    </file>
+    <file name="IIS_Internal_IP_Address.script">
+        <description>Checks if a Microsoft IIS server returns an IP address in Content-Location HTTP Header. A Content-Location header is added to the HTTP response for static HTMl pages by default. By default, in Microsoft IIS, the Content-Location references the IP address of the server instead of the Fully Qualified Domain Name (FQDN) or Hostname, therefore possibly exposing network addresses that are being used. This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Arbitrary_File_Deletion.script">
+        <description>Tests if a web application has scripts which are possibly vulnerable to arbitrary file deletion. Such an issue allows an attacker to influence calls to the unlink() function and delete arbitrary files. Due to a lack of input validation, an attacker can supply directory traversal sequences followed by an arbitrary file name to delete specific files</description>
+    </file>
+    <file name="mysql_bruteforce.script">
+        <description>Tests for MySQL using a weak password on the remote host</description>
+    </file>
+    <file name="RubyOnRails_Database_File.script">
+        <description>Tests for a Ruby on Rails database file which could expose sensitive information. This vulnerability could lead to information disclosure</description>
+    </file>
+    <file name="ektroncms.script">
+        <description>Tests for vulnerabilities in Ektron CMS web applications</description>
+    </file>
+    <file name="Clickjacking_X_Frame_Options.script">
+        <description>Tests for clickjacking vulnerabilities</description>
+    </file>
+    <file name="wordpress_15.script">
+        <description>Tests for vulnerabilities in the WPtouch WordPress plugin</description>
+    </file>
+    <file name="XML_Quadratic_Blowup_Attack.script">
+        <description>An XML quadratic blowup attack is similar to a &quot;Billion Laughs&quot; attack. Essentially, it exploits the use of entity expansion. Instead of deferring to the use of nested entities, it replicates one large entity using a couple thousand characters repeatedly. This vulnerability could lead to a denial of service attack</description>
+    </file>
+    <file name="Blind_Sql_Injection.script">
+        <description>Tests for Blind SQL Injection. When an SQL Injection attack is executed sometimes the server responds with error messages from the target database server complaining that the SQL query's syntax is incorrect. Blind SQL injection is identical to normal SQL Injection except that when an attacker attempts to exploit an application rather then getting a useful error message they get a generic page specified by the developer instead. This makes exploiting a potential SQL Injection attack more difficult but not impossible. An attacker can still steal data by asking a series of True and False questions through SQL statements. </description>
+    </file>
+    <file name="socks_ping.script">
+        <description>Tests for a SOCKS service running on the remote host. An open SOCKS server is a SOCKS server which is accessible by any Internet user. Generally, a proxy server allows users within a network group to store and forward internet services such as DNS or web pages so that the bandwidth used by the group is reduced and controlled</description>
+    </file>
+    <file name="ftp_anonymous_writable.script">
+        <description>Tests for an FTP server allowing anonymous users to create arbitrary files and/or directories on the remote host</description>
+    </file>
+    <file name="Trojan_Scripts.script">
+        <description>Tests if a trojan horse exists on a host. A trojan horse comes at least in two parts: a client and a server. The client is used by the hacker to connect to the victim' s machine. The hacker has full access to the victim's machine, once the server is installed on it</description>
+    </file>
+    <file name="Zend_Framework_LFI_via_XXE.script">
+        <description>Tests for local file disclosure via XML eXternal Entity Injection (XXE) in the Zend PHP Framework</description>
+    </file>
+    <file name="IIS_Tilde_Dir_Enumeration.script">
+        <description>Tests for Microsoft IIS tilde directory enumeration. It is possible to detect short names of files and directories which have an 8.3 file naming scheme (An 8.3 filename is a filename convention used by old versions Microsoft Windows prior to Windows 95, and Windows NT 3.51) equivalent in Microsoft Windows by using some vectors in several versions of Microsoft IIS. For instance, it is  possible to detect all short-names of &quot;.aspx&quot; files as they have 4 letters in their extensions. This could be a major issue especially for web applications vulnerable to direct URL access. This vulnerability could lead to an attacker finding sensitive files and directories not normally visible</description>
+    </file>
+    <file name="Apache_mod_negotiation_Filename_Bruteforcing.script">
+        <description>Tests if the Apache &quot;mod_negotiation&quot; module is vulnerable to filename bruteforcing. &quot;mod_negotiation&quot; is an Apache HTTP Server module responsible for selecting the document that best matches the clients capabilities, from one of several available documents. If the client provides an invalid Accept header, the server will respond with a HTTP 406 Not Acceptable error containing a pseudo directory listing. An attacker could use this information to generate a list of base names, generate a list of interesting extensions, look for backup files... This vulnerability may lead to information disclosure</description>
+    </file>
+    <file name="Backup_File.script">
+        <description>Tests if backup files exist on a webserver. These files are usually created by developers to backup their work and might disclose sensitive information</description>
+    </file>
+    <file name="Bazaar_Repository.script">
+        <description>Tests if the Bazaar metadata directory (.bzr) exists in a directory. An attacker can extract sensitive information by requesting the hidden metadata directory that version control tool Bazaar creates</description>
+    </file>
+    <file name="drupal_3.script">
+        <description>Tests for Drupal SQL injection vulnerabilities</description>
+    </file>
+    <file name="Java_Debug_Wire_Protocol_Audit.script">
+        <description>The Java Debug Wire Protocol (JDWP) is the protocol used for communication between a debugger and the Java virtual machine (JVM) which it debugs. JDWP is one layer within the Java Platform Debugger Architecture (JPDA). JDWP does not use any authentication and could be abused by an attacker to execute arbitrary code on the remote</description>
+    </file>
+    <file name="wordpress_10.script">
+        <description>Tests for vulnerabilities in various WordPress caching plugins</description>
+    </file>
+    <file name="oracle_tnssecurity.script">
+        <description>Tests for an Oracle TNS service running on a remote host</description>
+    </file>
+    <file name="SWFUpload_Audit.script">
+        <description>Tests for vulnerable versions of the SWFUpload library</description>
+    </file>
+    <file name="xcart.script">
+        <description>Tests for vulnerabilities in X-Cart web applications</description>
+    </file>
+    <file name="Blind_XSS.script">
+        <description>Tests for blind cross-site scripting (BXSS) vulnerabilities</description>
+    </file>
+    <file name="wordpress_3.script">
+        <description>Tests for vulnerabilities in WooFramework WordPress plugin</description>
+    </file>
+    <file name="ftp_bruteforce.script">
+        <description>Tests for an FTP server using a weak password on the remote host</description>
+    </file>
+    <file name="Lotus_Domino_crlf_xss.script">
+        <description>Tests for various cross-site scripting vulnerabilities in IBM Lotus Domino Web Server</description>
+    </file>
+    <file name="Unsafe_preg_replace.script">
+        <description>Tests for scripts that are using the PHP function preg_replace() on user input. This is not recommended as it can lead to various vulnerabilities</description>
+    </file>
+    <file name="ssh_ping.script">
+        <description>Tests for an SSH service is running on the remote host</description>
+    </file>
+    <file name="YUI_uploader_swf_Audit.script">
+        <description>Tests for vulnerabilities in the YUI Uploader. Legacy versions of the YUI uploader uses a vulnerable Flash SWF file to provide file upload functionality</description>
+    </file>
+    <file name="dotnet.script">
+        <description>Tests for Microsoft .NET's presence on a remote host and attempts to retrieve its version number</description>
+    </file>
+    <file name="Possible_Sensitive_Directories.script">
+        <description>Tests for common sensitive resources like backup directories, database dumps, administration pages, temporary directories, etc. Each one of these directories and files could help an attacker learn more about the target website</description>
+    </file>
+    <file name="XXE_File.script">
+        <description>Tests for XML external entity injection (XXE)</description>
+    </file>
+    <file name="Hashbang_Ajax_Crawling.script">
+        <description/>
+    </file>
+    <file name="typo3.script">
+        <description>Tests for vulnerabilities in Typo3 web applications</description>
+    </file>
+    <file name="Access_Database_Found.script">
+        <description>Tests for Microsoft Access database files in directories. Such files may disclose sensitive information and help an attacker learn more about the target website</description>
+    </file>
+    <file name="Script_Source_Code_Disclosure.script">
+        <description>Tests for scripts that allow their source code to be read by using the script filename as a parameter</description>
+    </file>
+    <file name="OFC_Upload_Image_Audit.script">
+        <description>Tests for known vulnerabilities in Open Flash Charts</description>
+    </file>
+    <file name="Error_Message.script">
+        <description>Tests if a web page contains any error/warning messages that may disclose sensitive information.The message can also contain the location of the file that produced the unhandled exception</description>
+    </file>
+    <file name="Apache_Unfiltered_Expect_Header_Injection.script">
+        <description>Tests for known unfiltered header injection in Apache HTTP Server, allowing a an attacker to inject HTML (including malicious JavaScript) through the &quot;Expect&quot; header</description>
+    </file>
+    <file name="ExtJS_Audit.script">
+        <description>Tests for known vulnerabilities in ExtJS</description>
+    </file>
+    <file name="WebLogic_Audit.script">
+        <description>Tests for known vulnerabilities in Oracle WebLogic Server</description>
+    </file>
+    <file name="Sql_Injection.script">
+        <description>Tests for scripts that are vulnerable to SQL Injection attacks. SQL injection is a vulnerability that allows an attacker to alter backend SQL statements by manipulating the user input. An SQL injection occurs when web applications accept user input that is directly placed into an SQL statement and doesn't properly filter out dangerous characters. This is one of the most common application layer attacks currently being used on the Internet.  Despite the fact that it is relatively easy to protect against, there is a large number of web applications that are vulnerable</description>
+    </file>
+    <file name="Directory_Listing.script">
+        <description>Tests if a web server is configured to display the list of files contained in a directory. This is not recommended because the directory may contain files that are not normally exposed through links on the website which might contain sensitive data</description>
+    </file>
+    <file name="Webadmin_script.script">
+        <description>Tests if webadmin.php exists in a web application. webadmin.php is a simple web-based file manager. This file manager should not be installed on production systems because it doesn't employ any user authentication in the default configuration. Therefore an attacker can read and create any files in your system</description>
+    </file>
+    <file name="Reverse_Proxy_Bypass.script">
+        <description>Tests for Reverse Proxy Bypass. The mod_proxy module in the Apache HTTP Server 1.3.x through 1.3.42, 2.0.x through 2.0.64, and 2.2.x through 2.2.21 does not properly interact with use of RewriteRule and ProxyPassMatch pattern matches for configuration of a reverse proxy, which allows remote attackers to send requests to intranet servers via a malformed URI containing an initial &quot;@&quot; character</description>
+    </file>
+    <file name="6-Stored_Code_Execution.script">
+        <description>Tests for stored code execution vulnerabilities</description>
+    </file>
+    <file name="trojan_XHacker.script">
+        <description>Tests if an Xhacker trojan is running on the remote host</description>
+    </file>
+    <file name="Analyze_Parameter_Values.script">
+        <description>Analyzes values of GET/POST parameters and look for interesting patterns (such as file names). If such paterns are found, they will be added to the crawler for indexing</description>
+    </file>
+    <file name="Hashbang_Ajax_Crawling.script">
+        <description>Analyzes the responses looking for Ajax Hashbang URLs</description>
+    </file>    
+</DirIndex>

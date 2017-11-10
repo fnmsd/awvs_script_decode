@@ -1,0 +1,45 @@
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include debug_helpers.inc;
+// test for insecure ClientAccessPolicy.xml
+function alert(fname, lastJob, msg)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(fname);
+	ri.affects = "Web Server";
+	ri.alertPath = "Scripts/" + fname; 	
+		
+	ri.setHttpInfo(lastJob);
+	if (msg) 
+		ri.Details =  msg;	
+	
+	addHTTPJobToCrawler(lastJob, 1, 1);
+	
+	AddReportItem(ri);	
+}
+function TestOn(path){
+	var req 		= new THTTPJob();
+	req.url 		= scanURL;
+	req.uri 		= path;
+	req.addCookies 	= false;
+	
+	req.verb  		= "GET";
+	req.execute();
+	if(!req.wasError && !req.notFound){
+			if (req.response.body.match(/<allow-from\s+http-request-headers\s?=\s?"*"/i)) {
+				if (req.response.body.match(/<domain\s+uri\s?=\s?"*"/i)) {
+					//trace("alert here");
+					alert("ClientAccessPolicyXML.xml", req, "The clientaccesspolicy.xml file is located at [bold]" + path + "[/bold]");	
+				}
+			}
+		}
+}
+// start
+// test the root of the website
+TestOn("/ClientAccessPolicy.xml");
+// test in the current directory
+var url = ScanURL;	
+if (url.path.substr(url.path.length-1, 1) != "/") {url.path += "/";}		
+url.path += "ClientAccessPolicy.xml";
+url2 = url.url;	
+TestOn(url2);

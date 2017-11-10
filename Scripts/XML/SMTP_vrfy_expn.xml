@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="SMTP EXPN/VRFY verbs enabled" version="0.1" released="20080307" updated="20140228" protocol="FTP" mayproxy="false" affects="server" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,abuse_of_functionality,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The remote SMTP server responds to EXPN/VRFY verbs. VRFY and EXPN ask the server for information about an address. Using these verbs it's possible to enumerate the names of valid users on the remote host. Login names are also a way to gather addresses for spam email messages.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>It's possible to enumerate the names of valid users on the remote host.</Impact>
+		<Recommendation>You need to configure your STMP server to disallow the usage of these verbs (EXPN and VRFY).</Recommendation>
+		<Reference database="The VRFY and EXPN verbs" URL="http://cr.yp.to/smtp/vrfy.html"/>
+		<Reference database="Maintain Security with sendmail" URL="http://www.codewalkers.com/c/a/Server-Administration/Maintain-Security-with-sendmail/2/"/>
+	</TestDescription>
+</WebApplicationTest>

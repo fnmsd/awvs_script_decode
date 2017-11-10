@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 4.1.39" version="0.1" released="20090226" updated="20140312" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="missing_update,xss" SendCookies="true" HasPrecondition="false" SendAuth="true" CVE="CVE-2008-0128,CVE-2008-1232,CVE-2008-2370" CWE="CWE-22" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="4.0" CVSSScoreEnv="4.0" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break][bold]Fixed in Apache Tomcat 4.1.39:[/bold][break][ul]
+
+[li]
+    [bold]moderate[/bold]: Session hi-jacking   CVE-2008-0128[break]
+
+    When using the SingleSignOn Valve via https the Cookie JSESSIONIDSSO is transmitted without the "secure" attribute, resulting in it being transmitted to any content that is - by purpose or error - requested via http from the same server. 
+[/li]
+
+[li]
+   [bold]low[/bold]: Cross-site scripting   CVE-2008-1232[break]
+
+   The message argument of HttpServletResponse.sendError() call is not only displayed on the error page, but is also used for the reason-phrase of HTTP response. This may include characters that are illegal in HTTP headers. It is possible for a specially crafted message to result in arbitrary content being injected into the HTTP response. For a successful XSS attack, unfiltered user supplied data must be included in the message argument.
+[/li]
+
+[li]
+   [bold]important[/bold]: Information disclosure   CVE-2008-2370[break]
+
+   When using a RequestDispatcher the target path was normalised before the query string was removed. A request that included a specially crafted request parameter could be used to access content that would otherwise be protected by a security constraint or by locating it in under the WEB-INF directory.
+[/li]
+
+[/ul][break]
+
+[navy]Affected Apache Tomcat version (4.1.0 - 4.1.37).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache Tomcat</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Multiple. Check vulnerability description for detailed information.</Impact>
+		<Recommendation>Upgrade Apache Tomcat to the latest version.</Recommendation>
+		<Reference database="Apache Tomcat 4.x vulnerabilities" URL="http://tomcat.apache.org/security-4.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

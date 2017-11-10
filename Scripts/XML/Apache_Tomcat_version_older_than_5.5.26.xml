@@ -1,0 +1,50 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Apache Tomcat version older than 5.5.26" version="0.1" released="20090226" updated="20140312" protocol="HTTP" mayproxy="true" affects="file" severity="medium" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="Parameter manipulation" Request="" Response="" FullResponse="" DetailsFormat="The script has been tested with these parameter values : ${combinations}" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" FolowRedirection="false" AlertTags="missing_update,privilege_escalation" SendCookies="true" HasPrecondition="false" SendAuth="true" CVE="CVE-2007-5333,CVE-2007-5342,CVE-2007-5461,CVE-2007-6286" CWE="CWE-264" CVSSVer="2.0" CVSSScore="6.4" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:N/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.1" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>[coolbox][dark]This alert was generated using only banner information. It may be a false positive.  [/dark][/coolbox][break][bold]Fixed in Apache Tomcat 5.5.26:[/bold][break][ul]
+
+[li]
+    [bold]low[/bold]: Session hi-jacking   CVE-2007-5333[break]
+
+    The previous fix for  CVE-2007-3385 was incomplete. It did not consider the use of quotes or %5C within a cookie value.
+[/li]
+
+[li]
+    [bold]low[/bold]: Elevated privileges   CVE-2007-5342[break]
+
+    The JULI logging component allows web applications to provide their own logging configurations. The default security policy does not restrict this configuration and allows an untrusted web application to add files or overwrite existing files where the Tomcat process has the necessary file permissions to do so.
+[/li]
+
+[li]
+    [bold]important[/bold]: Information disclosure   CVE-2007-5461[break]
+
+    When Tomcat's WebDAV servlet is configured for use with a context and has been enabled for write, some WebDAV requests that specify an entity with a SYSTEM tag can result in the contents of arbitary files being returned to the client.
+[/li]
+
+[li]
+    [bold]important[/bold]: Data integrity   CVE-2007-6286[break]
+
+    When using the native (APR based) connector, connecting to the SSL port using netcat and then disconnecting without sending any data will cause tomcat to handle a duplicate copy of one of the recent requests.
+[/li]
+
+[/ul][break]
+
+[navy]Affected Apache Tomcat version (5.5.0 - 5.5.25).[/navy][break]</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>All</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>Apache Tomcat</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>Multiple. Check vulnerability description for detailed information.</Impact>
+		<Recommendation>Upgrade Apache Tomcat to the latest version.</Recommendation>
+		<Reference database="Apache Tomcat 5.x vulnerabilities" URL="http://tomcat.apache.org/security-5.html"/>
+	</TestDescription>
+</WebApplicationTest>

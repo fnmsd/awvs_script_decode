@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Adobe ColdFusion directory traversal " version="0.1" released="20080307" updated="20140520" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="directory_traversal,information_disclosure" CVE="CVE-2013-3336" CWE="CWE-22" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Adobe has identified a critical vulnerability affecting ColdFusion 10, 9.0.2, 9.0.1 and 9.0 and earlier versions for Windows, Macintosh and UNIX. This vulnerability (CVE-2013-3336) could permit an unauthorized user to remotely retrieve files stored on the server.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An unauthorized user may remotely retrieve files stored on the server.</Impact>
+		<Recommendation>Adobe has released a security hotfix for ColdFusion 10, 9.0.2, 9.0.1 and 9.0 for Windows, Macintosh and UNIX. Adobe recommends users update their product installation using the instructions provided in the "Solution" section of Security Bulletin APSB13-13.</Recommendation>
+		<Reference database="Security Advisory for ColdFusion" URL="http://www.adobe.com/support/security/advisories/apsa13-03.html"></Reference>
+		<Reference database="Security update: Hotfix available for ColdFusion" URL="http://www.adobe.com/support/security/bulletins/apsb13-13.html"></Reference>
+	</TestDescription>
+</WebApplicationTest>

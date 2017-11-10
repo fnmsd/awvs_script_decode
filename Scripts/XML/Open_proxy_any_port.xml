@@ -1,0 +1,28 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Proxy can be used to connect to arbitrary ports" version="0.1" released="20080307" updated="20140304" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="configuration,network_alert" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="5.0" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Copyright/>
+		<Description>The remote proxy server can be used to connect to arbitrary ports. [break]
+
+The proxy allows everyone to perform HTTP requests to arbitrary ports, such as:
+[pre]
+GET http://www.acunetix.com:25 
+[/pre]
+
+This may allow attackers to bypass your firewall and connect to sensitive ports like 23 (telnet), 25 (sendmail) using the proxy. </Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>Firewall bypass, possible information disclosure</Impact>
+		<Recommendation>Restrict proxy access to valid users and/or hosts. Deny access to non-authorized ports.</Recommendation>
+		<Reference database="Wikipedia Open proxy" URL="http://en.wikipedia.org/wiki/Open_proxy"/>
+		<Reference database="Wikipedia Web proxy" URL="http://en.wikipedia.org/wiki/Web_proxy"/>
+		<Reference database="Setting up a Secure Proxy Server using Various Technologies" URL="http://www.suretecsystems.com/our_docs/proxy-guide-en/index.html"/>
+	</TestDescription>
+</WebApplicationTest>

@@ -1,0 +1,19 @@
+#include reporting_helpers.inc;
+// test for subversion server
+if (IsPortOpen(3690)){
+	socket = new TSocket("TCP");
+	socket.Host = ScanHost;
+	socket.Port	= 3690;
+	socket.Timeout = 5;
+	socket.Connect();
+	if (socket.IsConnected) {
+		data = socket.Receive(true);
+		trace(data);
+		if (data.match(/\(\s+success\s\(\s/i))
+		{
+			trace("Subversion server detected!");
+			KBase("Subversion server running", "A Subversion server is running on TCP port 3690.");
+		}
+		socket.Close();
+	}
+}

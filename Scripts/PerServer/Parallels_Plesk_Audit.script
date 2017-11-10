@@ -1,0 +1,33 @@
+#include helpers.inc;
+#include string_helpers.inc;
+var lastJob = null;
+// **************************************************************************************							 
+function alert(vxml, job)
+{	
+	var ri = new TReportItem();
+	ri.LoadFromFile(vxml);
+	ri.affects = 'Web Server';
+	ri.alertPath = "Scripts/" + vxml; 	
+	ri.setHttpInfo(job);
+	AddReportItem(ri);	
+}							 			
+/***********************************************************************************/
+function testParallelsPleskSiteBuilderVulns()
+{
+	lastJob = new THTTPJob();	
+	
+	lastJob.verb = "GET";
+	lastJob.addCookies = false;
+	lastJob.host = scanIP;
+	lastJob.uri  = '/$sitepreview/localhost:2006/Wizard/';
+	lastJob.execute();
+	
+	if (!lastJob.wasError && !lastJob.notFound && lastJob.response.body.indexOf('>Welcome to SiteBuilder Wizard!<') != -1)
+	{
+		alert("Parallels_Plesk_SiteBuilder_Vulns.xml", lastJob);	
+    }
+    
+	return false;
+}
+// main entry point
+testParallelsPleskSiteBuilderVulns();

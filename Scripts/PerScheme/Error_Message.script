@@ -1,0 +1,181 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include error_messages_helpers.inc;
+#include crawler_responses.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+var errorMessages = new classErrorMessages();
+{ // class for testing for error messages
+	function classApplicationError(scheme, inputIndex){
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.origValue = this.getOrigValue();
+		this.currentVariation = 0;
+		this.foundVulnOnVariation = false;
+		this.lastJob = null;
+		
+	}
+	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.getOrigValue = function()
+	{	
+		var value = "";
+		
+		for (var i=0; i<this.variations.count; i++){
+			var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+			
+			// if the value is not yet set		
+			if(value == "" && varValue != "") {
+				value = varValue;			
+			}
+			if (isNaN(varValue)) this.isNumeric = false;
+			// if is not numeric and the value is set then exit
+			if (!this.isNumeric && value != "") break;
+		}
+		return value;
+	}	
+	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.request = function(value, TestForArray)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+        if (TestForArray == 1) {
+            this.scheme.setTempInputName(this.inputIndex, this.scheme.getInputName(this.inputIndex) + '[]');
+        }
+		this.scheme.setEncodedInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+        // populate referer tag - some sites may need it
+        if (!this.lastJob.request.headerExists('Referer'))
+            this.lastJob.request.addHeader('Referer', scanURL.url, false);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.alert = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("Application_error.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/Application error";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText.trunc(1024) + "[/blue][/pre]";
+		}
+		//trace(ri.Details);
+		AddReportItem(ri);	
+	}		
+	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.alertMongo = function(testValue, matchedText)
+	{	
+		this.foundVulnOnVariation = true;
+		
+		var ri = new TReportItem();
+		ri.LoadFromFile("MongoDB_injection.xml");
+		ri.affects = this.scheme.path;
+		ri.alertPath = "Scripts/MongoDB_injection";
+		ri.parameter = this.scheme.getInputName(this.inputIndex);
+		ri.parameterValue = testValue;
+		
+		ri.setHttpInfo(this.lastJob);
+		
+		ri.details = this.scheme.getInputTypeStr(this.inputIndex) + " input [bold][dark]" + this.scheme.getInputName(this.inputIndex) + "[/dark][/bold] was set to [bold][dark]" + testValue + "[/dark][/bold]";
+		if (matchedText) {
+			ri.Details =  ri.Details + "[break]Error message found: [pre][blue]" + matchedText.trunc(1024) + "[/blue][/pre]";
+		}		//trace(ri.Details);
+		AddReportItem(ri);	
+	}
+		
+	/**************************************************************************************************************/
+	classApplicationError.prototype.testForError = function()
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		var response = getCrawlerResponseForSchemeVariation(this.scheme);
+	
+		if (response == null) {
+			if (!this.request(this.origValue)) return false;
+			response = this.lastJob.response;
+		}
+		
+		if (response.body.length > 250*1024) return false;
+		if (errorMessages.searchOnText(response.toString())) return false;	
+		
+		return true;
+	}	
+	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+		
+		var matchedText = errorMessages.searchOnText(this.lastJob.response.toString());		
+		if (matchedText) {
+			this.alert(value, matchedText);
+			
+			var mongoError = "Fatal error: Uncaught exception 'MongoException' with message";
+			if (this.lastJob.response.toString().indexOf(mongoError) != -1) {
+				this.alertMongo(value, mongoError);
+			}
+			
+			return false;
+		}
+		
+		return true;
+	}
+	/**************************************************************************************************************/
+	classApplicationError.prototype.testForArray = function()
+	{	
+		if (!this.request(this.origValue, 1)) return false;
+		var matchedText = errorMessages.searchOnText(this.lastJob.response.toString());		
+		if (matchedText) {
+			this.alert(this.origValue, matchedText);
+			return false;
+		}
+		
+		return true;
+	}	
+	
+	/**************************************************************************************************************/
+	classApplicationError.prototype.startTesting = function()
+	{
+		for (var i=0; i < this.variations.count; i++) 
+		{
+			// don't test further variations
+			if (this.foundVulnOnVariation) break;
+			
+			this.currentVariation = i;
+			
+			if (!this.testForError()) continue;			
+			if (!this.testInjection("")) continue;
+			if (!this.testInjection("12345'\"\\'\\\");|]*%00{%0d%0a<%00>%bf%27'" + strFromRawData(0xF0, 0x9F, 0x92, 0xA9))) continue;
+			
+			// test for name[]=1
+			if (this.scheme.inputHasFlag(this.inputIndex, INPUT_FLAG_CAN_BE_ARRAY)) {
+					if (!this.testForArray()) continue;
+			}            
+		}
+	}   
+}
+// main entry point 
+for (var i=0;i<scheme.inputCount; i++)
+{
+	var tester = new classApplicationError(scheme, i);
+	tester.startTesting();
+	ScriptProgress(ComputeProgress(i, scheme.inputCount));
+	tester = null;
+}

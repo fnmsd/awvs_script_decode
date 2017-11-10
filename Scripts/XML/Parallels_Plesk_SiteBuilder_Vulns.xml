@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Multiple vulnerabilities reported in Parallels Plesk Sitebuilder" version="0.1" released="20080307" updated="20140729" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,arbitrary_file_creation,code_execution" CVE="" CWE="CWE-94" CVSSVer="2.0" CVSSScore="6.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:P" CVSSScoreTemp="6.9" CVSSScoreEnv="6.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>Multiple vulnerabilities were reported in Parallels Plesk Sitebuilder. Parallels Plesk comes with an ISAPI filter named sitepreview.dll. This filter can be abused to bypass the firewall restrictions and access the Sitebuilder interface on port 2006. Using this interface an attacker can upload and execute arbitrary code.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read any file and execute arbitrary code on the affected server.</Impact>
+		<Recommendation>Upgrade to the latest version of Parallels Plesk.</Recommendation>
+		<Reference database="Multiple Vulnerabilities in Parallels Plesk Sitebuilder" URL="http://seclists.org/bugtraq/2014/Jul/107"></Reference>
+		<Reference database="Parallels Plesk Sitebuilder" URL="http://www.securatary.com/Portals/0/Vulnerabilities/Burp/plesk.pdf"></Reference>
+	</TestDescription>
+</WebApplicationTest>

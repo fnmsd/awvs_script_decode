@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Rails mass assignment" version="0.1" released="20080307" updated="20150218" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality,known_vulnerabilities" CVE="" CWE="CWE-915" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N" CVSSScoreTemp="0.0" CVSSScoreEnv="0.0"/>
+		<Copyright></Copyright>
+		<Description>[coolbox][dark]Manual confirmation is required for this alert.[/dark][/coolbox][break]
+
+This script is possibly vulnerable to Rails Mass Assignment vulnerability.[break][break]
+[code][pre]
+@user = User.new(params[:user])
+[/pre][/code]
+In the above line of code mass assignment is used to populate a newly created User from the params hash (user submitted data). If no precautions are taken an attacker can pass in their own parameters and set any user attributes. Consider an application that has a users table containing an admin column. When creating a new account an attacker can pass in the parameter user[admin] set to 1 and make themselves an admin. The security implications of mass assignment have been documented since Rails's inception and yet many applications are still vulnerable.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>The impact of this vulnerability varies depending on the affected application. In the more severe cases it's possible to bypass the user authentication or download arbitrary information from the database.</Impact>
+		<Recommendation>To avoid this, Rails provides two class methods in your Active Record class to control access to your attributes. The attr_protected method takes a list of attributes that will not be accessible for mass-assignment .A much better way, because it follows the whitelist-principle, is the attr_accessible method. It is the exact opposite of attr_protected, because it takes a list of attributes that will be accessible. All other attributes will be protected. This way you won't forget to protect attributes when adding new ones in the course of development. Here is an example:[code][pre]
+attr_accessible :name
+attr_accessible :name, :is_admin, :as =&gt; :admin
+[/pre][code]</Recommendation>
+		<Reference database="Mass assignment in Rails applications" URL="http://blog.mhartl.com/2008/09/21/mass-assignment-in-rails-applications/"/><Reference database="Ruby On Rails Security Guide" URL="http://guides.rubyonrails.org/security.html#mass-assignment"/><Reference database="Ruby on Rails: Secure Mass Assignment" URL="http://stephensclafani.com/2010/01/04/ruby-on-rails-secure-mass-assignment/"/></TestDescription>
+</WebApplicationTest>

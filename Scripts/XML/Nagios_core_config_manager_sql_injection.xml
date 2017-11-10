@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebApplicationTest>
+	<TestDescription name="Nagios core config manager SQL injection vulnerability " version="0.1" released="20080307" updated="20140305" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="sql_injection" CVE="CVE-2013-6875" CWE="CWE-89" CVSSVer="2.0" CVSSScore="7.5" CVSSDescr="AV:N/AC:L/Au:N/C:P/I:P/A:P/E:POC/RL:OF/RC:C" CVSSScoreTemp="5.9" CVSSScoreEnv="5.9" CVSS3Descr="CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"></WASPDescription>
+		<Copyright></Copyright>
+		<Description>An SQL injection vulnerability has been discovered within the login functionality of Nagios Core Config Manager. 
+This vulnerability exists due to the password field not being validated before being used to construct an SQL 
+query on-the-fly. SQL Injection allows a malicious entity to execute arbitrary SQL statements. This vulnerability 
+was discovered within the Nagios Core Config Manager shipped within the Nagios XI virtual appliance, which can 
+be found under http://&lt;vmlocation&gt;/nagiosql/index.php</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker may execute arbitrary SQL statements on the vulnerable system. This may compromise the integrity of your database and/or expose sensitive information. [break][break]Depending on the back-end database in use, SQL injection vulnerabilities lead to varying levels of data/system access for the attacker. It may be possible to not only manipulate existing queries, but to UNION in arbitrary data, use sub selects, or append additional queries. In some cases, it may be possible to read in or write out to files, or to execute shell commands on the underlying operating system.[break][break]Certain SQL Servers such as Microsoft SQL Server contain stored and extended procedures (database server functions). If an attacker can obtain access to these procedures it may be possible to compromise the entire machine.</Impact>
+		<Recommendation>Upgrade to the latest version of Nagios.</Recommendation>
+		<Reference database="Nagios Core Config Manager SQLi vulnerability " URL="http://www.security-assessment.com/files/documents/advisory/NagiosQL%20Core%20Config%20Manager%20SQL%20Injection%20Vulnerability%20Advisory%20-%20DA.pdf"></Reference>
+		<Reference database="Nagios changelog" URL="http://assets.nagios.com/downloads/nagiosxi/CHANGES-2012.TXT"></Reference>
+	</TestDescription>
+</WebApplicationTest>

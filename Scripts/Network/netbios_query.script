@@ -1,0 +1,40 @@
+#include string_helpers.inc;
+#include smb_helpers.inc;
+#include reporting_helpers.inc;
+// perform a NETBIOS query
+// start
+socket = new TSocket("UDP");
+socket.Host = ScanHost;
+socket.Port = 137;
+socket.Timeout = 5;
+socket.Connect();
+socket.send(prepare_netbios_request());
+data = socket.Receive(true);
+if (data.length > 0) {
+	//trace(data.toHexString());
+	//trace(data.slice(0, 4).toHexString());
+	if (data.slice(0, 4) == strFromRawData( 0x31, 0x37, 0x84, 0x00)) // valid response
+	{
+		//trace('valid response!');
+		
+		var numberAnswers = data.getWordAt(6, true);
+		//trace(numberAnswers);
+		if (numberAnswers > 0) {
+			
+			namescount = data.getByteAt(56, true);
+			//trace(namescount);	
+			if (data.length >= namescount*18 + 6) {
+				// report here
+				// extract names
+				trace("extract names");
+				var names = extract_netbios_names(data, namescount);
+				
+				trace(names);
+				KBase("NETBIOS names", "The remote hosts responds to NETBIOS requests on UDP port 137. It's possible to list the NETBIOS names (including the name of the host and the logged on username). [break] List of names: [pre]" + names + "[/pre]");
+				
+			} 			
+		}
+	}
+	
+}
+socket.Close();

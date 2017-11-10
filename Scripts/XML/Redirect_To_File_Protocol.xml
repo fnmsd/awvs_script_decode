@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="Http redirect security bypass" version="0.1" released="20080307" updated="20140515" protocol="FTP" mayproxy="false" affects="server" severity="high" alert="success" type="Configuration">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" DetaliedInformation="" AlertTags="abuse_of_functionality" CVE="" CWE="CWE-20" CVSSVer="2.0" CVSSScore="5.8" CVSSDescr="AV:N/AC:M/Au:N/C:P/I:P/A:N" CVSSScoreTemp="5.9" CVSSScoreEnv="5.8"/>
+		<Copyright></Copyright>
+		<Description>This issue occurs when handling HTTP 'Location:' redirect requests. The software fails to verify target protocols used in an automatic redirect request. An attacker running a malicious server could redirect a URI request and use a URI handler such as 'file://' to obtain files from a vulnerable computer.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>*</OS>
+				<Arch>*</Arch>
+			</Platform>
+			<WebServer>*</WebServer>
+			<ApplicationServer>*</ApplicationServer>
+		</ApplicableTo>
+		<Impact>An attacker can read arbitrary files from the vulnerable computer.</Impact>
+		<Recommendation>The web application should not permit redirects from http:// to file://.</Recommendation>
+	</TestDescription>
+</WebApplicationTest>

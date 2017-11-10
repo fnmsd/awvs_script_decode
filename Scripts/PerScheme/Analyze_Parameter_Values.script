@@ -1,0 +1,241 @@
+#include constants.inc;
+#include helpers.inc;
+#include string_helpers.inc;
+#include reporting_helpers.inc;
+#include cookies_helpers.inc;
+#noretest;
+var scheme = getCurrentScheme();
+var possibleFileNames = new TStringList();
+var targetUrl = new TURL(scanURL.url);
+targetUrl.path = scheme.path;
+// report vulnerability
+function alert(fname, inputIndex, value)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(fname);
+    ri.affects = scheme.path;
+    ri.alertPath = "Scripts/" + fname;
+    ri.details = scheme.getInputTypeStr(inputIndex) + " input [bold][dark]" + scheme.getInputName(inputIndex) + "[/dark][/bold] has the value [break][break][bold][dark]" + value + "[/dark][/bold].[break][break]This value looks like a serialized Java object.";
+    AddReportItem(ri);
+}
+// report vulnerability
+function alertPHP(fname, inputIndex, value)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(fname);
+    ri.affects = scheme.path;
+    ri.alertPath = "Scripts/" + fname;
+    ri.details = scheme.getInputTypeStr(inputIndex) + " input [bold][dark]" + scheme.getInputName(inputIndex) + "[/dark][/bold] has the value [break][break][bold][dark]" + value + "[/dark][/bold].[break][break]This value looks like serialized PHP data.";
+    AddReportItem(ri);
+}
+// report vulnerability
+function alertPython(fname, inputIndex, value)
+{
+    var ri = new TReportItem();
+    ri.LoadFromFile(fname);
+    ri.affects = scheme.path;
+    ri.alertPath = "Scripts/" + fname;
+    ri.details = scheme.getInputTypeStr(inputIndex) + " input [bold][dark]" + scheme.getInputName(inputIndex) + "[/dark][/bold] has the value [break][break][bold][dark]" + value + "[/dark][/bold].[break][break]This value looks like serialized Python data.";
+    AddReportItem(ri);
+}
+// check for base64 data
+function isBase64(value){
+    if (value.match(/^[a-zA-Z0-9\+\/=\%]+$/)) {
+        var decoded = b642plain(value);
+        if (decoded && (plain2b64(decoded) == value))
+			return decoded;
+    }
+    return false;
+}
+// check for base64 data
+function isValidPath(value){
+	var parts = value.split("?");
+	
+	if (parts.length == 1) {
+		// only filename
+		return parts[0].match(/((\.{0,2}\/)*([a-zA-Z_0-9\-\.]+\/)*[a-zA-Z_0-9\-\.]+\.[a-zA-Z]{2,4})/);
+	} else {
+		// filename and params
+		return parts[0].match(/((\.{0,2}\/)*([a-zA-Z_0-9\-\.]+\/)*[a-zA-Z_0-9\-\.]+\.[a-zA-Z]{2,4})/) && parts[1].match(/((\?([\w:]+=?[\w:]*&?)*)?)/);
+	}
+		
+    return false;
+}
+// collect and analyze parameter values
+function analyzeParameterValues(scheme){
+	for (var i=0; i<scheme.variationCount; i++){
+		var variation = scheme.getVariation(i);
+		for (var j=0; j<variation.count; j++){
+			var value = variation.item(j);
+			
+			if (value && value.length >= 2048) continue;
+			
+			var base64 = isBase64(value);
+			if (base64) value = base64;			
+			
+			if (isValidPath(value)) {
+				//trace("found valid path " + value);
+				
+				if (possibleFileNames.indexOf(value) == -1)
+					possibleFileNames.add(value);
+			}
+		}
+	}
+}
+// make a request and return status code and body
+function preCondition(uri) {
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	if (!http.wasError && http.notFound) 
+		return true;
+	return false;
+}
+// validate file 
+function validatePath(uri){
+	var http = new THTTPJob();
+	http.url = scanURL;
+	http.verb = 'GET';
+	http.URI = uri;
+	http.execute();	
+	if (!http.wasError && (http.responseStatus == 200))
+		return true;
+	return false;
+}
+// test if the value contains a Java serialized object
+function isJavaObjectDeserialization(value, inputIndex) {
+    var inputType = scheme.getInputTypeStr(inputIndex);
+    var inputName = scheme.getInputName(inputIndex);
+    // don't test cookies multiple times
+    if (inputType == "Cookie") {
+        var globalValueName = "testedJavaObjectDeserialization" + inputName;
+        var tested = getGlobalValue(globalValueName);
+        if (tested) return false;
+        SetGlobalValue(globalValueName, 1, true);
+    }
+    if (value.length < 10) return false;
+    var padding = value.substring(0, 5).toLowerCase();
+    if (padding == "ro0ab") {
+        var decoded = b642plain(value);
+        if (decoded.startsWith(strFromRawData(0xac, 0xed, 0x00, 0x05))) {
+            return true;
+        }
+    }
+    return false;
+}
+// test if the value contains a PHP serialized object
+function isPHPObjectDeserialization(value, inputIndex) {
+    var inputType = scheme.getInputTypeStr(inputIndex);
+    var inputName = scheme.getInputName(inputIndex);
+    // don't test cookies multiple times
+    if (inputType == "Cookie") {
+        var globalValueName = "testedPHPObjectDeserialization" + inputName;
+        var tested = getGlobalValue(globalValueName);
+        if (tested) return false;
+        SetGlobalValue(globalValueName, 1, true);
+    }
+    if (value.length < 10) return false;
+    // url encoded
+    if (value.startsWith("O:") || value.startsWith("a:")) {
+        var decodedValue = url2plain(value);
+        if (
+            // object
+            decodedValue.match(/^[O]:\d+:"[^"]+":\d+:{.*}/) ||
+            // array
+            decodedValue.match(/^a:\d+:{(s:\d:"[^"]+";|i:\d+;).*}/)
+        ) return true;
+    }
+    else {
+        // base64 encoded
+        if ((value.startsWith("Tz") || value.startsWith("YT")) && isBase64(value)){
+            var decodedValue = b642plain(value);
+            if (
+                // object
+                decodedValue.match(/^[O]:\d+:"[^"]+":\d+:{.*}/) ||
+                // array
+                decodedValue.match(/^a:\d+:{(s:\d:"[^"]+";|i:\d+;).*}/)
+            ) return true;
+        }
+    }
+    return false;
+}
+// test if the value contains a Python serialized object
+function isPythonObjectDeserialization(value, inputIndex) {
+    var inputType = scheme.getInputTypeStr(inputIndex);
+    var inputName = scheme.getInputName(inputIndex);
+    // don't test cookies multiple times
+    if (inputType == "Cookie") {
+        var globalValueName = "testedPythonObjectDeserialization" + inputName;
+        var tested = getGlobalValue(globalValueName);
+        if (tested) return false;
+        SetGlobalValue(globalValueName, 1, true);
+    }
+    if (value.length < 10) return false;
+    // base64 encoded
+    if (isBase64(value)) {
+        // pickle binary
+        if (value.startsWith("g")) {
+            var decodedValue = b642plain(value);
+            if (decodedValue.startsWith(strFromRawData(0x80, 0x03)) && decodedValue.endsWith(".")) {
+                return true;
+            }
+        }
+        else
+        // pickle text version
+        if (value.startsWith("K")) {
+            var decodedValue = b642plain(value);
+            if ((decodedValue.startsWith("(dp1") || decodedValue.startsWith("(lp1")) && decodedValue.endsWith(".")) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+// look for Object Deserialization on input values
+function lookForDeserializationIssues(scheme, inputIndex){
+    var variations = scheme.selectVariationsForInput(inputIndex);
+	for (var i=0; i<variations.count; i++)
+    {
+            var value = scheme.getVariation(variations.item(i)).item(inputIndex);
+            //trace(scheme.getInputName(inputIndex) + " = " + value);
+            // java
+            if (isJavaObjectDeserialization(value, inputIndex)) {
+                alert("java_object_deserialization_user_input.xml", inputIndex, value.trunc(128));
+            }
+            else
+            // php
+            if (isPHPObjectDeserialization(value, inputIndex)) {
+                alertPHP("php_object_deserialization_user_input.xml", inputIndex, value.trunc(128));
+            }
+            else
+            // python
+            if (isPythonObjectDeserialization(value, inputIndex)) {
+                alertPython("python_object_deserialization_user_input.xml", inputIndex, value.trunc(128));
+            }
+	}
+}
+// *********************************************************************************************
+// main entry point
+// get all parameter values and analyze them
+for (var i=0;i<scheme.inputCount; i++) {
+    analyzeParameterValues(scheme);
+    lookForDeserializationIssues(scheme, i);
+}
+// verify filenames
+if (possibleFileNames.count) {
+	var canonUrl = targetUrl.canonicalize(randStr(8) + '.jsp');	
+	if (preCondition(canonUrl.url)) {
+		siteFile = getSiteFileWithPath(scheme.path, 0);
+		if (siteFile)  {
+			for (var j=0; j<possibleFileNames.count; j++){
+				var fname = possibleFileNames.item(j);
+				canonUrl = targetUrl.canonicalize(fname);					
+				if (validatePath(canonUrl.url)){
+					addLinkToCrawler(fname, siteFile);
+				}
+			}
+		}
+	}
+}

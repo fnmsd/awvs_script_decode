@@ -1,0 +1,105 @@
+<?xml version="1.0" standalone="no"?>
+<WebApplicationTest>
+	<TestDescription name="WebDAV enabled" version="0.1" released="20040327" updated="20140314" protocol="HTTP" mayproxy="true" affects="file" severity="low" alert="success" type="Informational">
+		<WASPDescription BindAlertToFile="0" CrawlerProcessingMode="ParseOnly" TargetFormat="${file}" Target="" ModuleName="" Request="" Response="" FullResponse="" DetailsFormat="" Details="" AuthType="0" AuthName="" AuthPass="" CompInfo="" FolowRedirection="false" DetaliedInformation="" SendCookies="true" AlertTags="configuration" CVE="" CWE="CWE-16" CVSSVer="2.0" CVSSScore="0.0" CVSSDescr="AV:N/AC:L/Au:N/C:N/I:N/A:N" CVSSScoreTemp="5.0" CVSSScoreEnv="5.0"/>
+		<Reference database="Microsoft KB 241520" URL="http://support.microsoft.com/default.aspx?scid=kb;en-us;241520"/>
+		<Copyright/>
+		<Description>WebDAV is an extension to the HTTP protocol. It allows authorized users to remotely add and change content on your web server.</Description>
+		<ApplicableTo>
+			<Platform>
+				<OS>Windows</OS>
+				<Arch>i386</Arch>
+			</Platform>
+			<WebServer>IIS</WebServer>
+			<ApplicationServer>All</ApplicationServer>
+		</ApplicableTo>
+		<TriggerOn event="scheme_host_port">
+			<Match type="regex">.*</Match>
+		</TriggerOn>
+		<Impact>If WebDAV is not configured properly it may allow remote users to modify the content of the website.</Impact>
+		<Recommendation>If you are not using this extension, it's recommended to be disabled.</Recommendation>
+	</TestDescription>
+	<Connection scheme="${scheme}" host="${host}" port="${port}">
+		<Step name="first">
+			<Request>
+				<MessageHeader>
+					<Method>OPTIONS</Method>
+					<URI>${scheme}://${host}:${port}/</URI>
+					<Version>HTTP/1.0</Version>
+				</MessageHeader>
+				<MessageBody>
+					<Separator/>
+				</MessageBody>
+			</Request>
+			<Response>
+				<SetVariable name="ResponseCode" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="status">^.*\s(\d\d\d)\s</Source>
+				</SetVariable>
+				<SetVariable name="FullBody" type="string">
+					<Description>The HTTP Response Code</Description>
+					<Source source="body">^(.*)$</Source>
+				</SetVariable>
+				<SetVariable name="redir302" type="string">
+					<Description>Check to see if we are being redirected to another page</Description>
+					<Source source="header">^Location: (.*)$</Source>
+				</SetVariable>
+				<SetVariable name="FullHeaders" type="string">
+					<Description>Get full HTTP headers</Description>
+					<Source source="header">^(.*)$</Source>
+				</SetVariable>
+			</Response>
+			<TestCriteria type="success">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>200</Value>
+					<Compare variable="${IsCustom404}" test="eq">
+						<Value>false</Value>
+						<Compare variable="${FullHeaders}" test="cont">
+							<Value>DASL:</Value>
+							<Compare variable="${FullHeaders}" test="cont">
+								<Value>DAV:</Value>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>PROPFIND</Value>
+								</Compare>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>PROPPATCH</Value>
+								</Compare>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>LOCK</Value>
+								</Compare>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>SEARCH</Value>
+								</Compare>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>MKCOL</Value>
+								</Compare>
+								<Compare variable="${FullHeaders}" test="cont">
+									<Value>UNLOCK</Value>
+								</Compare>
+							</Compare>
+						</Compare>
+					</Compare>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>404</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="eq">
+					<Value>302</Value>
+				</Compare>
+			</TestCriteria>
+			<TestCriteria type="failure">
+				<Compare variable="${ResponseCode}" test="neq">
+					<Value>200</Value>
+				</Compare>
+			</TestCriteria>
+		</Step>
+	</Connection>
+	<Variable name="file" type="string">
+		<Description>Affected site file</Description>
+		<Item encoding="Text">test</Item>
+	</Variable>
+</WebApplicationTest>
